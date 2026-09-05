@@ -1,0 +1,64 @@
+name: Grade
+description: A searchable directory of public/free-to-air TV and radio broadcasts (sourced from iptv-org) plus a
+  personal, URL-addressable media library with exportable feeds (M3U, M3U8, JSON, XSPF), EPG guide, per-channel
+  health scores, and live chat. Exposes a REST API with OpenAPI 3.1, a hosted MCP server, and llms.txt agent docs.
+url: https://raw.githubusercontent.com/api-evangelist/gradetv/refs/heads/main/apis.yml
+created: '2026-09-05'
+modified: '2026-09-05'
+specificationVersion: '0.21'
+tags:
+- IPTV
+- Streaming
+- Live TV
+- Live Radio
+- Media Catalog
+- Broadcast Metadata
+- EPG
+- TV Guide
+- Content Aggregation
+- Agent-native
+- MCP
+- x402
+- Micropayments
+- Brazil
+apis:
+- name: Grade API
+  description: REST API for the Grade IPTV catalog and personal library, with a public OpenAPI 3.1 contract, hosted
+    MCP server (45 tools), llms.txt agent documentation, and a well-known API catalog.
+  humanURL: https://gradetv.net/api/
+  baseURL: https://gradetv.net
+  tags:
+  - IPTV
+  - Streaming
+  - Live TV
+  - Live Radio
+  - Media Catalog
+  - Broadcast Metadata
+  - EPG
+  - TV Guide
+  - Content Aggregation
+  - Agent-native
+  - MCP
+  - x402
+  - Micropayments
+  - Brazil
+  properties:
+  - type: OpenAPI
+    url: https://gradetv.net/openapi.json
+  - type: MCPServer
+    url: https://gradetv.net/mcp
+  - type: LLMsTxt
+    url: https://gradetv.net/llms.txt
+  - type: Documentation
+    url: https://gradetv.net/llms-full.txt
+  - type: Documentation
+    url: https://gradetv.net/okf/index.md
+  - type: Documentation
+    url: https://gradetv.net/.well-known/api-catalog
+maintainers:
+- FN: Grade
+  url: https://gradetv.net/
+x-source:
+  via: 'apis.io/add 16a81119, parked curated_record: the name Grade collided with usegrade.com, a different company.
+    Created under the domain slug instead -- the guard exists for exactly this.'
+  fetched: '2026-09-05'
