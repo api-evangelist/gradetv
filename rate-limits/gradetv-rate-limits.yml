@@ -1,0 +1,38 @@
+generated: '2026-09-05'
+method: searched
+source: https://gradetv.net/openapi.json + https://gradetv.net/api/billing
+limit_count: 4
+note: >-
+  Published limits live in the OpenAPI 429 responses, the billing endpoint's
+  limits block, and llms.txt. No X-RateLimit-* response headers are documented;
+  the runtime signal is the 429 status itself, with Retry-After documented on
+  the agent-contact backoff. Library size caps come from GET /api/billing.
+limits:
+- scope: per-owner, comment posting
+  endpoint: POST /api/channels/{id}/comments
+  window: 1 hour
+  limit: 20
+  exhaustion_status: 429
+- scope: per-email, login code requests
+  endpoint: POST /api/auth/start
+  window: unpublished
+  limit: unpublished ("pedidos demais para o mesmo e-mail")
+  exhaustion_status: 429
+- scope: per-session, code verification attempts
+  endpoint: POST /api/auth/verify
+  window: unpublished
+  limit: unpublished ("tentativas demais")
+  exhaustion_status: 429
+- scope: per-agent, producer contact backoff
+  endpoint: POST /api/contact
+  window: per Retry-After header
+  limit: unpublished
+  exhaustion_status: 429
+  headers: [Retry-After]
+resource_caps:
+  source: https://gradetv.net/api/billing
+  categories: 8
+  groups_per_category: 12
+  items_per_group: 40
+  admin_batch_rows: 1000
+  admin_guide_channels_per_batch: 500

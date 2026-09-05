@@ -1,0 +1,26 @@
+overlay: 1.0.0
+info:
+  title: API Evangelist enhancements for Grade
+  version: 1.0.0
+extends: openapi/gradetv-openapi.json
+actions:
+- target: $.info
+  update:
+    x-apievangelist:
+      profiled: '2026-09-05'
+      provider: gradetv
+      artifacts:
+        mcp: mcp/gradetv-mcp.yml
+        tool-crosswalk: mcp/gradetv-tool-crosswalk.yml
+        errors: errors/gradetv-problem-types.yml
+        conventions: conventions/gradetv-conventions.yml
+        plans: plans/gradetv-plans-pricing.yml
+- target: $.info
+  update:
+    x-payment-signaling:
+      scheme: x402
+      billing_endpoint: https://gradetv.net/api/billing
+      note: 402 responses carry accepts[]; retry the same call with X-PAYMENT after paying (USDC on Base).
+- target: $.paths['/api/m/{ticket}']
+  update:
+    x-retired: 'permanently answers 410: Grade does not relay video.'

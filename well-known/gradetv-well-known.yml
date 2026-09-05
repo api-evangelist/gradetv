@@ -1,0 +1,57 @@
+generated: '2026-09-05'
+method: searched
+source: https://gradetv.net/.well-known/
+note: >-
+  Clean host — the negative control 404d, so every 200 below is a real document.
+  Grade serves an RFC 9727 api-catalog (linkset pointing at the REST API, the MCP
+  server, and an APIs.json), an RFC 9116 security.txt, an APIs.json at both
+  /apis.json and /.well-known/apis.json (specificationVersion 0.19), and an
+  MCP registry auth key at /.well-known/mcp-registry-auth. No OIDC/OAuth
+  discovery documents and no A2A agent card. www.gradetv.net 301s every path
+  to the apex host.
+path_echo_control: passed
+negative_control:
+  path: /.well-known/gradetv-negative-control-a91f37c2.json
+  status: 404
+hosts:
+- host: https://gradetv.net
+  documents:
+  - path: /.well-known/security.txt
+    status: 200
+    file: gradetv-security.txt
+  - path: /.well-known/api-catalog
+    status: 200
+    file: gradetv-api-catalog.json
+    content_type: application/linkset+json; profile="https://www.rfc-editor.org/info/rfc9727"
+  - path: /.well-known/apis.json
+    status: 200
+    file: gradetv-apis-json.json
+  - path: /apis.json
+    status: 200
+    file: gradetv-apis-json.json
+  - path: /.well-known/mcp-registry-auth
+    status: 200
+    file: gradetv-mcp-registry-auth.txt
+  - path: /apis.yml
+    status: 404
+  - path: /.well-known/openid-configuration
+    status: 404
+  - path: /.well-known/oauth-authorization-server
+    status: 404
+  - path: /.well-known/oauth-protected-resource
+    status: 404
+  - path: /.well-known/ai-plugin.json
+    status: 404
+  - path: /.well-known/ucp.json
+    status: 404
+  - path: /.well-known/acp.json
+    status: 404
+  - path: /.well-known/aauth-resource.json
+    status: 404
+  - path: /.well-known/agent-card.json
+    status: 404
+  - path: /.well-known/agent.json
+    status: 404
+- host: https://www.gradetv.net
+  note: every path 301s to https://gradetv.net
+  documents: []

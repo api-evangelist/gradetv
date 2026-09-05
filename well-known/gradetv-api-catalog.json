@@ -1,0 +1,76 @@
+{
+  "linkset": [
+    {
+      "anchor": "https://gradetv.net/.well-known/api-catalog",
+      "item": [
+        {
+          "href": "https://gradetv.net/api/"
+        },
+        {
+          "href": "https://gradetv.net/mcp"
+        }
+      ],
+      "describedby": [
+        {
+          "href": "https://gradetv.net/apis.json",
+          "type": "application/json",
+          "title": "APIs.json"
+        }
+      ]
+    },
+    {
+      "anchor": "https://gradetv.net/api/",
+      "service-desc": [
+        {
+          "href": "https://gradetv.net/openapi.json",
+          "type": "application/json",
+          "title": "OpenAPI 3"
+        }
+      ],
+      "service-doc": [
+        {
+          "href": "https://gradetv.net/llms.txt",
+          "type": "text/plain",
+          "title": "Guia para agentes de IA"
+        },
+        {
+          "href": "https://gradetv.net/llms-full.txt",
+          "type": "text/plain",
+          "title": "Referência completa da API"
+        },
+        {
+          "href": "https://gradetv.net/okf/index.md",
+          "type": "text/markdown",
+          "title": "Bundle OKF"
+        }
+      ]
+    },
+    {
+      "anchor": "https://gradetv.net/mcp",
+      "service-desc": [
+        {
+          "href": "https://gradetv.net/mcp",
+          "type": "application/json",
+          "title": "MCP (streamable HTTP)"
+        }
+      ],
+      "service-doc": [
+        {
+          "href": "https://gradetv.net/llms.txt",
+          "type": "text/plain",
+          "title": "Guia para agentes de IA"
+        },
+        {
+          "href": "https://gradetv.net/llms-full.txt",
+          "type": "text/plain",
+          "title": "Referência completa da API"
+        },
+        {
+          "href": "https://gradetv.net/okf/index.md",
+          "type": "text/markdown",
+          "title": "Bundle OKF"
+        }
+      ]
+    }
+  ]
+}

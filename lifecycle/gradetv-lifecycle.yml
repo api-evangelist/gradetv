@@ -1,0 +1,19 @@
+generated: '2026-09-05'
+method: derived
+source: openapi/gradetv-openapi.json + https://gradetv.net/llms.txt
+versioning:
+  scheme: none-published
+  current: dbad45cb (build hash in info.version)
+  docs: null
+deprecation:
+  policy_url: null
+  sunset_header: false
+  note: no deprecation policy page; no Sunset/Deprecation headers documented.
+sla: null
+status_page: null
+deprecated_operations:
+- operation: get_api_m_by_ticket
+  path: /api/m/{ticket}
+  note: >-
+    Retired video pass-through — permanently answers 410 ("o Grade não
+    retransmite vídeo"). Still documented in the spec as a tombstone.

@@ -1,0 +1,77 @@
+{
+  "name": "Grade",
+  "description": "Canais públicos, pastas e M3U para o VLC. Para produtores: projetos de transmissão autorizada sob consulta, com informações e contato.",
+  "image": "https://gradetv.net/icon.svg",
+  "url": "https://gradetv.net/apis.json",
+  "tags": [
+    "Informações e contato para produtores com projetos de transmissão autorizada sob consulta; sem ativação automática",
+    "Catálogo público de canais, com facetas por país, categoria, idioma, rede e qualidade",
+    "Saúde de canal medida pela comunidade e por terceiro (IPTV Nexus): score por stream, ordenar por saúde e filtrar quem está no ar",
+    "Pastas pessoais, favoritos e histórico",
+    "Feed M3U e JSON para o VLC e a extensão",
+    "Rádio ao vivo (página /radio): as estações do Radio Browser ao lado da TV, com tags, votos, codec e estado — mesma pasta, mesmo feed M3U, mesma comunidade",
+    "Programação de hoje grabada por nós (iptv-org/epg em mi.tv, meuguia.tv…): agora e a seguir na ficha e no player",
+    "Canais ao vivo no YouTube (SBT News, Record News, Jovem Pan, TV Senado…) pelo player oficial embutido — fora do M3U/XSPF, que é do VLC"
+  ],
+  "created": "2026-09-05",
+  "modified": "2026-09-05",
+  "specificationVersion": "0.19",
+  "apis": [
+    {
+      "name": "Grade",
+      "description": "Canais públicos, pastas e M3U para o VLC. Para produtores: projetos de transmissão autorizada sob consulta, com informações e contato.",
+      "image": "https://gradetv.net/icon.svg",
+      "humanURL": "https://gradetv.net/",
+      "baseURL": "https://gradetv.net/api/",
+      "tags": [
+        "Informações e contato para produtores com projetos de transmissão autorizada sob consulta; sem ativação automática",
+        "Catálogo público de canais, com facetas por país, categoria, idioma, rede e qualidade",
+        "Saúde de canal medida pela comunidade e por terceiro (IPTV Nexus): score por stream, ordenar por saúde e filtrar quem está no ar",
+        "Pastas pessoais, favoritos e histórico",
+        "Feed M3U e JSON para o VLC e a extensão",
+        "Rádio ao vivo (página /radio): as estações do Radio Browser ao lado da TV, com tags, votos, codec e estado — mesma pasta, mesmo feed M3U, mesma comunidade",
+        "Programação de hoje grabada por nós (iptv-org/epg em mi.tv, meuguia.tv…): agora e a seguir na ficha e no player",
+        "Canais ao vivo no YouTube (SBT News, Record News, Jovem Pan, TV Senado…) pelo player oficial embutido — fora do M3U/XSPF, que é do VLC"
+      ],
+      "properties": [
+        {
+          "type": "OpenAPI",
+          "url": "https://gradetv.net/openapi.json"
+        },
+        {
+          "type": "Documentation",
+          "url": "https://gradetv.net/llms-full.txt"
+        },
+        {
+          "type": "x-llms-txt",
+          "url": "https://gradetv.net/llms.txt"
+        },
+        {
+          "type": "x-mcp",
+          "url": "https://gradetv.net/mcp"
+        },
+        {
+          "type": "x-api-catalog",
+          "url": "https://gradetv.net/.well-known/api-catalog"
+        },
+        {
+          "type": "x-okf",
+          "url": "https://gradetv.net/okf/index.md"
+        }
+      ],
+      "contact": [
+        {
+          "FN": "Grade",
+          "email": "contato@gradetv.net"
+        }
+      ]
+    }
+  ],
+  "include": [],
+  "maintainers": [
+    {
+      "FN": "Grade",
+      "email": "contato@gradetv.net"
+    }
+  ]
+}

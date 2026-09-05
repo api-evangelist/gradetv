@@ -1,0 +1,322 @@
+generated: '2026-09-05'
+method: derived
+source: openapi/gradetv-openapi.json
+format: custom-envelope
+note: 'Derived from the 4xx/5xx responses declared across all 83 operations. Grade does not use RFC 9457 application/problem+json;
+  errors are a plain JSON envelope with a machine `code` (e.g. 403 nsfw_consent_required, 409 recarga_divergente/delta_recusado
+  with a problemas[] list). Two shapes matter to agents: 402 responses carry an x402 accepts[] array (pay in USDC
+  on Base via the facilitator, then repeat the same call with an X-PAYMENT header), and 429 on POST /api/contact
+  documents a Retry-After backoff. Deleting someone else''s comment returns 404, not 403 — ownership is not disclosed.'
+problems:
+- status: 400
+  title: Bad request / validation or cap exceeded
+  occurrences: 24
+  variants:
+  - description: Nome vazio, longo demais, ou o teto de 8 pastas foi atingido.
+    operations:
+    - create_category
+  - description: Nome vazio ou longo demais.
+    operations:
+    - patch_api_categories_by_id
+  - description: Nome inválido ou teto de 12 sub-abas atingido.
+    operations:
+    - create_group
+  - description: Teto de 40 canais na sub-aba atingido.
+    operations:
+    - add_item
+  - description: '`channel_id` ausente ou JSON inválido.'
+    operations:
+    - record_watch
+  - description: '`underage`, `terms_required`, `birth_date` inválida ou `terms_outdated`.'
+    operations:
+    - nsfw_consent_accept
+  - description: '`channel_id` ausente, `ok` faltando ou `code` fora da lista.'
+    operations:
+    - report_play
+  - description: '`channel_id` ausente ou teto de favoritos atingido.'
+    operations:
+    - add_favorite
+  - description: Texto vazio ou acima de `max_length`.
+    operations:
+    - post_comment
+  - description: Texto vazio ou longo demais.
+    operations:
+    - chat_send
+  - description: E-mail ausente ou malformado.
+    operations:
+    - auth_start
+  - description: Código errado ou expirado.
+    operations:
+    - auth_verify
+  - description: '`guest_token` ausente.'
+    operations:
+    - post_api_auth_claim
+  - description: Campo obrigatório faltando.
+    operations:
+    - contact
+  - description: '`recarga_id` ausente ou fora do formato.'
+    operations:
+    - post_api_admin_catalogo_inicio
+  - description: Tabela desconhecida, `linhas` vazia ou linha sem coluna obrigatória (o índice vem na mensagem).
+    operations:
+    - post_api_admin_catalogo_lote
+  - description: '`day` torto, `canais` vazia ou canal inválido (o índice e o motivo vêm na mensagem).'
+    operations:
+    - post_api_admin_guia_lote
+  - description: Registro com campo de tipo errado.
+    operations:
+    - post_api_admin_guia_fim
+  - description: '`fonte` torta, lista vazia ou item sem `channel_id`/https (o índice vem na mensagem).'
+    operations:
+    - post_api_admin_logos_overrides
+  - description: '`recarga_id` ou `esperado` ausente.'
+    operations:
+    - post_api_admin_catalogo_troca
+  - description: '`recarga_id` fora do formato ou `esperado` ausente.'
+    operations:
+    - post_api_admin_catalogo_delta_inicio
+  - description: Tabela desconhecida, listas ausentes ou as duas vazias, linha sem chave, chave inválida.
+    operations:
+    - post_api_admin_catalogo_delta
+  - description: '`recarga_id`, `esperado` ou `fontes` inválidos.'
+    operations:
+    - post_api_admin_catalogo_delta_fim
+  - description: Pacote fora da lista (1, 5, 10 ou 25).
+    operations:
+    - post_api_credito
+- status: 401
+  title: Missing or invalid credential
+  occurrences: 45
+  variants:
+  - description: Sem credencial ou credencial inválida. Veja a auth deste endpoint.
+    operations:
+    - create_category
+    - mint_key
+    - get_api_keys
+    - delete_api_keys_by_id
+    - get_library
+    - patch_api_categories_by_id
+    - delete_api_categories_by_id
+    - create_group
+    - delete_api_groups_by_id
+    - add_item
+    - delete_api_items_by_id
+    - post_api_items_by_id_play
+    - get_history
+    - record_watch
+    - clear_history
+    - forget_watch
+    - nsfw_consent_status
+    - nsfw_consent_accept
+    - nsfw_consent_revoke
+    - nsfw_pass_buy
+    - nsfw_pass_status
+    - report_play
+    - play_reports
+    - list_favorites
+    - add_favorite
+    - remove_favorite
+    - post_comment
+    - delete_comment
+    - chat_send
+    - chat_pass
+    - me
+    - get_api_admin_catalogo_estado
+    - get_api_admin_catalogo_slugs
+    - post_api_admin_catalogo_inicio
+    - post_api_admin_catalogo_lote
+    - post_api_admin_guia_lote
+    - post_api_admin_guia_fim
+    - get_api_admin_logos_mortas
+    - post_api_admin_logos_overrides
+    - post_api_admin_catalogo_troca
+    - post_api_admin_catalogo_delta_inicio
+    - post_api_admin_catalogo_delta
+    - post_api_admin_catalogo_delta_fim
+  - description: Sessão ausente ou inválida.
+    operations:
+    - post_api_auth_claim
+  - description: Sem token ou token desconhecido.
+    operations:
+    - get_api_credito
+- status: 402
+  title: Payment required (x402)
+  occurrences: 5
+  variants:
+  - description: 'Cota estourada. A resposta traz `accepts[]` (x402, USDC na Base): pague e repita a mesma chamada
+      com `X-PAYMENT`.'
+    operations:
+    - nsfw_pass_buy
+    - chat_send
+    - chat_pass
+    - contact
+  - description: Sem pagamento — o corpo traz `accepts[]` do x402.
+    operations:
+    - post_api_credito
+- status: 403
+  title: Forbidden (NSFW consent gate / Turnstile)
+  occurrences: 5
+  variants:
+  - description: Pediu `nsfw=1` sem consentimento 18+ gravado. A recusa não descreve o canal.
+    operations:
+    - search_channels
+  - description: Canal adulto sem consentimento 18+ gravado.
+    operations:
+    - get_channel
+  - description: Canal adulto sem ticket `t` válido.
+    operations:
+    - get_api_s_by_id
+  - description: Sem consentimento 18+ gravado — declare a idade antes.
+    operations:
+    - nsfw_pass_buy
+  - description: Verificação Turnstile inválida.
+    operations:
+    - contact
+- status: 404
+  title: Not found (also returned for resources you do not own)
+  occurrences: 27
+  variants:
+  - description: Arquivo fora do bundle.
+    operations:
+    - get_okf_by_arquivo
+  - description: Nome fora dos quatro publicados.
+    operations:
+    - get_well_known_by_arquivo
+  - description: Canal não existe no catálogo.
+    operations:
+    - get_channel
+    - channel_health
+    - list_comments
+    - chat_history
+    - get_api_chat_by_channel_id_ws
+  - description: Canal sem guia do dia (ou com guia velha).
+    operations:
+    - get_channel_guide
+  - description: Não há variante em cache para este canal.
+    operations:
+    - get_logos_by_id
+  - description: Stream não existe.
+    operations:
+    - get_api_s_by_id
+  - description: Caminho inexistente fora da família retirada.
+    operations:
+    - get_api_m_by_ticket
+  - description: Token de feed desconhecido.
+    operations:
+    - get_f_by_token_library_formato
+  - description: Token de feed ou pasta desconhecidos.
+    operations:
+    - get_f_by_token_c_by_categoria_formato
+  - description: Token de feed, pasta ou sub-aba desconhecidos.
+    operations:
+    - get_f_by_token_c_by_categoria_g_by_grupo_formato
+  - description: Recurso não existe (ou não é seu — a API não distingue os dois de propósito).
+    operations:
+    - delete_api_keys_by_id
+    - patch_api_categories_by_id
+    - delete_api_categories_by_id
+    - delete_api_groups_by_id
+    - delete_api_items_by_id
+    - post_api_items_by_id_play
+    - forget_watch
+    - delete_comment
+  - description: A pasta não é sua ou não existe.
+    operations:
+    - create_group
+  - description: Sub-aba ou canal não encontrados.
+    operations:
+    - add_item
+  - description: O canal não estava nos seus favoritos.
+    operations:
+    - remove_favorite
+  - description: Canal não existe.
+    operations:
+    - post_comment
+    - chat_send
+- status: 405
+  title: Method not allowed
+  occurrences: 1
+  variants:
+  - description: A oferta só aceita GET; não existe provisionamento por POST.
+    operations:
+    - producer_services
+- status: 409
+  title: Conflict (catalog reload staging/delta divergence)
+  occurrences: 5
+  variants:
+  - description: O staging aberto pertence a outra `recarga_id`.
+    operations:
+    - post_api_admin_catalogo_lote
+  - description: '`recarga_divergente` (staging de outra execução) ou `staging_invalido` — a resposta lista `problemas[]`
+      e o catálogo no ar não mudou.'
+    operations:
+    - post_api_admin_catalogo_troca
+  - description: '`delta_recusado`: a resposta lista `problemas[]` e o catálogo no ar não mudou.'
+    operations:
+    - post_api_admin_catalogo_delta_inicio
+  - description: '`recarga_divergente`: a execução aberta é outra; chame `/delta/inicio`.'
+    operations:
+    - post_api_admin_catalogo_delta
+  - description: '`recarga_divergente` (outra execução) ou `delta_invalido` — a resposta lista `problemas[]` e o
+      carimbo não foi gravado.'
+    operations:
+    - post_api_admin_catalogo_delta_fim
+- status: 410
+  title: Gone (retired video pass-through)
+  occurrences: 1
+  variants:
+  - description: 'Sempre: o Grade não retransmite vídeo.'
+    operations:
+    - get_api_m_by_ticket
+- status: 413
+  title: Payload too large (batch row caps)
+  occurrences: 4
+  variants:
+  - description: Mais de 1000 linhas num pedido.
+    operations:
+    - post_api_admin_catalogo_lote
+  - description: Mais de 500 canais num pedido.
+    operations:
+    - post_api_admin_guia_lote
+  - description: Mais de 500 itens.
+    operations:
+    - post_api_admin_logos_overrides
+  - description: Mais de 1000 linhas (`upsert` + `remover`).
+    operations:
+    - post_api_admin_catalogo_delta
+- status: 429
+  title: Rate limited
+  occurrences: 4
+  variants:
+  - description: Passou de 20 comentários na hora.
+    operations:
+    - post_comment
+  - description: Pedidos demais para o mesmo e-mail.
+    operations:
+    - auth_start
+  - description: Tentativas demais.
+    operations:
+    - auth_verify
+  - description: 'Backoff de agente: espere o `Retry-After`.'
+    operations:
+    - contact
+- status: 502
+  title: Upstream email provider failure
+  occurrences: 1
+  variants:
+  - description: O provedor não aceitou o envio do e-mail; tente novamente mais tarde.
+    operations:
+    - contact
+- status: 503
+  title: Service unavailable (feature disabled by configuration)
+  occurrences: 3
+  variants:
+  - description: Envio indisponível por configuração de e-mail incompleta.
+    operations:
+    - contact
+  - description: '`CATALOGO_TOKEN` não configurado no Worker: a recarga está desligada.'
+    operations:
+    - get_api_admin_catalogo_estado
+  - description: Recarga desligada (sem `CATALOGO_TOKEN`).
+    operations:
+    - get_api_admin_catalogo_slugs

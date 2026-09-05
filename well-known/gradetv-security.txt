@@ -1,0 +1,4 @@
+Contact: mailto:contato@gradetv.net
+Expires: 2027-09-05T00:00:00Z
+Preferred-Languages: pt, en
+Canonical: https://gradetv.net/.well-known/security.txt

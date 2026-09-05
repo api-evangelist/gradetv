@@ -1,0 +1,73 @@
+generated: '2026-09-05'
+method: derived
+source: openapi/gradetv-openapi.json (components.schemas, 88 schemas; names are Portuguese)
+note: >-
+  Two clusters share one identity spine. The public catalog: Canal (channel)
+  with Stream[], Social counters, GuiaDoDia/Programa (EPG), faceted by Pais,
+  Categoria, Idioma, Rede, Qualidade, Subdivisao, Cidade, Tag (radio). The
+  personal side hangs off the guest identity (ipt_ token): Biblioteca (library)
+  -> PastaBiblioteca (category/folder) -> SubAba (group) -> ItemBiblioteca
+  (channel reference), plus Favorito, historico entries, Comentario,
+  MensagemChat, Relato (play report), Consentimento/Passe (NSFW + chat passes),
+  Chave (API key) and Conta (email account that claims guests).
+entities:
+- name: Canal
+  id_field: id
+  note: public channel; CanalCompleto adds streams, social, links
+- name: Stream
+  belongs_to: Canal
+- name: Social
+  belongs_to: Canal
+  note: plays, fails, favorites, comments, health, your_geo_ok, your_latency_ms
+- name: SaudeCanal
+  belongs_to: Canal
+  note: community + third-party (IPTV Nexus) health; regions[], geo, latency[], pra_voce
+- name: GuiaDoDia
+  belongs_to: Canal
+  has_many: [Programa]
+- name: Guest
+  id_prefix: ipt_
+  note: the owning identity; created anonymously at POST /api/guest
+- name: Chave
+  id_prefix: iptk_
+  belongs_to: Guest
+  note: API key, full text shown once; revoked rows stay listed
+- name: Conta
+  has_many: [Guest]
+  note: email account; auth_verify returns the account's original guest (adopt:true)
+- name: Biblioteca
+  belongs_to: Guest
+  has_many: [PastaBiblioteca]
+- name: PastaBiblioteca
+  has_many: [SubAba]
+  note: max 8 per owner (billing limits)
+- name: SubAba
+  has_many: [ItemBiblioteca]
+  note: max 12 per category; feeds exist per library, folder and group
+- name: ItemBiblioteca
+  belongs_to: SubAba
+  references: Canal
+  note: max 40 per group
+- name: Favorito
+  belongs_to: Guest
+  references: Canal
+- name: Comentario
+  belongs_to: Canal
+  note: authored by a guest; 20/hour cap
+- name: MensagemChat
+  belongs_to: Canal
+  note: per-channel chat room; writing requires the monthly chat pass
+- name: Relato
+  belongs_to: Canal
+  note: play report (ok or failure code + environment); feeds channel health
+- name: Consentimento
+  belongs_to: Guest
+  note: NSFW 18+ consent record with terms version
+- name: Passe
+  belongs_to: Guest
+  note: 30-day chat or NSFW pass bought via x402
+relationships:
+- Canal has_many Stream, Comentario, MensagemChat, Relato via channel id
+- Guest has_one Biblioteca; has_many Chave, Favorito, historico entries
+- Conta claims Guest via auth_verify (Reivindicacao)
+- PaginaDe* schemas are offset-paginated envelopes (items + total + next_offset)

@@ -1,0 +1,95 @@
+generated: '2026-09-05'
+method: derived
+source: openapi/gradetv-openapi.json + https://gradetv.net/llms.txt
+authentication:
+  style: bearer token, three tiers
+  detail: >-
+    One bearerAuth scheme carries three credential kinds: an anonymous guest
+    token (ipt_..., minted free at POST /api/guest — it IS the identity that
+    owns the library, favorites and history), an API key (iptk_..., minted once
+    via POST /api/keys, shown in full exactly once), and an operator/admin token
+    for the catalog-reload and metrics family. Email login (POST /api/auth/start
+    + /api/auth/verify) binds a guest to an account session; verify returns the
+    account's OLD guest (adopt:true) — use that one, it holds the library.
+  cross_link: authentication/gradetv-authentication.yml
+pagination:
+  style: offset
+  params: [limit, offset]
+  response_fields: [next_offset, total]
+  detail: >-
+    GET /api/channels pages with limit/offset; limit above 50 is silently
+    clamped to 50, and the response returns next_offset to continue plus
+    facets.categories[] for the current search.
+versioning:
+  scheme: none-published
+  detail: >-
+    No versioned path or version header. The OpenAPI info.version is a build
+    hash (dbad45cb). No deprecation policy page; the one retired surface
+    (GET /api/m/{ticket}, the video pass-through) permanently answers 410.
+error_envelope:
+  format: custom JSON envelope with a machine code field
+  detail: >-
+    Not RFC 9457. Errors return a plain JSON body with a code (e.g.
+    nsfw_consent_required, recarga_divergente) and, on 409 catalog-reload
+    conflicts, a problemas[] list. 404 is also used for resources you do not
+    own (deleting another owner's comment returns 404, not 403).
+  cross_link: errors/gradetv-problem-types.yml
+payment_signaling:
+  style: x402
+  detail: >-
+    Paid routes (chat write pass, NSFW pass, agent contact, prepaid credit)
+    answer 402 with an x402 accepts[] array (USDC on Base, chain 8453,
+    facilitator facilitator.payai.network); pay and repeat the same call with
+    an X-PAYMENT header. GET /api/billing publishes live prices, library caps
+    and the full x402 configuration. Humans pass Turnstile on POST /api/contact
+    instead of paying.
+  cross_link: plans/gradetv-plans-pricing.yml
+rate_limit_signaling:
+  detail: >-
+    429 on comment posting (20/hour per owner), auth code requests and
+    verification attempts; POST /api/contact documents an agent backoff with a
+    Retry-After header. No X-RateLimit-* headers are declared in the spec.
+  cross_link: rate-limits/gradetv-rate-limits.yml
+request_tracing:
+  detail: no request-id header documented.
+idempotency:
+  coverage: partial
+  scope: [add_favorite]
+  header: null
+  detail: >-
+    No Idempotency-Key mechanism exists. One write is documented as naturally
+    idempotent: POST /api/favorites ("repeating does not add — the public
+    counter counts people, not clicks"). POST /api/history is explicitly NOT
+    idempotent (repeats sum into plays). The admin catalog-reload family uses
+    INSERT OR REPLACE batches with an all-or-nothing swap, which is replay-safe
+    by construction but operator-only.
+reversibility:
+  grade: documented
+  detail: >-
+    Most write surfaces have a reversal operation, but no time windows are
+    stated anywhere in the docs, so the grade is documented, not verified.
+  writes:
+  - action: favorite a channel (add_favorite)
+    reversal: remove_favorite
+    window: not stated
+  - action: record a watch (record_watch)
+    reversal: forget_watch (single channel) / clear_history (all)
+    window: not stated
+  - action: post a comment (post_comment)
+    reversal: delete_comment (own comments only; others' return 404)
+    window: not stated
+  - action: accept NSFW terms (nsfw_consent_accept)
+    reversal: nsfw_consent_revoke (gate closes immediately)
+    window: not stated
+  - action: mint an API key (mint_key / post_api_keys)
+    reversal: delete_api_keys_by_id (row remains listed, marked revoked)
+    window: not stated
+  - action: create category/group/item (create_category, create_group, add_item)
+    reversal: delete_api_categories_by_id / delete_api_groups_by_id / delete_api_items_by_id
+    window: not stated
+  - action: open a session (auth_verify)
+    reversal: post_api_auth_logout (row is deleted, not flagged)
+    window: not stated
+  - action: buy chat pass / NSFW pass (chat_pass, nsfw_pass_buy)
+    reversal: none — a paid 30-day pass is not refundable via the API
+    window: n/a

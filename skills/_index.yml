@@ -1,0 +1,21 @@
+generated: '2026-09-05'
+method: generated
+note: >-
+  Generated from the OpenAPI + llms.txt; every operation listed exists verbatim
+  in openapi/gradetv-openapi.json. The provider references a first-party skill
+  (.agents/skills/iptv/SKILL.md) in its llms.txt but does not serve it publicly
+  (https://gradetv.net/.agents/skills/iptv/SKILL.md returns 404), so these are
+  API Evangelist-authored.
+skills:
+- file: gradetv-find-and-check-channel.md
+  name: Find a live TV or radio channel and check it actually plays
+  api: openapi/gradetv-openapi.json
+  operations: [search_channels, get_channel, channel_health, get_channel_guide, report_play]
+- file: gradetv-build-library-and-feeds.md
+  name: Build a personal library and export it as M3U feeds
+  api: openapi/gradetv-openapi.json
+  operations: [create_guest, mint_key, create_category, create_group, add_item, get_library]
+- file: gradetv-paid-actions-x402.md
+  name: Pay for chat, NSFW or producer contact with x402
+  api: openapi/gradetv-openapi.json
+  operations: [billing, chat_pass, chat_send, nsfw_pass_buy, contact]

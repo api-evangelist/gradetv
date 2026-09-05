@@ -1,0 +1,79 @@
+generated: '2026-09-05'
+method: searched
+status: published
+source: https://gradetv.net/mcp
+deployment:
+  mode: remote
+  endpoint: https://gradetv.net/mcp
+  auth: none
+  verified: probed
+server:
+  name: Grade
+  version: dbad45cb
+  transport: streamable-http
+  protocol_version: '2024-11-05'
+  url: https://gradetv.net/mcp
+  registry_auth: well-known/gradetv-mcp-registry-auth.txt
+tools_count: 46
+tools_file: gradetv-mcp-tools.json
+note: >-
+  First-party hosted MCP server on the same host as the REST API. GET /mcp
+  returns a server card (transport, protocol version, tool count); an anonymous
+  POST tools/list returned all 46 tools with full inputSchemas, saved verbatim
+  to mcp/gradetv-mcp-tools.json. Every tool is a thin proxy over the REST API —
+  the provider's llms.txt states "operationId = nome da tool MCP", and all 46
+  tool names match OpenAPI operationIds exactly (see the tool crosswalk).
+  Credentials (X-Guest-Token, Authorization, X-PAYMENT for x402) are passed
+  through as headers; the server itself requires no auth to list tools.
+x-evidence:
+  fetched: '2026-09-05'
+  url: https://gradetv.net/mcp
+  http_status: 200
+  method_probe: tools/list
+tools:
+- name: api_index
+- name: health
+- name: geo
+- name: list_countries
+- name: list_tags
+- name: search_channels
+- name: list_languages
+- name: list_networks
+- name: list_qualities
+- name: list_subdivisions
+- name: list_cities
+- name: get_channel
+- name: get_channel_guide
+- name: create_guest
+- name: mint_key
+- name: get_library
+- name: create_category
+- name: create_group
+- name: add_item
+- name: get_history
+- name: record_watch
+- name: forget_watch
+- name: clear_history
+- name: producer_services
+- name: nsfw_consent_status
+- name: nsfw_consent_accept
+- name: nsfw_pass_buy
+- name: nsfw_pass_status
+- name: nsfw_consent_revoke
+- name: report_play
+- name: play_reports
+- name: channel_health
+- name: list_favorites
+- name: add_favorite
+- name: remove_favorite
+- name: list_comments
+- name: post_comment
+- name: delete_comment
+- name: chat_history
+- name: chat_send
+- name: chat_pass
+- name: auth_start
+- name: auth_verify
+- name: me
+- name: billing
+- name: contact

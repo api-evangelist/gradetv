@@ -1,0 +1,56 @@
+generated: '2026-09-05'
+method: searched
+source: probed against https://gradetv.net on 2026-09-05
+standards:
+- id: rfc9727-api-catalog
+  conforms: true
+  evidence: >-
+    https://gradetv.net/.well-known/api-catalog returns 200 with content type
+    application/linkset+json; profile="https://www.rfc-editor.org/info/rfc9727";
+    the linkset anchors the REST API and MCP server with service-desc and
+    service-doc links (saved: well-known/gradetv-api-catalog.json).
+- id: rfc9116-security-txt
+  conforms: true
+  evidence: >-
+    https://gradetv.net/.well-known/security.txt returns 200 with Contact,
+    Expires, Preferred-Languages and Canonical fields (saved:
+    well-known/gradetv-security.txt).
+- id: apis-json
+  conforms: true
+  evidence: >-
+    https://gradetv.net/apis.json (and /.well-known/apis.json) serves a valid
+    APIs.json, specificationVersion 0.19, declaring the API's OpenAPI, MCP,
+    llms.txt, api-catalog and OKF bundle (saved: well-known/gradetv-apis-json.json).
+- id: openapi-3.1
+  conforms: true
+  evidence: >-
+    https://gradetv.net/openapi.json is OpenAPI 3.1.0 with 71 paths / 83
+    operations, all with unique operationIds (saved: openapi/gradetv-openapi.json).
+- id: mcp-streamable-http
+  conforms: true
+  evidence: >-
+    https://gradetv.net/mcp speaks MCP over Streamable HTTP (JSON-RPC 2.0,
+    protocol_version 2024-11-05); anonymous tools/list returned 46 tools with
+    inputSchemas. An MCP registry signing key is published at
+    /.well-known/mcp-registry-auth.
+- id: x402
+  conforms: true
+  evidence: >-
+    Paid routes answer 402 with an x402 accepts[] body; GET /api/billing
+    publishes the live x402 configuration (USDC on Base, chain 8453,
+    facilitator https://facilitator.payai.network, pay_to address). Retry the
+    same call with an X-PAYMENT header after paying.
+- id: llms-txt
+  conforms: true
+  evidence: >-
+    https://gradetv.net/llms.txt (and llms-full.txt) follow the llms.txt format
+    (saved: llms/gradetv-llms.txt).
+- id: rfc9457-problem-details
+  conforms: false
+  evidence: errors use a custom JSON envelope with a machine code field, not application/problem+json.
+- id: oauth2
+  conforms: false
+  evidence: no oauth2 security scheme; bearer tokens (guest ipt_/key iptk_) only.
+- id: openid-connect
+  conforms: false
+  evidence: /.well-known/openid-configuration returns 404.

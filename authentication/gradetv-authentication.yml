@@ -1,0 +1,13 @@
+generated: '2026-09-05'
+method: derived
+source: openapi/gradetv-openapi.json
+summary:
+  types:
+  - http
+schemes:
+- name: bearerAuth
+  type: http
+  scheme: bearer
+  description: ipt_… (guest) ou iptk_… (API key)
+  sources:
+  - openapi/gradetv-openapi.json

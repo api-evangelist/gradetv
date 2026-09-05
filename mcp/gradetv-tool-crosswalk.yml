@@ -1,0 +1,352 @@
+generated: '2026-09-05'
+method: derived
+source: mcp/gradetv-mcp-tools.json + openapi/gradetv-openapi.json
+note: 'The provider''s llms.txt states the MCP tool name IS the OpenAPI operationId (''operationId = nome
+  da tool MCP'') and the live tools/list confirmed it: all 46 tool names match operationIds exactly, so
+  every binding is 1:1 at high confidence. The 37 REST-only operations are the surfaces MCP deliberately
+  omits: feed/asset delivery (M3U/XSPF feeds, logos, the stream hop), key management, category/group/item
+  mutation detail routes, the WebSocket chat path, operator metrics, the prepaid credit endpoints, and
+  the token-gated admin catalog reload family.'
+surfaces:
+  openapi:
+    file: openapi/gradetv-openapi.json
+    gated: false
+  mcp:
+    url: https://gradetv.net/mcp
+    transport: streamable-http
+    gated: false
+    note: anonymous tools/list returns full inputSchemas
+coverage:
+  tools_named: 46
+  tools_bound: 46
+  mcp_only: 0
+  rest_operations_total: 83
+  rest_operations_with_tool: 46
+crosswalk:
+- tool: api_index
+  category: discovery
+  rest:
+  - api_index
+  binding: rest
+  confidence: high
+- tool: health
+  category: catalog
+  rest:
+  - health
+  binding: rest
+  confidence: high
+- tool: geo
+  category: catalog
+  rest:
+  - geo
+  binding: rest
+  confidence: high
+- tool: list_countries
+  category: catalog
+  rest:
+  - list_countries
+  binding: rest
+  confidence: high
+- tool: list_tags
+  category: catalog
+  rest:
+  - list_tags
+  binding: rest
+  confidence: high
+- tool: search_channels
+  category: catalog
+  rest:
+  - search_channels
+  binding: rest
+  confidence: high
+- tool: list_languages
+  category: catalog
+  rest:
+  - list_languages
+  binding: rest
+  confidence: high
+- tool: list_networks
+  category: catalog
+  rest:
+  - list_networks
+  binding: rest
+  confidence: high
+- tool: list_qualities
+  category: catalog
+  rest:
+  - list_qualities
+  binding: rest
+  confidence: high
+- tool: list_subdivisions
+  category: catalog
+  rest:
+  - list_subdivisions
+  binding: rest
+  confidence: high
+- tool: list_cities
+  category: catalog
+  rest:
+  - list_cities
+  binding: rest
+  confidence: high
+- tool: get_channel
+  category: catalog
+  rest:
+  - get_channel
+  binding: rest
+  confidence: high
+- tool: get_channel_guide
+  category: catalog
+  rest:
+  - get_channel_guide
+  binding: rest
+  confidence: high
+- tool: create_guest
+  category: identity
+  rest:
+  - create_guest
+  binding: rest
+  confidence: high
+- tool: mint_key
+  category: identity
+  rest:
+  - mint_key
+  binding: rest
+  confidence: high
+- tool: get_library
+  category: library
+  rest:
+  - get_library
+  binding: rest
+  confidence: high
+- tool: create_category
+  category: library
+  rest:
+  - create_category
+  binding: rest
+  confidence: high
+- tool: create_group
+  category: library
+  rest:
+  - create_group
+  binding: rest
+  confidence: high
+- tool: add_item
+  category: library
+  rest:
+  - add_item
+  binding: rest
+  confidence: high
+- tool: get_history
+  category: library
+  rest:
+  - get_history
+  binding: rest
+  confidence: high
+- tool: record_watch
+  category: library
+  rest:
+  - record_watch
+  binding: rest
+  confidence: high
+- tool: forget_watch
+  category: library
+  rest:
+  - forget_watch
+  binding: rest
+  confidence: high
+- tool: clear_history
+  category: library
+  rest:
+  - clear_history
+  binding: rest
+  confidence: high
+- tool: producer_services
+  category: discovery
+  rest:
+  - producer_services
+  binding: rest
+  confidence: high
+- tool: nsfw_consent_status
+  category: commerce
+  rest:
+  - nsfw_consent_status
+  binding: rest
+  confidence: high
+- tool: nsfw_consent_accept
+  category: commerce
+  rest:
+  - nsfw_consent_accept
+  binding: rest
+  confidence: high
+- tool: nsfw_pass_buy
+  category: commerce
+  rest:
+  - nsfw_pass_buy
+  binding: rest
+  confidence: high
+- tool: nsfw_pass_status
+  category: commerce
+  rest:
+  - nsfw_pass_status
+  binding: rest
+  confidence: high
+- tool: nsfw_consent_revoke
+  category: commerce
+  rest:
+  - nsfw_consent_revoke
+  binding: rest
+  confidence: high
+- tool: report_play
+  category: catalog
+  rest:
+  - report_play
+  binding: rest
+  confidence: high
+- tool: play_reports
+  category: catalog
+  rest:
+  - play_reports
+  binding: rest
+  confidence: high
+- tool: channel_health
+  category: catalog
+  rest:
+  - channel_health
+  binding: rest
+  confidence: high
+- tool: list_favorites
+  category: library
+  rest:
+  - list_favorites
+  binding: rest
+  confidence: high
+- tool: add_favorite
+  category: library
+  rest:
+  - add_favorite
+  binding: rest
+  confidence: high
+- tool: remove_favorite
+  category: library
+  rest:
+  - remove_favorite
+  binding: rest
+  confidence: high
+- tool: list_comments
+  category: community
+  rest:
+  - list_comments
+  binding: rest
+  confidence: high
+- tool: post_comment
+  category: community
+  rest:
+  - post_comment
+  binding: rest
+  confidence: high
+- tool: delete_comment
+  category: community
+  rest:
+  - delete_comment
+  binding: rest
+  confidence: high
+- tool: chat_history
+  category: community
+  rest:
+  - chat_history
+  binding: rest
+  confidence: high
+- tool: chat_send
+  category: community
+  rest:
+  - chat_send
+  binding: rest
+  confidence: high
+- tool: chat_pass
+  category: commerce
+  rest:
+  - chat_pass
+  binding: rest
+  confidence: high
+- tool: auth_start
+  category: identity
+  rest:
+  - auth_start
+  binding: rest
+  confidence: high
+- tool: auth_verify
+  category: identity
+  rest:
+  - auth_verify
+  binding: rest
+  confidence: high
+- tool: me
+  category: identity
+  rest:
+  - me
+  binding: rest
+  confidence: high
+- tool: billing
+  category: commerce
+  rest:
+  - billing
+  binding: rest
+  confidence: high
+- tool: contact
+  category: commerce
+  rest:
+  - contact
+  binding: rest
+  confidence: high
+mcp_only: []
+rest_only:
+- capability: admin
+  operations:
+  - get_api_admin_catalogo_estado
+  - get_api_admin_catalogo_slugs
+  - get_api_admin_logos_mortas
+  - post_api_admin_catalogo_delta
+  - post_api_admin_catalogo_delta_fim
+  - post_api_admin_catalogo_delta_inicio
+  - post_api_admin_catalogo_inicio
+  - post_api_admin_catalogo_lote
+  - post_api_admin_catalogo_troca
+  - post_api_admin_guia_fim
+  - post_api_admin_guia_lote
+  - post_api_admin_logos_overrides
+- capability: commerce
+  operations:
+  - get_api_credito
+  - post_api_credito
+- capability: community
+  operations:
+  - get_api_chat_by_channel_id_ws
+- capability: discovery
+  operations:
+  - delete_api_categories_by_id
+  - delete_api_keys_by_id
+  - get_api_categories
+  - get_api_keys
+  - get_api_m_by_ticket
+  - get_api_metrics
+  - get_api_s_by_id
+  - get_apis_json
+  - get_f_by_token_c_by_categoria_formato
+  - get_f_by_token_c_by_categoria_g_by_grupo_formato
+  - get_logos_by_id
+  - get_okf_by_arquivo
+  - get_well_known_by_arquivo
+  - patch_api_categories_by_id
+  - post_api_visit
+  - post_mcp
+- capability: identity
+  operations:
+  - post_api_auth_claim
+  - post_api_auth_logout
+- capability: library
+  operations:
+  - delete_api_groups_by_id
+  - delete_api_items_by_id
+  - get_f_by_token_library_formato
+  - post_api_items_by_id_play

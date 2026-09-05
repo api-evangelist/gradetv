@@ -1,0 +1,45 @@
+generated: '2026-09-05'
+method: probed
+source: https://gradetv.net/api/billing
+plan_count: 4
+note: >-
+  Pricing is machine-readable at GET /api/billing (live x402 configuration:
+  provider x402, network Base chain 8453, asset USDC, facilitator
+  facilitator.payai.network) and summarized in the llms.txt "Cota" section.
+  The core catalog and personal library are free with no quota; three
+  micro-purchases are sold per-feature via x402, and a prepaid credit token
+  (POST /api/credito) can cover any paid call. No enterprise tiers, no
+  contact-sales gate.
+plans:
+- name: Free
+  price: 0
+  currency: USD
+  billing_period: none
+  included: >-
+    catalog search + facets (GET /api/channels), channel detail/guide/health,
+    personal library with M3U/JSON/XSPF feeds, favorites, history, reading
+    chat/comments/health — all without quota per guest.
+  limits:
+    categories: 8
+    groups_per_category: 12
+    items_per_group: 40
+- name: Chat pass
+  price: 0.10
+  currency: USDC
+  billing_period: 30 days
+  included: writing in per-channel chat rooms (POST /api/chat/{channel_id}/mensagens)
+  purchase: POST /api/chat/pass via x402
+- name: NSFW pass
+  price: 0.10
+  currency: USDC
+  billing_period: 30 days
+  included: adult content access (on top of a recorded 18+ consent)
+  purchase: POST /api/nsfw/pass via x402
+- name: Agent contact
+  price: 0.10
+  currency: USDC
+  billing_period: per submission
+  included: >-
+    POST /api/contact for agents (humans pass Turnstile instead of paying);
+    also payable from prepaid credit.
+  purchase: x402 on POST /api/contact, or prepaid credit via POST /api/credito

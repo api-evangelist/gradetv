@@ -1,0 +1,127 @@
+# Grade
+
+Diretório de transmissões públicas (fonte iptv-org) e galeria pessoal com URL estável por pasta.
+Não armazena nem retransmite vídeo. O M3U e a API apontam para GET /api/s/:id (conta o play uma vez por pessoa, canal e dia, e devolve a playlist da origem com URI absoluta); os segmentos vêm da origem, no browser e no VLC.
+Produtores: https://gradetv.net/produtores e GET https://gradetv.net/api/producers — transmissão autorizada sob consulta. Informações e contato, sem ativação. Envie o projeto para contato@gradetv.net ou POST /api/contact (Turnstile humano; x402/crédito para agente).
+Páginas HTML (sem JS): https://gradetv.net/brasil · https://gradetv.net/como-usar · https://gradetv.net/sobre. Mesmas páginas em en/es/fr/de: https://gradetv.net/en · https://gradetv.net/en/brazil · https://gradetv.net/en/how-to · https://gradetv.net/en/about. Não há uma página por canal — isso seria despejo de dataset de terceiro.
+Catálogo em dados: https://gradetv.net/api/channels?country=BR&language=por&playable=1 (filtros: q, category, network, quality, nsfw; facets.categories[{id,name,count,icon}] + total). Sitemap: https://gradetv.net/sitemap.xml (home, guias, produtores e descoberta).
+Conteúdo adulto é fechado por padrão: nsfw=1 e a ficha de canal NSFW respondem 403 nsfw_consent_required até o dono declarar 18+ e aceitar os termos em POST /api/nsfw-consent.
+Catálogo comunitário: cada canal carrega `social` {plays, fails, favorites, comments, health, your_geo_ok, your_latency_ms} e https://gradetv.net/api/channels/:id/health abre a saúde por ambiente (navegador, sistema, país) e por PAÍS: regions[] + geo (geo-restrito vs. fora do ar, com países), latency[] (velocidade de abertura medida no hop /api/s/:id) e pra_voce — o veredito para o país de quem chama. É assim que se sabe se o canal está fora do ar, geo-bloqueado ou só lento para você. Relate o que aconteceu no seu player em POST /api/play-report; sem relato o catálogo não aprende.
+Comentário e chat por canal: GET/POST /api/channels/:id/comments e GET/POST /api/chat/:channel_id/mensagens (o WebSocket em /ws é o caminho ao vivo).
+Convidado ipt_… é a identidade. POST /api/auth/start + /api/auth/verify amarram esse convidado a um e-mail: de outro aparelho, o verify devolve o convidado ANTIGO (claimed.product.guest_token, adopt:true) — use esse, é o que tem a biblioteca.
+Docs: https://gradetv.net/api/ · https://gradetv.net/openapi.json · https://gradetv.net/llms-full.txt (referência completa)
+
+## Descoberta
+
+- GET https://gradetv.net/api/
+- GET https://gradetv.net/llms.txt
+- GET https://gradetv.net/openapi.json (`operationId` = nome da tool MCP)
+- POST https://gradetv.net/mcp — servidor MCP por HTTP; pluga direto, sem instalar
+- GET https://gradetv.net/llms-full.txt — referência completa: params, corpo, resposta campo a campo, erros
+
+## Endpoints principais
+
+- `GET /okf/:arquivo` — Bundle OKF (Open Knowledge Format v0.1): markdown com frontmatter para o agente ler o produto inteiro sem parsear HTML. (auth: none)
+- `GET /.well-known/:arquivo` — Descoberta de máquina antes da home: `api-catalog` (RFC 9727, linkset com a API e o MCP), `security.txt` (RFC 9116) e `mcp-registry-auth` (chave do registro oficial de MCP). (auth: none)
+- `GET /apis.json` — APIs.json (apisjson.org, 0.19): o índice que o APIs.io colhe — a API, o MCP, OpenAPI, guia e bundle OKF num arquivo só. Também em `/.well-known/apis.json`. (auth: none)
+- `POST /mcp` — Servidor MCP por HTTP (Streamable HTTP, JSON-RPC 2.0) — pluga no cliente sem instalar nada. (auth: none)
+- `GET /api/channels` — Busca paginada do catálogo público, com as facetas de categoria da busca atual. (auth: none)
+- `GET /api/channels/:id` — Ficha completa de um canal, com os streams já apontando para o nosso hop. (auth: none)
+- `GET /api/channels/:id/health` — Por que o canal falha, para quem e onde — inclui geo-bloqueio, latência por região e o veredito de quem está chamando. (auth: none)
+- `GET /api/channels/:id/guia` — Programação de hoje do canal, grabada por nós: o que está no ar agora e o que vem a seguir. (auth: none)
+- `GET /api/geo` — País e idioma sugeridos pela borda da Cloudflare para quem está chamando. (auth: none)
+- `GET /api/countries` — Países que têm canal tocável, com a contagem e a bandeira de cada um. (auth: none)
+- `GET /api/tags` — Tags das estações de rádio tocáveis (vocabulário livre do Radio Browser), com a contagem de cada uma. (auth: none)
+- `GET /api/categories` — Vocabulário de categorias do iptv-org, com ícone para a interface. (auth: none)
+- `GET /api/languages` — Idiomas que têm canal tocável, com a contagem de cada um. (auth: none)
+- `GET /api/networks` — Redes e emissoras que têm canal tocável, com a contagem. (auth: none)
+- `GET /api/qualities` — Qualidades distintas encontradas nos streams do catálogo (em rádio, codec e bitrate). (auth: none)
+- `GET /api/subdivisions` — Estados e províncias que têm canal tocável. (auth: none)
+- `GET /api/cities` — Cidades que têm canal tocável, filtráveis por país e por estado. (auth: none)
+- `GET /api/producers` — Oferta sob consulta para produtores com conteúdo autorizado e canais de contato. (auth: none)
+- `GET /logos/:id` — Logo do canal servido por nós, na variante de card (≤256px). (auth: none)
+- `GET /api/s/:id` — Hop do stream: conta o play (uma vez por pessoa, canal e dia) e devolve a playlist da origem com as URIs absolutas, ou 302 para ela. (auth: none)
+- `GET /api/m/:ticket` — Desligado: era o pass-through de vídeo. Responde 410 sempre. (auth: none)
+- `GET /f/:token/library.:formato` — Feed da biblioteca inteira do dono, no formato pedido pela extensão. (auth: none)
+- `GET /f/:token/c/:categoria.:formato` — Feed de uma pasta da biblioteca, para assinar só aquele recorte. (auth: none)
+- `GET /f/:token/c/:categoria/g/:grupo.:formato` — Feed de uma sub-aba — o recorte mais fino que a galeria oferece. (auth: none)
+- `POST /api/guest` — Cria um convidado `ipt_…` — é a identidade que guarda galeria, histórico e favoritos. (auth: none)
+- `POST /api/keys` — Cria uma API key `iptk_…` para o agente — o texto completo aparece uma vez só. (auth: guest)
+- `GET /api/keys` — Lista as chaves do dono, sempre mascaradas, inclusive as já revogadas. (auth: guest)
+- `DELETE /api/keys/:id` — Revoga uma chave. A linha continua na listagem, marcada como revogada. (auth: guest)
+- `GET /api/library` — A galeria inteira do dono: pastas, sub-abas, canais e as URLs de feed de cada nível. (auth: guest)
+- `POST /api/categories` — Cria uma pasta na galeria, já com a sub-aba Geral dentro dela. (auth: guest)
+- `PATCH /api/categories/:id` — Renomeia uma pasta. O slug do feed acompanha o nome novo. (auth: guest)
+- `DELETE /api/categories/:id` — Apaga a pasta e tudo que está dentro dela: sub-abas e canais. (auth: guest)
+- `POST /api/groups` — Cria uma sub-aba dentro de uma pasta. (auth: guest)
+- `DELETE /api/groups/:id` — Apaga uma sub-aba e os canais que estavam nela. (auth: guest)
+- `POST /api/items` — Põe um canal do catálogo numa sub-aba da galeria. (auth: guest)
+- `DELETE /api/items/:id` — Tira um canal da sub-aba. O canal continua no catálogo público, claro. (auth: guest)
+- `POST /api/items/:id/play` — Marca este canal como o último tocado da sub-aba — é o que devolve a pessoa onde parou. (auth: guest)
+- `GET /api/history` — Canais que o dono assistiu, do mais recente para o mais antigo. (auth: guest)
+- `POST /api/history` — Registra que o dono assistiu um canal. Repetir soma em `plays` e sobe a linha. (auth: guest)
+- `DELETE /api/history/:channel_id` — Tira um canal do histórico do dono. (auth: guest)
+- `DELETE /api/history` — Limpa o histórico inteiro do dono, de uma vez. (auth: guest)
+- `GET /api/nsfw-consent` — Estado do portão adulto do dono: se vale, qual versão dos termos e a idade mínima. (auth: guest)
+- `POST /api/nsfw-consent` — Declara a idade e aceita os termos de conteúdo adulto. (auth: guest)
+- `DELETE /api/nsfw-consent` — Revoga o consentimento; o portão adulto fecha de novo na hora. (auth: guest)
+- `POST /api/nsfw/pass` — Compra o passe de conteúdo adulto: $0.10 por 30 dias, via x402. (auth: guest)
+- `GET /api/nsfw/pass` — Situação do passe adulto do dono: se vale e até quando. (auth: guest)
+- `POST /api/play-report` — Relata se o canal tocou ou falhou — é o que alimenta a saúde pública do catálogo. (auth: guest)
+- `GET /api/play-reports` — Relatos crus, com endereço IP, para investigar um canal — só operador. (auth: token)
+- `GET /api/favorites` — Canais favoritados pelo dono, do mais recente para o mais antigo. (auth: guest)
+- `POST /api/favorites` — Favorita um canal. Repetir não soma: o contador público conta pessoas, não cliques. (auth: guest)
+- `DELETE /api/favorites/:channel_id` — Desfavorita o canal e devolve o ponto ao contador público. (auth: guest)
+- `GET /api/channels/:id/comments` — Comentários públicos de um canal, do mais novo para o mais antigo. (auth: none)
+- `POST /api/channels/:id/comments` — Escreve um comentário no canal. Teto de 20 por hora por dono. (auth: guest)
+- `DELETE /api/comments/:id` — Apaga um comentário seu. Comentário alheio responde 404, não 403. (auth: guest)
+- `GET /api/chat/:channel_id/mensagens` — Últimas mensagens da sala do canal, mais o endereço do WebSocket para acompanhar ao vivo. (auth: none)
+- `POST /api/chat/:channel_id/mensagens` — Manda mensagem na sala sem abrir WebSocket. Exige o passe mensal do chat. (auth: guest)
+- `POST /api/chat/pass` — Compra ou confirma o passe mensal do chat: $0.10 por 30 dias, via x402. (auth: guest)
+- `GET /api/chat/:channel_id/ws` — WebSocket da sala do canal — o caminho ao vivo, com presença. (auth: none)
+- `POST /api/auth/start` — Manda um código de 6 dígitos por e-mail para criar a conta ou entrar nela. (auth: none)
+- `POST /api/auth/verify` — Troca o código por uma sessão e devolve o convidado que a conta já tinha. (auth: none)
+- `POST /api/auth/claim` — Liga um convidado a uma sessão já aberta, sem passar pelo código de novo. (auth: none)
+- `POST /api/auth/logout` — Encerra a sessão. A linha some do banco, não fica marcada como inativa. (auth: none)
+- `GET /api/me` — A conta da sessão: e-mail, convidado principal e o tamanho da biblioteca. (auth: session)
+- `GET /api/billing` — Preços em vigor, tetos da galeria e a configuração x402 completa. (auth: none)
+- `POST /api/contact` — Contato e projetos de produtores: humano usa Turnstile; agente paga $0.10 por x402 ou crédito. (auth: none)
+- `GET /api/admin/catalogo/estado` — Contagens do catálogo no ar e do staging, mais o carimbo da última recarga. (auth: token)
+- `GET /api/admin/catalogo/slugs` — Slug publicado de cada canal, paginado por id — a recarga herda para não trocar URL indexada. (auth: token)
+- `POST /api/admin/catalogo/inicio` — Abre o staging da recarga: as tabelas `*_novo` nascem vazias e o que sobrou de execução interrompida cai. (auth: token)
+- `POST /api/admin/catalogo/lote` — Grava até 1000 linhas de UMA tabela no staging, num batch com no máximo 100 parâmetros por statement. (auth: token)
+- `POST /api/admin/guia/lote` — Grava o dia de programação de até 500 canais em `guia_dia` (INSERT OR REPLACE). (auth: token)
+- `POST /api/admin/guia/fim` — Registra a fonte `guia` em `catalog_meta.fontes`, ao lado das fontes do catálogo. (auth: token)
+- `GET /api/admin/logos/mortas` — Canais de TV cuja origem de logo morreu (o cron já falhou ao buscá-la) e ainda não têm override. (auth: token)
+- `POST /api/admin/logos/overrides` — Grava overrides de logo (`logo_overrides`, INSERT OR REPLACE): a ficha passa a usar a URL nova e o cron a espelha no R2. (auth: token)
+- `POST /api/admin/catalogo/troca` — Confere o staging e troca o catálogo inteiro num único batch: ou tudo entra, ou nada muda. (auth: token)
+- `POST /api/admin/catalogo/delta/inicio` — Abre a recarga por diferença: coleira contra o catálogo no ar e a marca da execução. (auth: token)
+- `POST /api/admin/catalogo/delta` — Aplica no catálogo vivo, num batch, até 1000 linhas de UMA tabela: `upsert` entra ou atualiza, `remover` apaga por chave. (auth: token)
+- `POST /api/admin/catalogo/delta/fim` — Confere o catálogo inteiro contra `esperado` e grava o carimbo (`synced_at`) — só se bateu. (auth: token)
+- `POST /api/credito` — Recarrega crédito pré-pago: paga uma vez com x402 e recebe o token que desconta em qualquer API da casa. (auth: none)
+- `GET /api/credito` — Saldo e extrato do crédito — as últimas movimentações, sem devolver o token. (auth: credito)
+
+## Cota
+
+- Grátis: catálogo, busca e facets (`GET /api/channels`) — sem cota.
+- Grátis: galeria pessoal, pastas e feeds M3U/JSON/XSPF — sem cota por convidado.
+- Grátis: ler chat, comentários e saúde de canal — sem cota.
+- Pago: escrever no chat (30 dias) — **$0.10** USDC via x402.
+- Pago: conteúdo adulto (30 dias, além do consentimento 18+) — **$0.10** USDC via x402.
+- Pago: contato de agente — **$0.10** USDC via x402.
+
+Rota paga responde **402** com `accepts[]` (x402, USDC na Base). Pague e repita a mesma chamada com `X-PAYMENT`.
+
+Números em vigor: https://gradetv.net/api/billing
+
+## MCP
+
+- **Endpoint:** `POST https://gradetv.net/mcp` — Streamable HTTP, JSON-RPC 2.0. Não precisa instalar nada.
+- Confira com `GET https://gradetv.net/mcp` (cartão do servidor) ou `tools/list`.
+- Cada tool é uma chamada nesta mesma API — o MCP não tem backend próprio.
+- Credencial (`X-Guest-Token`, `Authorization`, `X-PAYMENT`) vai no header e é repassada.
+
+## Skill
+
+- `.agents/skills/iptv/SKILL.md` — paridade com esta superfície.
+- **Paridade:** mexeu na UI/API → apidocs + skill + este arquivo no mesmo PR.
