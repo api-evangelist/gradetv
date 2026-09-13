@@ -7,6 +7,11 @@ deployment:
   endpoint: https://gradetv.net/mcp
   auth: none
   verified: probed
+  probe_prior: (never probed)
+  probe: live
+  probe_why: live
+  checked: '2026-09-11'
+  source: claimed-backlog re-probe 2026-09-11
 server:
   name: Grade
   version: dbad45cb
@@ -16,14 +21,11 @@ server:
   registry_auth: well-known/gradetv-mcp-registry-auth.txt
 tools_count: 46
 tools_file: gradetv-mcp-tools.json
-note: >-
-  First-party hosted MCP server on the same host as the REST API. GET /mcp
-  returns a server card (transport, protocol version, tool count); an anonymous
-  POST tools/list returned all 46 tools with full inputSchemas, saved verbatim
-  to mcp/gradetv-mcp-tools.json. Every tool is a thin proxy over the REST API —
-  the provider's llms.txt states "operationId = nome da tool MCP", and all 46
-  tool names match OpenAPI operationIds exactly (see the tool crosswalk).
-  Credentials (X-Guest-Token, Authorization, X-PAYMENT for x402) are passed
+note: First-party hosted MCP server on the same host as the REST API. GET /mcp returns a server card (transport,
+  protocol version, tool count); an anonymous POST tools/list returned all 46 tools with full inputSchemas,
+  saved verbatim to mcp/gradetv-mcp-tools.json. Every tool is a thin proxy over the REST API — the provider's
+  llms.txt states "operationId = nome da tool MCP", and all 46 tool names match OpenAPI operationIds exactly
+  (see the tool crosswalk). Credentials (X-Guest-Token, Authorization, X-PAYMENT for x402) are passed
   through as headers; the server itself requires no auth to list tools.
 x-evidence:
   fetched: '2026-09-05'
