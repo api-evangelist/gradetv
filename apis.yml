@@ -17,38 +17,857 @@ tags:
 - EPG
 - TV Guide
 - Content Aggregation
+- agent-native
+- MCP
+- x402
+- Micropayments
+- Brazil
+tags_raw:
+- IPTV
+- Streaming
+- Live TV
+- Live Radio
+- Media Catalog
+- Broadcast Metadata
+- EPG
+- TV Guide
+- Content Aggregation
 - Agent-native
 - MCP
 - x402
 - Micropayments
 - Brazil
 apis:
-- name: Grade API
-  description: REST API for the Grade IPTV catalog and personal library, with a public OpenAPI 3.1 contract, hosted
-    MCP server (46 tools), llms.txt agent documentation, and a well-known API catalog.
-  image: https://gradetv.net/icon.svg
+- aid: gradetv:gradetv-admin-api
+  name: Grade Admin API
+  description: The Admin API from Grade — 12 operation(s) for admin.
   humanURL: https://gradetv.net/api/
   baseURL: https://gradetv.net
   tags:
-  - IPTV
-  - Streaming
-  - Live TV
-  - Live Radio
-  - Media Catalog
-  - Broadcast Metadata
-  - EPG
-  - TV Guide
-  - Content Aggregation
-  - Agent-native
-  - MCP
-  - x402
-  - Micropayments
-  - Brazil
+  - Admin
   properties:
   - type: OpenAPI
-    url: https://gradetv.net/openapi.json
-  - type: MCPServer
-    url: https://gradetv.net/mcp
+    url: openapi/gradetv-admin-api-openapi.yml
+  - type: LLMsTxt
+    url: https://gradetv.net/llms.txt
+  - type: Documentation
+    url: https://gradetv.net/llms-full.txt
+  - type: Documentation
+    url: https://gradetv.net/okf/index.md
+  - type: Documentation
+    url: https://gradetv.net/.well-known/api-catalog
+  - type: APIReference
+    url: https://gradetv.net/llms-full.txt
+- aid: gradetv:gradetv-apis-json-api
+  name: Grade Apis.json API
+  description: The Apis.json API from Grade — 1 operation(s) for apis.json.
+  humanURL: https://gradetv.net/api/
+  baseURL: https://gradetv.net
+  tags:
+  - Apis.json
+  properties:
+  - type: OpenAPI
+    url: openapi/gradetv-apis-json-api-openapi.yml
+  - type: LLMsTxt
+    url: https://gradetv.net/llms.txt
+  - type: Documentation
+    url: https://gradetv.net/llms-full.txt
+  - type: Documentation
+    url: https://gradetv.net/okf/index.md
+  - type: Documentation
+    url: https://gradetv.net/.well-known/api-catalog
+  - type: APIReference
+    url: https://gradetv.net/llms-full.txt
+- aid: gradetv:gradetv-auth-api
+  name: Grade Auth API
+  description: The Auth API from Grade — 4 operation(s) for auth.
+  humanURL: https://gradetv.net/api/
+  baseURL: https://gradetv.net
+  tags:
+  - Auth
+  properties:
+  - type: OpenAPI
+    url: openapi/gradetv-auth-api-openapi.yml
+  - type: LLMsTxt
+    url: https://gradetv.net/llms.txt
+  - type: Documentation
+    url: https://gradetv.net/llms-full.txt
+  - type: Documentation
+    url: https://gradetv.net/okf/index.md
+  - type: Documentation
+    url: https://gradetv.net/.well-known/api-catalog
+  - type: APIReference
+    url: https://gradetv.net/llms-full.txt
+- aid: gradetv:gradetv-billing-api
+  name: Grade Billing API
+  description: The Billing API from Grade — 1 operation(s) for billing.
+  humanURL: https://gradetv.net/api/
+  baseURL: https://gradetv.net
+  tags:
+  - Billing
+  properties:
+  - type: OpenAPI
+    url: openapi/gradetv-billing-api-openapi.yml
+  - type: LLMsTxt
+    url: https://gradetv.net/llms.txt
+  - type: Documentation
+    url: https://gradetv.net/llms-full.txt
+  - type: Documentation
+    url: https://gradetv.net/okf/index.md
+  - type: Documentation
+    url: https://gradetv.net/.well-known/api-catalog
+  - type: APIReference
+    url: https://gradetv.net/llms-full.txt
+- aid: gradetv:gradetv-categories-api
+  name: Grade Categories API
+  description: The Categories API from Grade — 2 operation(s) for categories.
+  humanURL: https://gradetv.net/api/
+  baseURL: https://gradetv.net
+  tags:
+  - Categories
+  properties:
+  - type: OpenAPI
+    url: openapi/gradetv-categories-api-openapi.yml
+  - type: LLMsTxt
+    url: https://gradetv.net/llms.txt
+  - type: Documentation
+    url: https://gradetv.net/llms-full.txt
+  - type: Documentation
+    url: https://gradetv.net/okf/index.md
+  - type: Documentation
+    url: https://gradetv.net/.well-known/api-catalog
+  - type: APIReference
+    url: https://gradetv.net/llms-full.txt
+- aid: gradetv:gradetv-channels-api
+  name: Grade Channels API
+  description: The Channels API from Grade — 5 operation(s) for channels.
+  humanURL: https://gradetv.net/api/
+  baseURL: https://gradetv.net
+  tags:
+  - Channels
+  properties:
+  - type: OpenAPI
+    url: openapi/gradetv-channels-api-openapi.yml
+  - type: LLMsTxt
+    url: https://gradetv.net/llms.txt
+  - type: Documentation
+    url: https://gradetv.net/llms-full.txt
+  - type: Documentation
+    url: https://gradetv.net/okf/index.md
+  - type: Documentation
+    url: https://gradetv.net/.well-known/api-catalog
+  - type: APIReference
+    url: https://gradetv.net/llms-full.txt
+- aid: gradetv:gradetv-chat-api
+  name: Grade Chat API
+  description: The Chat API from Grade — 3 operation(s) for chat.
+  humanURL: https://gradetv.net/api/
+  baseURL: https://gradetv.net
+  tags:
+  - Chat
+  properties:
+  - type: OpenAPI
+    url: openapi/gradetv-chat-api-openapi.yml
+  - type: LLMsTxt
+    url: https://gradetv.net/llms.txt
+  - type: Documentation
+    url: https://gradetv.net/llms-full.txt
+  - type: Documentation
+    url: https://gradetv.net/okf/index.md
+  - type: Documentation
+    url: https://gradetv.net/.well-known/api-catalog
+  - type: APIReference
+    url: https://gradetv.net/llms-full.txt
+- aid: gradetv:gradetv-cities-api
+  name: Grade Cities API
+  description: The Cities API from Grade — 1 operation(s) for cities.
+  humanURL: https://gradetv.net/api/
+  baseURL: https://gradetv.net
+  tags:
+  - Cities
+  properties:
+  - type: OpenAPI
+    url: openapi/gradetv-cities-api-openapi.yml
+  - type: LLMsTxt
+    url: https://gradetv.net/llms.txt
+  - type: Documentation
+    url: https://gradetv.net/llms-full.txt
+  - type: Documentation
+    url: https://gradetv.net/okf/index.md
+  - type: Documentation
+    url: https://gradetv.net/.well-known/api-catalog
+  - type: APIReference
+    url: https://gradetv.net/llms-full.txt
+- aid: gradetv:gradetv-comments-api
+  name: Grade Comments API
+  description: The Comments API from Grade — 1 operation(s) for comments.
+  humanURL: https://gradetv.net/api/
+  baseURL: https://gradetv.net
+  tags:
+  - Comments
+  properties:
+  - type: OpenAPI
+    url: openapi/gradetv-comments-api-openapi.yml
+  - type: LLMsTxt
+    url: https://gradetv.net/llms.txt
+  - type: Documentation
+    url: https://gradetv.net/llms-full.txt
+  - type: Documentation
+    url: https://gradetv.net/okf/index.md
+  - type: Documentation
+    url: https://gradetv.net/.well-known/api-catalog
+  - type: APIReference
+    url: https://gradetv.net/llms-full.txt
+- aid: gradetv:gradetv-contact-api
+  name: Grade Contact API
+  description: The Contact API from Grade — 1 operation(s) for contact.
+  humanURL: https://gradetv.net/api/
+  baseURL: https://gradetv.net
+  tags:
+  - Contact
+  properties:
+  - type: OpenAPI
+    url: openapi/gradetv-contact-api-openapi.yml
+  - type: LLMsTxt
+    url: https://gradetv.net/llms.txt
+  - type: Documentation
+    url: https://gradetv.net/llms-full.txt
+  - type: Documentation
+    url: https://gradetv.net/okf/index.md
+  - type: Documentation
+    url: https://gradetv.net/.well-known/api-catalog
+  - type: APIReference
+    url: https://gradetv.net/llms-full.txt
+- aid: gradetv:gradetv-countries-api
+  name: Grade Countries API
+  description: The Countries API from Grade — 1 operation(s) for countries.
+  humanURL: https://gradetv.net/api/
+  baseURL: https://gradetv.net
+  tags:
+  - Countries
+  properties:
+  - type: OpenAPI
+    url: openapi/gradetv-countries-api-openapi.yml
+  - type: LLMsTxt
+    url: https://gradetv.net/llms.txt
+  - type: Documentation
+    url: https://gradetv.net/llms-full.txt
+  - type: Documentation
+    url: https://gradetv.net/okf/index.md
+  - type: Documentation
+    url: https://gradetv.net/.well-known/api-catalog
+  - type: APIReference
+    url: https://gradetv.net/llms-full.txt
+- aid: gradetv:gradetv-credito-api
+  name: Grade Credito API
+  description: The Credito API from Grade — 1 operation(s) for credito.
+  humanURL: https://gradetv.net/api/
+  baseURL: https://gradetv.net
+  tags:
+  - Credito
+  properties:
+  - type: OpenAPI
+    url: openapi/gradetv-credito-api-openapi.yml
+  - type: LLMsTxt
+    url: https://gradetv.net/llms.txt
+  - type: Documentation
+    url: https://gradetv.net/llms-full.txt
+  - type: Documentation
+    url: https://gradetv.net/okf/index.md
+  - type: Documentation
+    url: https://gradetv.net/.well-known/api-catalog
+  - type: APIReference
+    url: https://gradetv.net/llms-full.txt
+- aid: gradetv:gradetv-f-api
+  name: Grade F API
+  description: The F API from Grade — 3 operation(s) for f.
+  humanURL: https://gradetv.net/api/
+  baseURL: https://gradetv.net
+  tags:
+  - F
+  properties:
+  - type: OpenAPI
+    url: openapi/gradetv-f-api-openapi.yml
+  - type: LLMsTxt
+    url: https://gradetv.net/llms.txt
+  - type: Documentation
+    url: https://gradetv.net/llms-full.txt
+  - type: Documentation
+    url: https://gradetv.net/okf/index.md
+  - type: Documentation
+    url: https://gradetv.net/.well-known/api-catalog
+  - type: APIReference
+    url: https://gradetv.net/llms-full.txt
+- aid: gradetv:gradetv-favorites-api
+  name: Grade Favorites API
+  description: The Favorites API from Grade — 2 operation(s) for favorites.
+  humanURL: https://gradetv.net/api/
+  baseURL: https://gradetv.net
+  tags:
+  - Favorites
+  properties:
+  - type: OpenAPI
+    url: openapi/gradetv-favorites-api-openapi.yml
+  - type: LLMsTxt
+    url: https://gradetv.net/llms.txt
+  - type: Documentation
+    url: https://gradetv.net/llms-full.txt
+  - type: Documentation
+    url: https://gradetv.net/okf/index.md
+  - type: Documentation
+    url: https://gradetv.net/.well-known/api-catalog
+  - type: APIReference
+    url: https://gradetv.net/llms-full.txt
+- aid: gradetv:gradetv-geo-api
+  name: Grade Geo API
+  description: The Geo API from Grade — 1 operation(s) for geo.
+  humanURL: https://gradetv.net/api/
+  baseURL: https://gradetv.net
+  tags:
+  - Geo
+  properties:
+  - type: OpenAPI
+    url: openapi/gradetv-geo-api-openapi.yml
+  - type: LLMsTxt
+    url: https://gradetv.net/llms.txt
+  - type: Documentation
+    url: https://gradetv.net/llms-full.txt
+  - type: Documentation
+    url: https://gradetv.net/okf/index.md
+  - type: Documentation
+    url: https://gradetv.net/.well-known/api-catalog
+  - type: APIReference
+    url: https://gradetv.net/llms-full.txt
+- aid: gradetv:gradetv-grade-api
+  name: Grade Grade API
+  description: The Grade API from Grade — 1 operation(s) for grade.
+  humanURL: https://gradetv.net/api/
+  baseURL: https://gradetv.net
+  tags:
+  - Grade
+  properties:
+  - type: OpenAPI
+    url: openapi/gradetv-grade-api-openapi.yml
+  - type: LLMsTxt
+    url: https://gradetv.net/llms.txt
+  - type: Documentation
+    url: https://gradetv.net/llms-full.txt
+  - type: Documentation
+    url: https://gradetv.net/okf/index.md
+  - type: Documentation
+    url: https://gradetv.net/.well-known/api-catalog
+  - type: APIReference
+    url: https://gradetv.net/llms-full.txt
+- aid: gradetv:gradetv-groups-api
+  name: Grade Groups API
+  description: The Groups API from Grade — 2 operation(s) for groups.
+  humanURL: https://gradetv.net/api/
+  baseURL: https://gradetv.net
+  tags:
+  - Groups
+  properties:
+  - type: OpenAPI
+    url: openapi/gradetv-groups-api-openapi.yml
+  - type: LLMsTxt
+    url: https://gradetv.net/llms.txt
+  - type: Documentation
+    url: https://gradetv.net/llms-full.txt
+  - type: Documentation
+    url: https://gradetv.net/okf/index.md
+  - type: Documentation
+    url: https://gradetv.net/.well-known/api-catalog
+  - type: APIReference
+    url: https://gradetv.net/llms-full.txt
+- aid: gradetv:gradetv-guest-api
+  name: Grade Guest API
+  description: The Guest API from Grade — 1 operation(s) for guest.
+  humanURL: https://gradetv.net/api/
+  baseURL: https://gradetv.net
+  tags:
+  - Guest
+  properties:
+  - type: OpenAPI
+    url: openapi/gradetv-guest-api-openapi.yml
+  - type: LLMsTxt
+    url: https://gradetv.net/llms.txt
+  - type: Documentation
+    url: https://gradetv.net/llms-full.txt
+  - type: Documentation
+    url: https://gradetv.net/okf/index.md
+  - type: Documentation
+    url: https://gradetv.net/.well-known/api-catalog
+  - type: APIReference
+    url: https://gradetv.net/llms-full.txt
+- aid: gradetv:gradetv-health-api
+  name: Grade Health API
+  description: The Health API from Grade — 1 operation(s) for health.
+  humanURL: https://gradetv.net/api/
+  baseURL: https://gradetv.net
+  tags:
+  - Health
+  properties:
+  - type: OpenAPI
+    url: openapi/gradetv-health-api-openapi.yml
+  - type: LLMsTxt
+    url: https://gradetv.net/llms.txt
+  - type: Documentation
+    url: https://gradetv.net/llms-full.txt
+  - type: Documentation
+    url: https://gradetv.net/okf/index.md
+  - type: Documentation
+    url: https://gradetv.net/.well-known/api-catalog
+  - type: APIReference
+    url: https://gradetv.net/llms-full.txt
+- aid: gradetv:gradetv-history-api
+  name: Grade History API
+  description: The History API from Grade — 2 operation(s) for history.
+  humanURL: https://gradetv.net/api/
+  baseURL: https://gradetv.net
+  tags:
+  - History
+  properties:
+  - type: OpenAPI
+    url: openapi/gradetv-history-api-openapi.yml
+  - type: LLMsTxt
+    url: https://gradetv.net/llms.txt
+  - type: Documentation
+    url: https://gradetv.net/llms-full.txt
+  - type: Documentation
+    url: https://gradetv.net/okf/index.md
+  - type: Documentation
+    url: https://gradetv.net/.well-known/api-catalog
+  - type: APIReference
+    url: https://gradetv.net/llms-full.txt
+- aid: gradetv:gradetv-items-api
+  name: Grade Items API
+  description: The Items API from Grade — 3 operation(s) for items.
+  humanURL: https://gradetv.net/api/
+  baseURL: https://gradetv.net
+  tags:
+  - Items
+  properties:
+  - type: OpenAPI
+    url: openapi/gradetv-items-api-openapi.yml
+  - type: LLMsTxt
+    url: https://gradetv.net/llms.txt
+  - type: Documentation
+    url: https://gradetv.net/llms-full.txt
+  - type: Documentation
+    url: https://gradetv.net/okf/index.md
+  - type: Documentation
+    url: https://gradetv.net/.well-known/api-catalog
+  - type: APIReference
+    url: https://gradetv.net/llms-full.txt
+- aid: gradetv:gradetv-keys-api
+  name: Grade Keys API
+  description: The Keys API from Grade — 2 operation(s) for keys.
+  humanURL: https://gradetv.net/api/
+  baseURL: https://gradetv.net
+  tags:
+  - Keys
+  properties:
+  - type: OpenAPI
+    url: openapi/gradetv-keys-api-openapi.yml
+  - type: LLMsTxt
+    url: https://gradetv.net/llms.txt
+  - type: Documentation
+    url: https://gradetv.net/llms-full.txt
+  - type: Documentation
+    url: https://gradetv.net/okf/index.md
+  - type: Documentation
+    url: https://gradetv.net/.well-known/api-catalog
+  - type: APIReference
+    url: https://gradetv.net/llms-full.txt
+- aid: gradetv:gradetv-languages-api
+  name: Grade Languages API
+  description: The Languages API from Grade — 1 operation(s) for languages.
+  humanURL: https://gradetv.net/api/
+  baseURL: https://gradetv.net
+  tags:
+  - Languages
+  properties:
+  - type: OpenAPI
+    url: openapi/gradetv-languages-api-openapi.yml
+  - type: LLMsTxt
+    url: https://gradetv.net/llms.txt
+  - type: Documentation
+    url: https://gradetv.net/llms-full.txt
+  - type: Documentation
+    url: https://gradetv.net/okf/index.md
+  - type: Documentation
+    url: https://gradetv.net/.well-known/api-catalog
+  - type: APIReference
+    url: https://gradetv.net/llms-full.txt
+- aid: gradetv:gradetv-library-api
+  name: Grade Library API
+  description: The Library API from Grade — 1 operation(s) for library.
+  humanURL: https://gradetv.net/api/
+  baseURL: https://gradetv.net
+  tags:
+  - Library
+  properties:
+  - type: OpenAPI
+    url: openapi/gradetv-library-api-openapi.yml
+  - type: LLMsTxt
+    url: https://gradetv.net/llms.txt
+  - type: Documentation
+    url: https://gradetv.net/llms-full.txt
+  - type: Documentation
+    url: https://gradetv.net/okf/index.md
+  - type: Documentation
+    url: https://gradetv.net/.well-known/api-catalog
+  - type: APIReference
+    url: https://gradetv.net/llms-full.txt
+- aid: gradetv:gradetv-logos-api
+  name: Grade Logos API
+  description: The Logos API from Grade — 1 operation(s) for logos.
+  humanURL: https://gradetv.net/api/
+  baseURL: https://gradetv.net
+  tags:
+  - Logos
+  properties:
+  - type: OpenAPI
+    url: openapi/gradetv-logos-api-openapi.yml
+  - type: LLMsTxt
+    url: https://gradetv.net/llms.txt
+  - type: Documentation
+    url: https://gradetv.net/llms-full.txt
+  - type: Documentation
+    url: https://gradetv.net/okf/index.md
+  - type: Documentation
+    url: https://gradetv.net/.well-known/api-catalog
+  - type: APIReference
+    url: https://gradetv.net/llms-full.txt
+- aid: gradetv:gradetv-m-api
+  name: Grade M API
+  description: The M API from Grade — 1 operation(s) for m.
+  humanURL: https://gradetv.net/api/
+  baseURL: https://gradetv.net
+  tags:
+  - M
+  properties:
+  - type: OpenAPI
+    url: openapi/gradetv-m-api-openapi.yml
+  - type: LLMsTxt
+    url: https://gradetv.net/llms.txt
+  - type: Documentation
+    url: https://gradetv.net/llms-full.txt
+  - type: Documentation
+    url: https://gradetv.net/okf/index.md
+  - type: Documentation
+    url: https://gradetv.net/.well-known/api-catalog
+  - type: APIReference
+    url: https://gradetv.net/llms-full.txt
+- aid: gradetv:gradetv-mcp-api
+  name: Grade MCP API
+  description: The Mcp API from Grade — 1 operation(s) for mcp.
+  humanURL: https://gradetv.net/api/
+  baseURL: https://gradetv.net
+  tags:
+  - Mcp
+  properties:
+  - type: OpenAPI
+    url: openapi/gradetv-mcp-api-openapi.yml
+  - type: LLMsTxt
+    url: https://gradetv.net/llms.txt
+  - type: Documentation
+    url: https://gradetv.net/llms-full.txt
+  - type: Documentation
+    url: https://gradetv.net/okf/index.md
+  - type: Documentation
+    url: https://gradetv.net/.well-known/api-catalog
+  - type: APIReference
+    url: https://gradetv.net/llms-full.txt
+- aid: gradetv:gradetv-me-api
+  name: Grade Me API
+  description: The Me API from Grade — 1 operation(s) for me.
+  humanURL: https://gradetv.net/api/
+  baseURL: https://gradetv.net
+  tags:
+  - Me
+  properties:
+  - type: OpenAPI
+    url: openapi/gradetv-me-api-openapi.yml
+  - type: LLMsTxt
+    url: https://gradetv.net/llms.txt
+  - type: Documentation
+    url: https://gradetv.net/llms-full.txt
+  - type: Documentation
+    url: https://gradetv.net/okf/index.md
+  - type: Documentation
+    url: https://gradetv.net/.well-known/api-catalog
+  - type: APIReference
+    url: https://gradetv.net/llms-full.txt
+- aid: gradetv:gradetv-metrics-api
+  name: Grade Metrics API
+  description: The Metrics API from Grade — 1 operation(s) for metrics.
+  humanURL: https://gradetv.net/api/
+  baseURL: https://gradetv.net
+  tags:
+  - Metrics
+  properties:
+  - type: OpenAPI
+    url: openapi/gradetv-metrics-api-openapi.yml
+  - type: LLMsTxt
+    url: https://gradetv.net/llms.txt
+  - type: Documentation
+    url: https://gradetv.net/llms-full.txt
+  - type: Documentation
+    url: https://gradetv.net/okf/index.md
+  - type: Documentation
+    url: https://gradetv.net/.well-known/api-catalog
+  - type: APIReference
+    url: https://gradetv.net/llms-full.txt
+- aid: gradetv:gradetv-networks-api
+  name: Grade Networks API
+  description: The Networks API from Grade — 1 operation(s) for networks.
+  humanURL: https://gradetv.net/api/
+  baseURL: https://gradetv.net
+  tags:
+  - Networks
+  properties:
+  - type: OpenAPI
+    url: openapi/gradetv-networks-api-openapi.yml
+  - type: LLMsTxt
+    url: https://gradetv.net/llms.txt
+  - type: Documentation
+    url: https://gradetv.net/llms-full.txt
+  - type: Documentation
+    url: https://gradetv.net/okf/index.md
+  - type: Documentation
+    url: https://gradetv.net/.well-known/api-catalog
+  - type: APIReference
+    url: https://gradetv.net/llms-full.txt
+- aid: gradetv:gradetv-nsfw-api
+  name: Grade Nsfw API
+  description: The Nsfw API from Grade — 1 operation(s) for nsfw.
+  humanURL: https://gradetv.net/api/
+  baseURL: https://gradetv.net
+  tags:
+  - Nsfw
+  properties:
+  - type: OpenAPI
+    url: openapi/gradetv-nsfw-api-openapi.yml
+  - type: LLMsTxt
+    url: https://gradetv.net/llms.txt
+  - type: Documentation
+    url: https://gradetv.net/llms-full.txt
+  - type: Documentation
+    url: https://gradetv.net/okf/index.md
+  - type: Documentation
+    url: https://gradetv.net/.well-known/api-catalog
+  - type: APIReference
+    url: https://gradetv.net/llms-full.txt
+- aid: gradetv:gradetv-nsfw-consent-api
+  name: Grade Nsfw Consent API
+  description: The Nsfw Consent API from Grade — 1 operation(s) for nsfw consent.
+  humanURL: https://gradetv.net/api/
+  baseURL: https://gradetv.net
+  tags:
+  - Nsfw Consent
+  properties:
+  - type: OpenAPI
+    url: openapi/gradetv-nsfw-consent-api-openapi.yml
+  - type: LLMsTxt
+    url: https://gradetv.net/llms.txt
+  - type: Documentation
+    url: https://gradetv.net/llms-full.txt
+  - type: Documentation
+    url: https://gradetv.net/okf/index.md
+  - type: Documentation
+    url: https://gradetv.net/.well-known/api-catalog
+  - type: APIReference
+    url: https://gradetv.net/llms-full.txt
+- aid: gradetv:gradetv-okf-api
+  name: Grade Okf API
+  description: The Okf API from Grade — 1 operation(s) for okf.
+  humanURL: https://gradetv.net/api/
+  baseURL: https://gradetv.net
+  tags:
+  - Okf
+  properties:
+  - type: OpenAPI
+    url: openapi/gradetv-okf-api-openapi.yml
+  - type: LLMsTxt
+    url: https://gradetv.net/llms.txt
+  - type: Documentation
+    url: https://gradetv.net/llms-full.txt
+  - type: Documentation
+    url: https://gradetv.net/okf/index.md
+  - type: Documentation
+    url: https://gradetv.net/.well-known/api-catalog
+  - type: APIReference
+    url: https://gradetv.net/llms-full.txt
+- aid: gradetv:gradetv-play-report-api
+  name: Grade Play Report API
+  description: The Play Report API from Grade — 1 operation(s) for play report.
+  humanURL: https://gradetv.net/api/
+  baseURL: https://gradetv.net
+  tags:
+  - Play Report
+  properties:
+  - type: OpenAPI
+    url: openapi/gradetv-play-report-api-openapi.yml
+  - type: LLMsTxt
+    url: https://gradetv.net/llms.txt
+  - type: Documentation
+    url: https://gradetv.net/llms-full.txt
+  - type: Documentation
+    url: https://gradetv.net/okf/index.md
+  - type: Documentation
+    url: https://gradetv.net/.well-known/api-catalog
+  - type: APIReference
+    url: https://gradetv.net/llms-full.txt
+- aid: gradetv:gradetv-play-reports-api
+  name: Grade Play Reports API
+  description: The Play Reports API from Grade — 1 operation(s) for play reports.
+  humanURL: https://gradetv.net/api/
+  baseURL: https://gradetv.net
+  tags:
+  - Play Reports
+  properties:
+  - type: OpenAPI
+    url: openapi/gradetv-play-reports-api-openapi.yml
+  - type: LLMsTxt
+    url: https://gradetv.net/llms.txt
+  - type: Documentation
+    url: https://gradetv.net/llms-full.txt
+  - type: Documentation
+    url: https://gradetv.net/okf/index.md
+  - type: Documentation
+    url: https://gradetv.net/.well-known/api-catalog
+  - type: APIReference
+    url: https://gradetv.net/llms-full.txt
+- aid: gradetv:gradetv-producers-api
+  name: Grade Producers API
+  description: The Producers API from Grade — 1 operation(s) for producers.
+  humanURL: https://gradetv.net/api/
+  baseURL: https://gradetv.net
+  tags:
+  - Producers
+  properties:
+  - type: OpenAPI
+    url: openapi/gradetv-producers-api-openapi.yml
+  - type: LLMsTxt
+    url: https://gradetv.net/llms.txt
+  - type: Documentation
+    url: https://gradetv.net/llms-full.txt
+  - type: Documentation
+    url: https://gradetv.net/okf/index.md
+  - type: Documentation
+    url: https://gradetv.net/.well-known/api-catalog
+  - type: APIReference
+    url: https://gradetv.net/llms-full.txt
+- aid: gradetv:gradetv-qualities-api
+  name: Grade Qualities API
+  description: The Qualities API from Grade — 1 operation(s) for qualities.
+  humanURL: https://gradetv.net/api/
+  baseURL: https://gradetv.net
+  tags:
+  - Qualities
+  properties:
+  - type: OpenAPI
+    url: openapi/gradetv-qualities-api-openapi.yml
+  - type: LLMsTxt
+    url: https://gradetv.net/llms.txt
+  - type: Documentation
+    url: https://gradetv.net/llms-full.txt
+  - type: Documentation
+    url: https://gradetv.net/okf/index.md
+  - type: Documentation
+    url: https://gradetv.net/.well-known/api-catalog
+  - type: APIReference
+    url: https://gradetv.net/llms-full.txt
+- aid: gradetv:gradetv-s-api
+  name: Grade S API
+  description: The S API from Grade — 1 operation(s) for s.
+  humanURL: https://gradetv.net/api/
+  baseURL: https://gradetv.net
+  tags:
+  - S
+  properties:
+  - type: OpenAPI
+    url: openapi/gradetv-s-api-openapi.yml
+  - type: LLMsTxt
+    url: https://gradetv.net/llms.txt
+  - type: Documentation
+    url: https://gradetv.net/llms-full.txt
+  - type: Documentation
+    url: https://gradetv.net/okf/index.md
+  - type: Documentation
+    url: https://gradetv.net/.well-known/api-catalog
+  - type: APIReference
+    url: https://gradetv.net/llms-full.txt
+- aid: gradetv:gradetv-subdivisions-api
+  name: Grade Subdivisions API
+  description: The Subdivisions API from Grade — 1 operation(s) for subdivisions.
+  humanURL: https://gradetv.net/api/
+  baseURL: https://gradetv.net
+  tags:
+  - Subdivisions
+  properties:
+  - type: OpenAPI
+    url: openapi/gradetv-subdivisions-api-openapi.yml
+  - type: LLMsTxt
+    url: https://gradetv.net/llms.txt
+  - type: Documentation
+    url: https://gradetv.net/llms-full.txt
+  - type: Documentation
+    url: https://gradetv.net/okf/index.md
+  - type: Documentation
+    url: https://gradetv.net/.well-known/api-catalog
+  - type: APIReference
+    url: https://gradetv.net/llms-full.txt
+- aid: gradetv:gradetv-tags-api
+  name: Grade Tags API
+  description: The Tags API from Grade — 1 operation(s) for tags.
+  humanURL: https://gradetv.net/api/
+  baseURL: https://gradetv.net
+  tags:
+  - Tags
+  properties:
+  - type: OpenAPI
+    url: openapi/gradetv-tags-api-openapi.yml
+  - type: LLMsTxt
+    url: https://gradetv.net/llms.txt
+  - type: Documentation
+    url: https://gradetv.net/llms-full.txt
+  - type: Documentation
+    url: https://gradetv.net/okf/index.md
+  - type: Documentation
+    url: https://gradetv.net/.well-known/api-catalog
+  - type: APIReference
+    url: https://gradetv.net/llms-full.txt
+- aid: gradetv:gradetv-visit-api
+  name: Grade Visit API
+  description: The Visit API from Grade — 1 operation(s) for visit.
+  humanURL: https://gradetv.net/api/
+  baseURL: https://gradetv.net
+  tags:
+  - Visit
+  properties:
+  - type: OpenAPI
+    url: openapi/gradetv-visit-api-openapi.yml
+  - type: LLMsTxt
+    url: https://gradetv.net/llms.txt
+  - type: Documentation
+    url: https://gradetv.net/llms-full.txt
+  - type: Documentation
+    url: https://gradetv.net/okf/index.md
+  - type: Documentation
+    url: https://gradetv.net/.well-known/api-catalog
+  - type: APIReference
+    url: https://gradetv.net/llms-full.txt
+- aid: gradetv:gradetv-well-known-api
+  name: Grade .well Known API
+  description: The .well Known API from Grade — 1 operation(s) for .well known.
+  humanURL: https://gradetv.net/api/
+  baseURL: https://gradetv.net
+  tags:
+  - .well Known
+  properties:
+  - type: OpenAPI
+    url: openapi/gradetv-well-known-api-openapi.yml
   - type: LLMsTxt
     url: https://gradetv.net/llms.txt
   - type: Documentation
@@ -73,6 +892,8 @@ x-enrichment:
   artifacts_added: 26
   pass: local-v3
 common:
+- type: MCPServer
+  url: https://gradetv.net/mcp
 - type: Website
   url: https://gradetv.net
 - type: ToolCrosswalk
