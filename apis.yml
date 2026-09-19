@@ -64,6 +64,8 @@ apis:
   humanURL: https://gradetv.net/api/
   baseURL: https://gradetv.net
   tags:
+  - APIs.json
+  tags_raw:
   - Apis.json
   properties:
   - type: OpenAPI
@@ -84,6 +86,8 @@ apis:
   humanURL: https://gradetv.net/api/
   baseURL: https://gradetv.net
   tags:
+  - Authentication
+  tags_raw:
   - Auth
   properties:
   - type: OpenAPI
@@ -364,6 +368,8 @@ apis:
   humanURL: https://gradetv.net/api/
   baseURL: https://gradetv.net
   tags:
+  - Group
+  tags_raw:
   - Groups
   properties:
   - type: OpenAPI
@@ -444,6 +450,8 @@ apis:
   humanURL: https://gradetv.net/api/
   baseURL: https://gradetv.net
   tags:
+  - Item
+  tags_raw:
   - Items
   properties:
   - type: OpenAPI
@@ -484,6 +492,8 @@ apis:
   humanURL: https://gradetv.net/api/
   baseURL: https://gradetv.net
   tags:
+  - Language
+  tags_raw:
   - Languages
   properties:
   - type: OpenAPI
@@ -524,6 +534,8 @@ apis:
   humanURL: https://gradetv.net/api/
   baseURL: https://gradetv.net
   tags:
+  - Logo
+  tags_raw:
   - Logos
   properties:
   - type: OpenAPI
@@ -564,6 +576,8 @@ apis:
   humanURL: https://gradetv.net/api/
   baseURL: https://gradetv.net
   tags:
+  - MCP
+  tags_raw:
   - Mcp
   properties:
   - type: OpenAPI
