@@ -1,0 +1,125 @@
+openapi: 3.2.0
+info:
+  title: Grade Nsfw Consent API
+  version: dbad45cb
+  description: Catálogo IPTV, biblioteca pessoal com feeds e informações para produtores sobre transmissão autorizada sob consulta.
+servers:
+- url: https://gradetv.net
+tags:
+- name: Nsfw Consent
+paths:
+  /api/nsfw-consent:
+    get:
+      operationId: nsfw_consent_status
+      summary: 'Estado do portão adulto do dono: se vale, qual versão dos termos e a idade…'
+      description: 'Devolve: { consented, terms_version, min_age, confirmed_at?, accepted_version?, stale_version? }'
+      security:
+      - bearerAuth: []
+      responses:
+        '200':
+          description: '{ consented, terms_version, min_age, confirmed_at?, accepted_version?, stale_version? }'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Consentimento'
+        '401':
+          description: Sem credencial ou credencial inválida. Veja a auth deste endpoint.
+      tags:
+      - Nsfw Consent
+    post:
+      operationId: nsfw_consent_accept
+      summary: Declara a idade e aceita os termos de conteúdo adulto
+      description: 'Sem isto, `nsfw=1` na busca e a ficha de canal adulto respondem 403 `nsfw_consent_required`. Pagar o passe não substitui: são dois portões, idade primeiro.
+
+        Devolve: { consented, terms_version, min_age, confirmed_at?, accepted_version?, stale_version? }'
+      security:
+      - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                birth_date:
+                  type: string
+                  description: Data de nascimento, AAAA-MM-DD.
+                accept_terms:
+                  type: boolean
+                  description: Tem que ser `true` — aceite explícito.
+                terms_version:
+                  type: string
+                  description: Versão dos termos aceita; use a que veio no GET.
+              required:
+              - birth_date
+              - accept_terms
+              - terms_version
+            example:
+              birth_date: '1990-05-20'
+              accept_terms: true
+              terms_version: nsfw-2026-08-14
+      responses:
+        '200':
+          description: '{ consented, terms_version, min_age, confirmed_at?, accepted_version?, stale_version? }'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Consentimento'
+        '400':
+          description: '`underage`, `terms_required`, `birth_date` inválida ou `terms_outdated`.'
+        '401':
+          description: Sem credencial ou credencial inválida. Veja a auth deste endpoint.
+      tags:
+      - Nsfw Consent
+    delete:
+      operationId: nsfw_consent_revoke
+      summary: Revoga o consentimento; o portão adulto fecha de novo na hora
+      description: 'Tirar é tão fácil quanto dar — sem isso o portão viraria armadilha.
+
+        Devolve: { consented, terms_version, min_age, confirmed_at?, accepted_version?, stale_version? }'
+      security:
+      - bearerAuth: []
+      responses:
+        '200':
+          description: '{ consented, terms_version, min_age, confirmed_at?, accepted_version?, stale_version? }'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Consentimento'
+        '401':
+          description: Sem credencial ou credencial inválida. Veja a auth deste endpoint.
+      tags:
+      - Nsfw Consent
+components:
+  schemas:
+    Consentimento:
+      type: object
+      properties:
+        consented:
+          type: boolean
+          description: Se o consentimento vale agora, na versão corrente dos termos.
+        terms_version:
+          type: string
+          description: Versão dos termos em vigor hoje.
+        min_age:
+          type: integer
+          description: Idade mínima exigida.
+        confirmed_at:
+          type: string
+          description: Quando o dono aceitou; só aparece com consentimento válido.
+        accepted_version:
+          type: string
+          description: Versão que ele aceitou; só com consentimento válido.
+        stale_version:
+          type: string
+          description: Versão antiga aceita, quando os termos mudaram e ele precisa reaceitar.
+      required:
+      - consented
+      - terms_version
+      - min_age
+      description: Estado do portão adulto do dono. Sem consentimento válido, canal NSFW responde 403.
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      description: ipt_… (guest) ou iptk_… (API key)

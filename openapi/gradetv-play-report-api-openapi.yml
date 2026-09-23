@@ -1,0 +1,155 @@
+openapi: 3.2.0
+info:
+  title: Grade Play Report API
+  version: dbad45cb
+  description: Catálogo IPTV, biblioteca pessoal com feeds e informações para produtores sobre transmissão autorizada sob consulta.
+servers:
+- url: https://gradetv.net
+tags:
+- name: Play Report
+paths:
+  /api/play-report:
+    post:
+      operationId: report_play
+      summary: Relata se o canal tocou ou falhou — é o que alimenta a saúde pública do catálogo
+      description: 'Conta uma vez por dono, por canal, por dia e por resultado; relatar de novo devolve 200 com `reason: ja_relatado_hoje`, e não é erro. Navegador e sistema saem do User-Agent e o país da borda — mandar isso no corpo não muda nada. Sem relato, o catálogo não aprende: é assim que `GET /api/channels/:id/health` sabe distinguir canal fora do ar de canal bloqueado para você.
+
+        Devolve: { ok, counted, reason?, channel_id, stats{plays,fails,favorites,comments,last_fail_code,health,your_plays,your_fails,your_fail_code,your_country_ok,your_country_fail,your_geo_ok,your_latency_ms,your_latency_grade}, health }'
+      security:
+      - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                channel_id:
+                  type: string
+                  description: Canal que você tentou assistir.
+                ok:
+                  type: boolean
+                  description: '`true` se tocou, `false` se falhou.'
+                code:
+                  type: string
+                  description: Por que falhou; só quando `ok` é `false`.
+              required:
+              - channel_id
+              - ok
+            example:
+              channel_id: Globo.br
+              ok: false
+              code: cors
+      responses:
+        '200':
+          description: '{ ok, counted, reason?, channel_id, stats{plays,fails,favorites,comments,last_fail_code,health,your_plays,your_fails,your_fail_code,your_country_ok,your_country_fail,your_geo_ok,your_latency_ms,your_latency_grade}, health }'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok:
+                    type: boolean
+                    description: Sempre `true` — o relato foi aceito.
+                  counted:
+                    type: boolean
+                    description: '`false` quando você já tinha relatado o mesmo hoje.'
+                  reason:
+                    type: string
+                    description: Por que não contou; só aparece quando `counted` é `false`.
+                  channel_id:
+                    type: string
+                    description: O canal relatado.
+                  stats:
+                    allOf:
+                    - $ref: '#/components/schemas/Social'
+                    description: Os contadores do canal já com este relato dentro.
+                  health:
+                    type: string
+                    description: URL do painel de saúde completo deste canal.
+                required:
+                - ok
+                - counted
+                - channel_id
+                - stats
+                - health
+        '400':
+          description: '`channel_id` ausente, `ok` faltando ou `code` fora da lista.'
+        '401':
+          description: Sem credencial ou credencial inválida. Veja a auth deste endpoint.
+      tags:
+      - Play Report
+components:
+  schemas:
+    Social:
+      type: object
+      properties:
+        plays:
+          type: integer
+          description: Relatos de que o canal tocou.
+        fails:
+          type: integer
+          description: Relatos de que o canal falhou.
+        favorites:
+          type: integer
+          description: Quantas pessoas favoritaram — conta pessoas, não cliques.
+        comments:
+          type: integer
+          description: Comentários públicos no canal.
+        last_fail_code:
+          type: string
+          description: Código da falha mais recente relatada.
+          nullable: true
+        health:
+          type: integer
+          description: Percentual de sucesso; `null` enquanto houver menos de 3 relatos.
+          nullable: true
+        your_plays:
+          type: integer
+          description: Relatos de sucesso no SEU navegador, sistema e país.
+        your_fails:
+          type: integer
+          description: Relatos de falha no seu ambiente — é o que distingue 'fora do ar' de 'bloqueado para você'.
+        your_fail_code:
+          type: string
+          description: Código da última falha no seu ambiente.
+          nullable: true
+        your_country_ok:
+          type: integer
+          description: Relatos de sucesso no SEU país, sem quebrar por navegador/SO.
+        your_country_fail:
+          type: integer
+          description: Relatos de falha no seu país.
+        your_geo_ok:
+          type: boolean
+          description: '`false` = todas as tentativas relatadas no seu país falharam (suspeita de geo-bloqueio); `null` sem relato suficiente.'
+          nullable: true
+        your_latency_ms:
+          type: integer
+          description: Latência média da playlist medida no hop, na borda do seu país; `null` sem medição.
+          nullable: true
+        your_latency_grade:
+          type: string
+          description: '`otima`, `boa`, `lenta` ou `ruim`; `null` sem medição.'
+          nullable: true
+      required:
+      - plays
+      - fails
+      - favorites
+      - comments
+      - last_fail_code
+      - health
+      - your_plays
+      - your_fails
+      - your_fail_code
+      - your_country_ok
+      - your_country_fail
+      - your_geo_ok
+      - your_latency_ms
+      - your_latency_grade
+      description: Contadores da comunidade sobre um canal, incluindo o recorte do ambiente e do país de quem pediu.
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      description: ipt_… (guest) ou iptk_… (API key)

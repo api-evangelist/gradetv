@@ -1,0 +1,278 @@
+openapi: 3.2.0
+info:
+  title: Grade Auth API
+  version: dbad45cb
+  description: Catálogo IPTV, biblioteca pessoal com feeds e informações para produtores sobre transmissão autorizada sob consulta.
+servers:
+- url: https://gradetv.net
+tags:
+- name: Auth
+paths:
+  /api/auth/start:
+    post:
+      operationId: auth_start
+      summary: Manda um código de 6 dígitos por e-mail para criar a conta ou entrar nela
+      description: 'Devolve: { ok, sent, expires_in }'
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                  description: E-mail que vai receber o código.
+              required:
+              - email
+            example:
+              email: voce@exemplo.com
+      responses:
+        '200':
+          description: '{ ok, sent, expires_in }'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok:
+                    type: boolean
+                    description: Sempre `true` quando o envio foi aceito.
+                  sent:
+                    type: boolean
+                    description: Se o e-mail saiu de fato.
+                  expires_in:
+                    type: integer
+                    description: Segundos até o código expirar.
+                required:
+                - ok
+                - sent
+                - expires_in
+        '400':
+          description: E-mail ausente ou malformado.
+        '429':
+          description: Pedidos demais para o mesmo e-mail.
+      tags:
+      - Auth
+  /api/auth/verify:
+    post:
+      operationId: auth_verify
+      summary: Troca o código por uma sessão e devolve o convidado que a conta já tinha
+      description: 'O campo que importa é `claimed.product`: de outro aparelho, ele traz o convidado ANTIGO com `adopt: true`. É ESSE token que tem a biblioteca — o convidado local do aparelho novo está vazio. Ignorar isso é o jeito clássico de a pessoa ''perder'' a galeria ao entrar.
+
+        Devolve: { ok, user{id,email}, session_token, claimed{ok,product} }'
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                  description: O mesmo e-mail do `/api/auth/start`.
+                code:
+                  type: string
+                  description: Os 6 dígitos que chegaram por e-mail.
+                guest_token:
+                  type: string
+                  description: Convidado deste aparelho, para ser reivindicado pela conta.
+              required:
+              - email
+              - code
+            example:
+              email: voce@exemplo.com
+              code: '123456'
+              guest_token: ipt_…
+      responses:
+        '200':
+          description: '{ ok, user{id,email}, session_token, claimed{ok,product} }'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok:
+                    type: boolean
+                    description: Sempre `true` quando o código conferiu.
+                  user:
+                    allOf:
+                    - $ref: '#/components/schemas/Conta'
+                    description: A pessoa que acabou de entrar.
+                  session_token:
+                    type: string
+                    description: 'Sessão `sess_…` para usar em `Authorization: Bearer`.'
+                  claimed:
+                    allOf:
+                    - $ref: '#/components/schemas/Reivindicacao'
+                    description: O convidado que a conta já tinha — leia `adopt` antes de continuar.
+                required:
+                - ok
+                - user
+                - session_token
+                - claimed
+        '400':
+          description: Código errado ou expirado.
+        '429':
+          description: Tentativas demais.
+      tags:
+      - Auth
+  /api/auth/claim:
+    post:
+      operationId: post_api_auth_claim
+      summary: Liga um convidado a uma sessão já aberta, sem passar pelo código de novo
+      description: 'Use quando a pessoa já está logada e aparece um convidado novo (outro aparelho, outro navegador).
+
+        Devolve: { ok, claimed, user{id,email} }'
+      security: []
+      parameters:
+      - name: Authorization
+        in: header
+        required: true
+        schema:
+          type: string
+        description: '`Bearer sess_…`, a sessão que vai adotar o convidado.'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                guest_token:
+                  type: string
+                  description: Convidado `ipt_…` a ligar na conta.
+              required:
+              - guest_token
+            example:
+              guest_token: ipt_…
+      responses:
+        '200':
+          description: '{ ok, claimed, user{id,email} }'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok:
+                    type: boolean
+                    description: Sempre `true` quando ligou.
+                  claimed:
+                    type: boolean
+                    description: Se havia algo novo para ligar.
+                  user:
+                    allOf:
+                    - $ref: '#/components/schemas/Conta'
+                    description: A pessoa dona da sessão.
+                required:
+                - ok
+                - claimed
+                - user
+        '400':
+          description: '`guest_token` ausente.'
+        '401':
+          description: Sessão ausente ou inválida.
+      tags:
+      - Auth
+  /api/auth/logout:
+    post:
+      operationId: post_api_auth_logout
+      summary: Encerra a sessão. A linha some do banco, não fica marcada como inativa
+      description: 'Devolve: { ok }'
+      security: []
+      parameters:
+      - name: Authorization
+        in: header
+        required: true
+        schema:
+          type: string
+        description: '`Bearer sess_…`, a sessão a encerrar.'
+      responses:
+        '200':
+          description: '{ ok }'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Ok'
+      tags:
+      - Auth
+components:
+  schemas:
+    Conta:
+      type: object
+      properties:
+        id:
+          type: string
+          description: ID da conta.
+        email:
+          type: string
+          description: E-mail confirmado por código.
+      required:
+      - id
+      - email
+      description: A pessoa por trás da sessão.
+    Reivindicacao:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          description: Se havia algo a reivindicar.
+        product:
+          allOf:
+          - $ref: '#/components/schemas/ReivindicacaoProduto'
+          description: O convidado que a conta já tinha, e o que fazer com ele.
+      required:
+      - ok
+      - product
+      description: O que o verify achou de convidado já ligado a este e-mail. É o campo que salva a biblioteca de outro aparelho.
+    Recursos:
+      type: object
+      properties:
+        categories:
+          type: integer
+          description: Quantas pastas o dono tem.
+        favorites:
+          type: integer
+          description: Quantos canais ele favoritou.
+        history:
+          type: integer
+          description: Quantos canais estão no histórico.
+      required:
+      - categories
+      - favorites
+      - history
+      description: O tamanho da biblioteca do dono — para o agente saber o que vai encontrar antes de buscar.
+    Ok:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          description: Sempre `true` — a falha vem como status 4xx/5xx, não como `ok:false`.
+      required:
+      - ok
+      description: Confirmação de escrita que não tem corpo próprio a devolver.
+    ReivindicacaoProduto:
+      type: object
+      properties:
+        guest_token:
+          type: string
+          description: O convidado ANTIGO da conta. É este que tem a biblioteca.
+        adopt:
+          type: boolean
+          description: '`true` quer dizer: jogue fora o convidado local e passe a usar o de cima.'
+        resources:
+          allOf:
+          - $ref: '#/components/schemas/Recursos'
+          description: O que existe nesse convidado antigo.
+      required:
+      - guest_token
+      - adopt
+      - resources
+      description: Qual convidado usar depois de entrar — o novo ou o que já existia.
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      description: ipt_… (guest) ou iptk_… (API key)

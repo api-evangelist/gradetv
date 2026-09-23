@@ -1,0 +1,27 @@
+openapi: 3.2.0
+info:
+  title: Grade Apis.json API
+  version: dbad45cb
+  description: Catálogo IPTV, biblioteca pessoal com feeds e informações para produtores sobre transmissão autorizada sob consulta.
+servers:
+- url: https://gradetv.net
+tags:
+- name: Apis.json
+paths:
+  /apis.json:
+    get:
+      operationId: get_apis_json
+      summary: 'APIs.json (apisjson.org, 0.19): o índice que o APIs.io colhe — a API, o MCP…'
+      description: 'Devolve: `application/json` no formato APIs.json 0.19: `apis[]` com `baseURL`, `humanURL` e `properties[]`.'
+      security: []
+      responses:
+        '200':
+          description: '`application/json` no formato APIs.json 0.19: `apis[]` com `baseURL`, `humanURL` e `properties[]`.'
+      tags:
+      - Apis.json
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      description: ipt_… (guest) ou iptk_… (API key)

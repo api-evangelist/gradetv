@@ -1,0 +1,76 @@
+openapi: 3.2.0
+info:
+  title: Grade Countries API
+  version: dbad45cb
+  description: Catálogo IPTV, biblioteca pessoal com feeds e informações para produtores sobre transmissão autorizada sob consulta.
+servers:
+- url: https://gradetv.net
+tags:
+- name: Countries
+paths:
+  /api/countries:
+    get:
+      operationId: list_countries
+      summary: Países que têm canal tocável, com a contagem e a bandeira de cada um
+      description: 'Devolve: { items[{code,name,count,flag}] }'
+      security: []
+      parameters:
+      - name: kind
+        in: query
+        required: false
+        schema:
+          type: string
+          default: tv
+          enum:
+          - tv
+          - radio
+          - all
+        description: '`tv` (padrão) conta canais de TV; `radio` conta estações do Radio Browser; `all` junta os dois.'
+      responses:
+        '200':
+          description: '{ items[{code,name,count,flag}] }'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ListaPais'
+      tags:
+      - Countries
+components:
+  schemas:
+    Pais:
+      type: object
+      properties:
+        code:
+          type: string
+          description: ISO 3166-1 alpha-2, ex. `BR`.
+        name:
+          type: string
+          description: Nome do país.
+        count:
+          type: integer
+          description: Canais tocáveis deste país.
+        flag:
+          type: string
+          description: URL do SVG da bandeira, servido por nós.
+      required:
+      - code
+      - name
+      - count
+      - flag
+      description: País com canal tocável no catálogo.
+    ListaPais:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/Pais'
+          description: Todos os itens; estas rotas não paginam.
+      required:
+      - items
+      description: Coleção pequena e completa — faceta de catálogo, que cabe inteira numa resposta.
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      description: ipt_… (guest) ou iptk_… (API key)

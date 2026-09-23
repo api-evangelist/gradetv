@@ -1,0 +1,85 @@
+openapi: 3.2.0
+info:
+  title: Grade Health API
+  version: dbad45cb
+  description: Catálogo IPTV, biblioteca pessoal com feeds e informações para produtores sobre transmissão autorizada sob consulta.
+servers:
+- url: https://gradetv.net
+tags:
+- name: Health
+paths:
+  /api/health:
+    get:
+      operationId: health
+      summary: Liveness e o commit publicado agora — é como o smoke espera o próprio deploy
+      description: 'Devolve: { ok, app, build, ts, catalog{synced_at,age_hours,stale,limit_days}, sources }'
+      security: []
+      responses:
+        '200':
+          description: '{ ok, app, build, ts, catalog{synced_at,age_hours,stale,limit_days}, sources }'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Saude'
+      tags:
+      - Health
+components:
+  schemas:
+    FrescorCatalogo:
+      type: object
+      properties:
+        synced_at:
+          type: string
+          description: Instante (ISO-8601) da última recarga que entrou no ar; `null` se nunca.
+          nullable: true
+        age_hours:
+          type: integer
+          description: Horas inteiras desde `synced_at`; `null` sem carimbo.
+          nullable: true
+        stale:
+          type: boolean
+          description: '`true` quando passou de `limit_days` — o cron avisa por e-mail e o smoke reprova.'
+        limit_days:
+          type: integer
+          description: O limite em dias (2).
+      required:
+      - synced_at
+      - age_hours
+      - stale
+      - limit_days
+      description: Idade do catálogo, como sai em `/api/health`.
+    Saude:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          description: Sempre `true` quando o Worker responde.
+        app:
+          type: string
+          description: Nome do produto.
+        build:
+          type: string
+          description: Commit publicado; o CI passa o SHA curto no deploy.
+        ts:
+          type: string
+          description: Momento da resposta (UTC, ISO-8601).
+        catalog:
+          allOf:
+          - $ref: '#/components/schemas/FrescorCatalogo'
+          description: 'Idade do catálogo: `synced_at` da última recarga e se passou do limite de 2 dias (o smoke reprova).'
+        sources:
+          type: object
+          description: 'Uma entrada por fonte do catálogo, pelo nome (`iptv-org`, o tronco; as demais conforme entram): `fetched_at`, `sha256`, `itens`, `age_hours`, `limit_days`, `stale` (passou do limite ou a recarga usou o snapshot anterior), `ausente` (saiu sem a fonte). Só o tronco velho reprova o smoke.'
+      required:
+      - ok
+      - app
+      - build
+      - ts
+      - catalog
+      - sources
+      description: 'A resposta de `/api/health`: liveness, o commit publicado e a idade do catálogo.'
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      description: ipt_… (guest) ou iptk_… (API key)

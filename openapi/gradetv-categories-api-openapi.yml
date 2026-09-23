@@ -1,0 +1,384 @@
+openapi: 3.2.0
+info:
+  title: Grade Categories API
+  version: dbad45cb
+  description: Catálogo IPTV, biblioteca pessoal com feeds e informações para produtores sobre transmissão autorizada sob consulta.
+servers:
+- url: https://gradetv.net
+tags:
+- name: Categories
+paths:
+  /api/categories:
+    get:
+      operationId: get_api_categories
+      summary: Vocabulário de categorias do iptv-org, com ícone para a interface
+      description: 'Note que `POST /api/categories` é outra coisa: cria pasta na biblioteca do dono.
+
+        Devolve: { items[{id,name,description,icon}] }'
+      security: []
+      responses:
+        '200':
+          description: '{ items[{id,name,description,icon}] }'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ListaCategoria'
+      tags:
+      - Categories
+    post:
+      operationId: create_category
+      summary: Cria uma pasta na galeria, já com a sub-aba Geral dentro dela
+      description: 'Teto de 8 pastas por dono. A resposta traz a biblioteca inteira já atualizada — não precisa recarregar `GET /api/library` depois.
+
+        Devolve: { owner, feeds{m3u,m3u8,json,xspf}, categories[{id,name,slug,sort,last_group_id,api,feeds,groups}], id, name, slug, group_id }'
+      security:
+      - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  description: Nome da pasta, até 40 caracteres.
+              required:
+              - name
+            example:
+              name: Notícias
+      responses:
+        '200':
+          description: '{ owner, feeds{m3u,m3u8,json,xspf}, categories[{id,name,slug,sort,last_group_id,api,feeds,groups}], id, name, slug, group_id }'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BibliotecaComPasta'
+        '400':
+          description: Nome vazio, longo demais, ou o teto de 8 pastas foi atingido.
+        '401':
+          description: Sem credencial ou credencial inválida. Veja a auth deste endpoint.
+      tags:
+      - Categories
+  /api/categories/{id}:
+    patch:
+      operationId: patch_api_categories_by_id
+      summary: Renomeia uma pasta. O slug do feed acompanha o nome novo
+      description: 'Atenção: mudar o nome muda o slug, e portanto muda a URL do feed daquela pasta. Quem já tinha colado o link antigo no player precisa colar o novo.
+
+        Devolve: { owner, feeds{m3u,m3u8,json,xspf}, categories[{id,name,slug,sort,last_group_id,api,feeds,groups}] }'
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  description: Novo nome da pasta, até 40 caracteres.
+              required:
+              - name
+            example:
+              name: Jornalismo
+      responses:
+        '200':
+          description: '{ owner, feeds{m3u,m3u8,json,xspf}, categories[{id,name,slug,sort,last_group_id,api,feeds,groups}] }'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Biblioteca'
+        '400':
+          description: Nome vazio ou longo demais.
+        '401':
+          description: Sem credencial ou credencial inválida. Veja a auth deste endpoint.
+        '404':
+          description: Recurso não existe (ou não é seu — a API não distingue os dois de propósito).
+      tags:
+      - Categories
+    delete:
+      operationId: delete_api_categories_by_id
+      summary: 'Apaga a pasta e tudo que está dentro dela: sub-abas e canais'
+      description: 'Devolve: { owner, feeds{m3u,m3u8,json,xspf}, categories[{id,name,slug,sort,last_group_id,api,feeds,groups}] }'
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: '{ owner, feeds{m3u,m3u8,json,xspf}, categories[{id,name,slug,sort,last_group_id,api,feeds,groups}] }'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Biblioteca'
+        '401':
+          description: Sem credencial ou credencial inválida. Veja a auth deste endpoint.
+        '404':
+          description: Recurso não existe (ou não é seu — a API não distingue os dois de propósito).
+      tags:
+      - Categories
+components:
+  schemas:
+    Feeds:
+      type: object
+      properties:
+        m3u:
+          type: string
+          description: Playlist M3U — é o que se cola no VLC.
+        m3u8:
+          type: string
+          description: Mesma playlist, extensão `.m3u8` para players que só aceitam ela.
+        json:
+          type: string
+          description: Mesma lista em JSON, para quem programa em cima.
+        xspf:
+          type: string
+          description: Mesma lista em XSPF, para players que preferem XML.
+      required:
+      - m3u
+      - m3u8
+      - json
+      - xspf
+      description: O mesmo conteúdo em quatro formatos. São URLs públicas, com o token do feed no caminho — quem tem o link tem o conteúdo.
+    ListaCategoria:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/Categoria'
+          description: Todos os itens; estas rotas não paginam.
+      required:
+      - items
+      description: Coleção pequena e completa — faceta de catálogo, que cabe inteira numa resposta.
+    BibliotecaComPasta:
+      type: object
+      properties:
+        owner:
+          type: string
+          description: 'Rótulo derivado do dono desta árvore — estável enquanto o feed for o mesmo, e não reversível. NÃO é o token de convidado: publicá-lo aqui faria uma API key delegada escalar para a credencial mestra, que não tem revogação.'
+        feeds:
+          allOf:
+          - $ref: '#/components/schemas/Feeds'
+          description: Feeds da biblioteca inteira, em quatro formatos.
+        categories:
+          type: array
+          items:
+            $ref: '#/components/schemas/PastaBiblioteca'
+          description: As pastas do dono, na ordem que ele arrumou.
+        id:
+          type: string
+          description: ID da pasta criada, `cat_…`.
+        name:
+          type: string
+          description: Nome da pasta criada.
+        slug:
+          type: string
+          description: Slug da pasta — é o que entra na URL do feed dela.
+        group_id:
+          type: string
+          description: ID da sub-aba Geral, criada junto com a pasta.
+      required:
+      - owner
+      - feeds
+      - categories
+      - id
+      - name
+      - slug
+      - group_id
+      description: A biblioteca inteira mais os ids da pasta que acabou de ser criada.
+    SubAba:
+      type: object
+      properties:
+        id:
+          type: string
+          description: ID da sub-aba, `grp_…`.
+        name:
+          type: string
+          description: Nome que o dono deu.
+        slug:
+          type: string
+          description: Versão do nome usada na URL do feed.
+        sort:
+          type: integer
+          description: Posição na ordenação dentro da pasta.
+        last_item_id:
+          type: string
+          description: Último canal tocado nesta sub-aba.
+          nullable: true
+        api:
+          type: string
+          description: URL absoluta desta sub-aba.
+        feeds:
+          allOf:
+          - $ref: '#/components/schemas/Feeds'
+          description: Feeds só desta sub-aba.
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/ItemBiblioteca'
+          description: Canais colocados aqui, na ordem do dono.
+      required:
+      - id
+      - name
+      - slug
+      - sort
+      - last_item_id
+      - api
+      - feeds
+      - items
+      description: Sub-aba dentro de uma pasta; é o nível que agrupa os canais.
+    ItemBiblioteca:
+      type: object
+      properties:
+        id:
+          type: string
+          description: ID do item na biblioteca, `itm_…`.
+        channel_id:
+          type: string
+          description: ID do canal no catálogo, ex. `Globo.br`.
+        stream_id:
+          type: string
+          description: Stream escolhido para este item.
+          nullable: true
+        name:
+          type: string
+          description: Nome do canal; cai no `channel_id` se o canal sumiu do catálogo.
+        logo_url:
+          type: string
+          description: Logo servido por nós.
+          nullable: true
+        url:
+          type: string
+          description: URL de reprodução no hop; `null` quando o stream sumiu.
+          nullable: true
+        quality:
+          type: string
+          description: Qualidade do stream escolhido.
+          nullable: true
+        kind:
+          type: string
+          description: 'Tipo de mídia: `hls`, `mpd`, `mp4`…'
+        playable_hint:
+          type: boolean
+          description: Se a última verificação achou o stream utilizável.
+        stale:
+          type: boolean
+          description: '`true` quando o canal ou o stream sumiu da fonte — o item fica, sem tocar.'
+        sort:
+          type: integer
+          description: Posição dentro da sub-aba.
+      required:
+      - id
+      - channel_id
+      - stream_id
+      - name
+      - logo_url
+      - url
+      - quality
+      - kind
+      - playable_hint
+      - stale
+      - sort
+      description: Um canal dentro de uma sub-aba, com o stream já escolhido.
+    PastaBiblioteca:
+      type: object
+      properties:
+        id:
+          type: string
+          description: ID da pasta, `cat_…`.
+        name:
+          type: string
+          description: Nome que o dono deu.
+        slug:
+          type: string
+          description: Versão do nome usada na URL do feed.
+        sort:
+          type: integer
+          description: Posição na ordenação do dono.
+        last_group_id:
+          type: string
+          description: Sub-aba aberta por último — é o que devolve a pessoa ao lugar onde parou.
+          nullable: true
+        api:
+          type: string
+          description: URL absoluta desta pasta.
+        feeds:
+          allOf:
+          - $ref: '#/components/schemas/Feeds'
+          description: Feeds só desta pasta.
+        groups:
+          type: array
+          items:
+            $ref: '#/components/schemas/SubAba'
+          description: Sub-abas dentro da pasta.
+      required:
+      - id
+      - name
+      - slug
+      - sort
+      - last_group_id
+      - api
+      - feeds
+      - groups
+      description: Pasta (aba principal) da galeria do dono.
+    Categoria:
+      type: object
+      properties:
+        id:
+          type: string
+          description: ID da categoria, ex. `movies`.
+        name:
+          type: string
+          description: Nome para exibição.
+        description:
+          type: string
+          description: O que a categoria abrange, segundo a fonte.
+          nullable: true
+        icon:
+          type: string
+          description: Nome do ícone usado na interface.
+          nullable: true
+      required:
+      - id
+      - name
+      - description
+      - icon
+      description: Categoria do vocabulário do iptv-org, sem contagem.
+    Biblioteca:
+      type: object
+      properties:
+        owner:
+          type: string
+          description: 'Rótulo derivado do dono desta árvore — estável enquanto o feed for o mesmo, e não reversível. NÃO é o token de convidado: publicá-lo aqui faria uma API key delegada escalar para a credencial mestra, que não tem revogação.'
+        feeds:
+          allOf:
+          - $ref: '#/components/schemas/Feeds'
+          description: Feeds da biblioteca inteira, em quatro formatos.
+        categories:
+          type: array
+          items:
+            $ref: '#/components/schemas/PastaBiblioteca'
+          description: As pastas do dono, na ordem que ele arrumou.
+      required:
+      - owner
+      - feeds
+      - categories
+      description: 'A galeria inteira do dono: pastas, sub-abas, canais e as URLs de feed de cada nível.'
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      description: ipt_… (guest) ou iptk_… (API key)

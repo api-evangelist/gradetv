@@ -1,0 +1,95 @@
+openapi: 3.2.0
+info:
+  title: Grade Metrics API
+  version: dbad45cb
+  description: Catálogo IPTV, biblioteca pessoal com feeds e informações para produtores sobre transmissão autorizada sob consulta.
+servers:
+- url: https://gradetv.net
+tags:
+- name: Metrics
+paths:
+  /api/metrics:
+    get:
+      operationId: get_api_metrics
+      summary: Métricas dos últimos 7 dias. Com o token do operador, inclui os pagamentos
+      description: 'Sem credencial devolve visitas, uso e contas. Com `METRICS_TOKEN` em Bearer acrescenta `payments` — e só em Base mainnet, porque número de homologação em painel financeiro engana.
+
+        Devolve: { app, today, today_visits, today_contacts?, today_plays, today_feeds, days, usage, accounts, top_plays, financeiro?, payments? }'
+      security: []
+      parameters:
+      - name: Authorization
+        in: header
+        required: false
+        schema:
+          type: string
+        description: '`Bearer <METRICS_TOKEN>` para incluir o bloco financeiro.'
+      responses:
+        '200':
+          description: '{ app, today, today_visits, today_contacts?, today_plays, today_feeds, days, usage, accounts, top_plays, financeiro?, payments? }'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Metricas'
+      tags:
+      - Metrics
+components:
+  schemas:
+    Metricas:
+      type: object
+      properties:
+        app:
+          type: string
+          description: Nome do produto.
+        today:
+          type: string
+          description: Dia de referência (UTC, AAAA-MM-DD).
+        today_visits:
+          type: integer
+          description: Visitas contadas hoje.
+        today_contacts:
+          type: integer
+          description: Contatos de hoje; só com `METRICS_TOKEN`.
+        today_plays:
+          type: integer
+          description: Plays contados hoje.
+        today_feeds:
+          type: integer
+          description: Feeds servidos hoje.
+        days:
+          type: array
+          items:
+            type: object
+          description: Um registro por dia da janela, com as contagens de cada métrica.
+        usage:
+          type: object
+          description: Uso por recurso do produto — aqui, itens na galeria.
+        accounts:
+          type: object
+          description: Total de convidados cadastrados.
+        top_plays:
+          type: array
+          items:
+            type: object
+          description: 'Canais mais tocados hoje: `channel_id`, `name` e `count`.'
+        financeiro:
+          type: object
+          description: '`hoje_usd`, `hoje_count`, `rede`; só com `METRICS_TOKEN`.'
+        payments:
+          type: object
+          description: Resumo financeiro; só com METRICS_TOKEN.
+      required:
+      - app
+      - today
+      - today_visits
+      - today_plays
+      - today_feeds
+      - days
+      - usage
+      - accounts
+      - top_plays
+      description: Painel de 7 dias. O bloco `payments` só aparece com o token do operador e só em Base mainnet.
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      description: ipt_… (guest) ou iptk_… (API key)

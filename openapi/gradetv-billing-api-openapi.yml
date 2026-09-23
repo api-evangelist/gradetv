@@ -1,0 +1,157 @@
+openapi: 3.2.0
+info:
+  title: Grade Billing API
+  version: dbad45cb
+  description: Catálogo IPTV, biblioteca pessoal com feeds e informações para produtores sobre transmissão autorizada sob consulta.
+servers:
+- url: https://gradetv.net
+tags:
+- name: Billing
+paths:
+  /api/billing:
+    get:
+      operationId: billing
+      summary: Preços em vigor, tetos da galeria e a configuração x402 completa
+      description: 'É o número EM VIGOR: leia daqui antes de gastar chamada, em vez de assumir o preço da documentação. Com credencial, também diz se o seu passe de chat está ativo.
+
+        Devolve: { provider, mode, network, chain_id, pay_to, homolog, dev, dev_gate, facilitator, asset, asset_address, faucet, wallets, product, prices{contact_agent_usd,chat_month_usd}, chat{active,until}, limits{categories,groups_per_category,items_per_group} }'
+      security: []
+      responses:
+        '200':
+          description: '{ provider, mode, network, chain_id, pay_to, homolog, dev, dev_gate, facilitator, asset, asset_address, faucet, wallets, product, prices{contact_agent_usd,chat_month_usd}, chat{active,until}, limits{categories,groups_per_category,items_per_group} }'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Billing'
+      tags:
+      - Billing
+components:
+  schemas:
+    TetosGaleria:
+      type: object
+      properties:
+        categories:
+          type: integer
+          description: Pastas por dono.
+        groups_per_category:
+          type: integer
+          description: Sub-abas por pasta.
+        items_per_group:
+          type: integer
+          description: Canais por sub-aba.
+      required:
+      - categories
+      - groups_per_category
+      - items_per_group
+      description: Os limites da galeria pessoal — existem para o catálogo público não ser despejado numa biblioteca.
+    Passe:
+      type: object
+      properties:
+        active:
+          type: boolean
+          description: Se o passe vale neste momento.
+        until:
+          type: string
+          description: Até quando vale (UTC); `null` quando não há passe.
+          nullable: true
+      required:
+      - active
+      - until
+      description: Passe mensal — do chat ou de conteúdo adulto. São contas separadas, mesmo formato.
+    Billing:
+      type: object
+      properties:
+        provider:
+          type: string
+          description: Sempre `x402` — é o único protocolo de cobrança aceito.
+        mode:
+          type: string
+          description: 'Modo do vendedor: `live` cobra de verdade, `dev` libera sem pagar.'
+        network:
+          type: string
+          description: 'Rede da USDC: `base` em produção, `base-sepolia` em homologação.'
+        chain_id:
+          type: integer
+          description: Chain ID EVM da rede acima, para a carteira assinar na cadeia certa.
+        pay_to:
+          type: string
+          description: Endereço que recebe o pagamento.
+          nullable: true
+        homolog:
+          type: boolean
+          description: 'Seam de homologação ligado: dá para fechar o loop sem gastar USDC.'
+        dev:
+          type: boolean
+          description: 'Modo de desenvolvimento: o 402 é simulado.'
+        dev_gate:
+          type: string
+          description: Como o modo dev é destravado, quando existe.
+          nullable: true
+        facilitator:
+          type: string
+          description: URL do facilitador que verifica e liquida o pagamento.
+        asset:
+          type: string
+          description: Moeda aceita — sempre `USDC`.
+        asset_address:
+          type: string
+          description: Contrato da USDC na rede acima.
+        faucet:
+          type: string
+          description: Torneira de USDC de teste; só em base-sepolia.
+          nullable: true
+        wallets:
+          type: object
+          description: Links de carteiras que falam x402 (metamask, coinbase, base_app).
+        product:
+          type: string
+          description: Nome do produto que está cobrando.
+        prices:
+          allOf:
+          - $ref: '#/components/schemas/Precos'
+          description: Quanto custa cada ação paga, em USD.
+        chat:
+          allOf:
+          - $ref: '#/components/schemas/Passe'
+          description: Seu passe de chat; sem credencial vem inativo.
+        limits:
+          allOf:
+          - $ref: '#/components/schemas/TetosGaleria'
+          description: Quantas pastas, sub-abas e canais cabem.
+      required:
+      - provider
+      - mode
+      - network
+      - chain_id
+      - pay_to
+      - homolog
+      - dev
+      - dev_gate
+      - facilitator
+      - asset
+      - asset_address
+      - faucet
+      - wallets
+      - product
+      - prices
+      - chat
+      - limits
+      description: 'Tudo que decide se uma chamada vai custar: a configuração x402, os preços do produto, o seu passe e os tetos da galeria.'
+    Precos:
+      type: object
+      properties:
+        contact_agent_usd:
+          type: number
+          description: Custo de um contato de agente.
+        chat_month_usd:
+          type: number
+          description: Custo do passe de chat por 30 dias.
+      required:
+      - contact_agent_usd
+      - chat_month_usd
+      description: Preços em vigor, em dólar. Leia daqui, não da documentação.
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      description: ipt_… (guest) ou iptk_… (API key)

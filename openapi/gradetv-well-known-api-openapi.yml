@@ -1,0 +1,35 @@
+openapi: 3.2.0
+info:
+  title: Grade .well Known API
+  version: dbad45cb
+  description: Catálogo IPTV, biblioteca pessoal com feeds e informações para produtores sobre transmissão autorizada sob consulta.
+servers:
+- url: https://gradetv.net
+tags:
+- name: .well Known
+paths:
+  /.well-known/{arquivo}:
+    get:
+      operationId: get_well_known_by_arquivo
+      summary: 'Descoberta de máquina antes da home: `api-catalog` (RFC 9727, linkset com a API…'
+      description: 'Devolve: `application/linkset+json` no api-catalog; `text/plain` nos outros dois.'
+      security: []
+      parameters:
+      - name: arquivo
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: '`application/linkset+json` no api-catalog; `text/plain` nos outros dois.'
+        '404':
+          description: Nome fora dos quatro publicados.
+      tags:
+      - .well Known
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      description: ipt_… (guest) ou iptk_… (API key)

@@ -1,0 +1,158 @@
+openapi: 3.2.0
+info:
+  title: Grade Keys API
+  version: dbad45cb
+  description: Catálogo IPTV, biblioteca pessoal com feeds e informações para produtores sobre transmissão autorizada sob consulta.
+servers:
+- url: https://gradetv.net
+tags:
+- name: Keys
+paths:
+  /api/keys:
+    post:
+      operationId: mint_key
+      summary: Cria uma API key `iptk_…` para o agente — o texto completo aparece uma vez só
+      description: 'A key é a conta do agente: vale como o convidado que a criou e não expira até ser revogada.
+
+        Devolve: { id, token, masked, label, note }'
+      security:
+      - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                label:
+                  type: string
+                  description: Rótulo para lembrar onde a chave foi usada.
+            example:
+              label: meu-agente
+      responses:
+        '200':
+          description: '{ id, token, masked, label, note }'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                    description: ID da chave, para revogar depois.
+                  token:
+                    type: string
+                    description: A chave em texto. Não é mostrada de novo — guarde agora.
+                  masked:
+                    type: string
+                    description: A mesma chave mascarada, como ela aparecerá na listagem.
+                  label:
+                    type: string
+                    description: O rótulo que você mandou.
+                    nullable: true
+                  note:
+                    type: string
+                    description: Lembrete de que o token não será mostrado outra vez.
+                required:
+                - id
+                - token
+                - masked
+                - label
+                - note
+        '401':
+          description: Sem credencial ou credencial inválida. Veja a auth deste endpoint.
+      tags:
+      - Keys
+    get:
+      operationId: get_api_keys
+      summary: Lista as chaves do dono, sempre mascaradas, inclusive as já revogadas
+      description: 'Devolve: { keys[{id,masked,label,revoked,created_at}] }'
+      security:
+      - bearerAuth: []
+      responses:
+        '200':
+          description: '{ keys[{id,masked,label,revoked,created_at}] }'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  keys:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Chave'
+                    description: As chaves do dono, da mais recente para a mais antiga.
+                required:
+                - keys
+        '401':
+          description: Sem credencial ou credencial inválida. Veja a auth deste endpoint.
+      tags:
+      - Keys
+  /api/keys/{id}:
+    delete:
+      operationId: delete_api_keys_by_id
+      summary: Revoga uma chave. A linha continua na listagem, marcada como revogada
+      description: 'Devolve: { ok }'
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: '{ ok }'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Ok'
+        '401':
+          description: Sem credencial ou credencial inválida. Veja a auth deste endpoint.
+        '404':
+          description: Recurso não existe (ou não é seu — a API não distingue os dois de propósito).
+      tags:
+      - Keys
+components:
+  schemas:
+    Ok:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          description: Sempre `true` — a falha vem como status 4xx/5xx, não como `ok:false`.
+      required:
+      - ok
+      description: Confirmação de escrita que não tem corpo próprio a devolver.
+    Chave:
+      type: object
+      properties:
+        id:
+          type: string
+          description: ID da chave, para revogar.
+        masked:
+          type: string
+          description: Prefixo e últimos 4 dígitos, ex. `iptk_…a1b2`.
+        label:
+          type: string
+          description: Rótulo que o dono deu para lembrar onde usou.
+          nullable: true
+        revoked:
+          type: boolean
+          description: Se já foi revogada — a linha fica, para o histórico.
+        created_at:
+          type: string
+          description: Quando foi criada (UTC).
+      required:
+      - id
+      - masked
+      - label
+      - revoked
+      - created_at
+      description: API key do dono, sempre mascarada. O texto completo só aparece na criação.
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      description: ipt_… (guest) ou iptk_… (API key)

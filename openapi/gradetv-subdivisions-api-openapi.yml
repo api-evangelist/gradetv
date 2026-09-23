@@ -1,0 +1,83 @@
+openapi: 3.2.0
+info:
+  title: Grade Subdivisions API
+  version: dbad45cb
+  description: Catálogo IPTV, biblioteca pessoal com feeds e informações para produtores sobre transmissão autorizada sob consulta.
+servers:
+- url: https://gradetv.net
+tags:
+- name: Subdivisions
+paths:
+  /api/subdivisions:
+    get:
+      operationId: list_subdivisions
+      summary: Estados e províncias que têm canal tocável
+      description: 'Devolve: { items[{code,country,name,count}] }'
+      security: []
+      parameters:
+      - name: country
+        in: query
+        required: false
+        schema:
+          type: string
+        description: Restringe a um país, ISO 3166-1 alpha-2.
+        example: BR
+      - name: kind
+        in: query
+        required: false
+        schema:
+          type: string
+          default: tv
+          enum:
+          - tv
+          - radio
+          - all
+        description: '`tv` (padrão) conta canais de TV; `radio` conta estações do Radio Browser; `all` junta os dois.'
+      responses:
+        '200':
+          description: '{ items[{code,country,name,count}] }'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ListaSubdivisao'
+      tags:
+      - Subdivisions
+components:
+  schemas:
+    ListaSubdivisao:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/Subdivisao'
+          description: Todos os itens; estas rotas não paginam.
+      required:
+      - items
+      description: Coleção pequena e completa — faceta de catálogo, que cabe inteira numa resposta.
+    Subdivisao:
+      type: object
+      properties:
+        code:
+          type: string
+          description: Código do iptv-org, ex. `BR-SP`.
+        country:
+          type: string
+          description: País a que pertence, alpha-2.
+        name:
+          type: string
+          description: Nome da subdivisão.
+        count:
+          type: integer
+          description: Canais tocáveis nela.
+      required:
+      - code
+      - country
+      - name
+      - count
+      description: Estado/província com canal tocável.
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      description: ipt_… (guest) ou iptk_… (API key)

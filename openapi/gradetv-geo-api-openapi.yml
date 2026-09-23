@@ -1,0 +1,63 @@
+openapi: 3.2.0
+info:
+  title: Grade Geo API
+  version: dbad45cb
+  description: Catálogo IPTV, biblioteca pessoal com feeds e informações para produtores sobre transmissão autorizada sob consulta.
+servers:
+- url: https://gradetv.net
+tags:
+- name: Geo
+paths:
+  /api/geo:
+    get:
+      operationId: geo
+      summary: País e idioma sugeridos pela borda da Cloudflare para quem está chamando
+      description: 'Devolve: { country, detected, language, language_detected, source, api }'
+      security: []
+      responses:
+        '200':
+          description: '{ country, detected, language, language_detected, source, api }'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Geo'
+      tags:
+      - Geo
+components:
+  schemas:
+    Geo:
+      type: object
+      properties:
+        country:
+          type: string
+          description: País a usar; cai em `BR` quando a borda não informa.
+        detected:
+          type: string
+          description: O que a borda realmente detectou; `null` se nada.
+          nullable: true
+        language:
+          type: string
+          description: Idioma a usar; cai em `por` sem detecção.
+        language_detected:
+          type: string
+          description: Idioma realmente detectado.
+          nullable: true
+        source:
+          type: string
+          description: '`cf` quando veio da borda, `fallback` quando é o padrão.'
+        api:
+          type: string
+          description: URL absoluta desta rota.
+      required:
+      - country
+      - detected
+      - language
+      - language_detected
+      - source
+      - api
+      description: País e idioma sugeridos pela borda da Cloudflare para quem está chamando.
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      description: ipt_… (guest) ou iptk_… (API key)

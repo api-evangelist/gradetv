@@ -1,0 +1,298 @@
+openapi: 3.2.0
+info:
+  title: Grade Groups API
+  version: dbad45cb
+  description: Catálogo IPTV, biblioteca pessoal com feeds e informações para produtores sobre transmissão autorizada sob consulta.
+servers:
+- url: https://gradetv.net
+tags:
+- name: Groups
+paths:
+  /api/groups:
+    post:
+      operationId: create_group
+      summary: Cria uma sub-aba dentro de uma pasta
+      description: 'Teto de 12 sub-abas por pasta. A resposta traz a biblioteca inteira já atualizada — não precisa recarregar `GET /api/library` depois.
+
+        Devolve: { owner, feeds{m3u,m3u8,json,xspf}, categories[{id,name,slug,sort,last_group_id,api,feeds,groups}], id, name, slug, category_id }'
+      security:
+      - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                category_id:
+                  type: string
+                  description: Pasta que vai receber a sub-aba, `cat_…`.
+                name:
+                  type: string
+                  description: Nome da sub-aba, até 40 caracteres.
+              required:
+              - category_id
+              - name
+            example:
+              category_id: cat_…
+              name: Manchete
+      responses:
+        '200':
+          description: '{ owner, feeds{m3u,m3u8,json,xspf}, categories[{id,name,slug,sort,last_group_id,api,feeds,groups}], id, name, slug, category_id }'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BibliotecaComSubAba'
+        '400':
+          description: Nome inválido ou teto de 12 sub-abas atingido.
+        '401':
+          description: Sem credencial ou credencial inválida. Veja a auth deste endpoint.
+        '404':
+          description: A pasta não é sua ou não existe.
+      tags:
+      - Groups
+  /api/groups/{id}:
+    delete:
+      operationId: delete_api_groups_by_id
+      summary: Apaga uma sub-aba e os canais que estavam nela
+      description: 'Devolve: { owner, feeds{m3u,m3u8,json,xspf}, categories[{id,name,slug,sort,last_group_id,api,feeds,groups}] }'
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: '{ owner, feeds{m3u,m3u8,json,xspf}, categories[{id,name,slug,sort,last_group_id,api,feeds,groups}] }'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Biblioteca'
+        '401':
+          description: Sem credencial ou credencial inválida. Veja a auth deste endpoint.
+        '404':
+          description: Recurso não existe (ou não é seu — a API não distingue os dois de propósito).
+      tags:
+      - Groups
+components:
+  schemas:
+    Feeds:
+      type: object
+      properties:
+        m3u:
+          type: string
+          description: Playlist M3U — é o que se cola no VLC.
+        m3u8:
+          type: string
+          description: Mesma playlist, extensão `.m3u8` para players que só aceitam ela.
+        json:
+          type: string
+          description: Mesma lista em JSON, para quem programa em cima.
+        xspf:
+          type: string
+          description: Mesma lista em XSPF, para players que preferem XML.
+      required:
+      - m3u
+      - m3u8
+      - json
+      - xspf
+      description: O mesmo conteúdo em quatro formatos. São URLs públicas, com o token do feed no caminho — quem tem o link tem o conteúdo.
+    BibliotecaComSubAba:
+      type: object
+      properties:
+        owner:
+          type: string
+          description: 'Rótulo derivado do dono desta árvore — estável enquanto o feed for o mesmo, e não reversível. NÃO é o token de convidado: publicá-lo aqui faria uma API key delegada escalar para a credencial mestra, que não tem revogação.'
+        feeds:
+          allOf:
+          - $ref: '#/components/schemas/Feeds'
+          description: Feeds da biblioteca inteira, em quatro formatos.
+        categories:
+          type: array
+          items:
+            $ref: '#/components/schemas/PastaBiblioteca'
+          description: As pastas do dono, na ordem que ele arrumou.
+        id:
+          type: string
+          description: ID da sub-aba criada, `grp_…`.
+        name:
+          type: string
+          description: Nome da sub-aba criada.
+        slug:
+          type: string
+          description: Slug da sub-aba — entra na URL do feed dela.
+        category_id:
+          type: string
+          description: Pasta que recebeu a sub-aba.
+      required:
+      - owner
+      - feeds
+      - categories
+      - id
+      - name
+      - slug
+      - category_id
+      description: A biblioteca inteira mais os ids da sub-aba que acabou de ser criada.
+    SubAba:
+      type: object
+      properties:
+        id:
+          type: string
+          description: ID da sub-aba, `grp_…`.
+        name:
+          type: string
+          description: Nome que o dono deu.
+        slug:
+          type: string
+          description: Versão do nome usada na URL do feed.
+        sort:
+          type: integer
+          description: Posição na ordenação dentro da pasta.
+        last_item_id:
+          type: string
+          description: Último canal tocado nesta sub-aba.
+          nullable: true
+        api:
+          type: string
+          description: URL absoluta desta sub-aba.
+        feeds:
+          allOf:
+          - $ref: '#/components/schemas/Feeds'
+          description: Feeds só desta sub-aba.
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/ItemBiblioteca'
+          description: Canais colocados aqui, na ordem do dono.
+      required:
+      - id
+      - name
+      - slug
+      - sort
+      - last_item_id
+      - api
+      - feeds
+      - items
+      description: Sub-aba dentro de uma pasta; é o nível que agrupa os canais.
+    ItemBiblioteca:
+      type: object
+      properties:
+        id:
+          type: string
+          description: ID do item na biblioteca, `itm_…`.
+        channel_id:
+          type: string
+          description: ID do canal no catálogo, ex. `Globo.br`.
+        stream_id:
+          type: string
+          description: Stream escolhido para este item.
+          nullable: true
+        name:
+          type: string
+          description: Nome do canal; cai no `channel_id` se o canal sumiu do catálogo.
+        logo_url:
+          type: string
+          description: Logo servido por nós.
+          nullable: true
+        url:
+          type: string
+          description: URL de reprodução no hop; `null` quando o stream sumiu.
+          nullable: true
+        quality:
+          type: string
+          description: Qualidade do stream escolhido.
+          nullable: true
+        kind:
+          type: string
+          description: 'Tipo de mídia: `hls`, `mpd`, `mp4`…'
+        playable_hint:
+          type: boolean
+          description: Se a última verificação achou o stream utilizável.
+        stale:
+          type: boolean
+          description: '`true` quando o canal ou o stream sumiu da fonte — o item fica, sem tocar.'
+        sort:
+          type: integer
+          description: Posição dentro da sub-aba.
+      required:
+      - id
+      - channel_id
+      - stream_id
+      - name
+      - logo_url
+      - url
+      - quality
+      - kind
+      - playable_hint
+      - stale
+      - sort
+      description: Um canal dentro de uma sub-aba, com o stream já escolhido.
+    PastaBiblioteca:
+      type: object
+      properties:
+        id:
+          type: string
+          description: ID da pasta, `cat_…`.
+        name:
+          type: string
+          description: Nome que o dono deu.
+        slug:
+          type: string
+          description: Versão do nome usada na URL do feed.
+        sort:
+          type: integer
+          description: Posição na ordenação do dono.
+        last_group_id:
+          type: string
+          description: Sub-aba aberta por último — é o que devolve a pessoa ao lugar onde parou.
+          nullable: true
+        api:
+          type: string
+          description: URL absoluta desta pasta.
+        feeds:
+          allOf:
+          - $ref: '#/components/schemas/Feeds'
+          description: Feeds só desta pasta.
+        groups:
+          type: array
+          items:
+            $ref: '#/components/schemas/SubAba'
+          description: Sub-abas dentro da pasta.
+      required:
+      - id
+      - name
+      - slug
+      - sort
+      - last_group_id
+      - api
+      - feeds
+      - groups
+      description: Pasta (aba principal) da galeria do dono.
+    Biblioteca:
+      type: object
+      properties:
+        owner:
+          type: string
+          description: 'Rótulo derivado do dono desta árvore — estável enquanto o feed for o mesmo, e não reversível. NÃO é o token de convidado: publicá-lo aqui faria uma API key delegada escalar para a credencial mestra, que não tem revogação.'
+        feeds:
+          allOf:
+          - $ref: '#/components/schemas/Feeds'
+          description: Feeds da biblioteca inteira, em quatro formatos.
+        categories:
+          type: array
+          items:
+            $ref: '#/components/schemas/PastaBiblioteca'
+          description: As pastas do dono, na ordem que ele arrumou.
+      required:
+      - owner
+      - feeds
+      - categories
+      description: 'A galeria inteira do dono: pastas, sub-abas, canais e as URLs de feed de cada nível.'
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      description: ipt_… (guest) ou iptk_… (API key)

@@ -1,0 +1,68 @@
+openapi: 3.2.0
+info:
+  title: Grade Networks API
+  version: dbad45cb
+  description: Catálogo IPTV, biblioteca pessoal com feeds e informações para produtores sobre transmissão autorizada sob consulta.
+servers:
+- url: https://gradetv.net
+tags:
+- name: Networks
+paths:
+  /api/networks:
+    get:
+      operationId: list_networks
+      summary: Redes e emissoras que têm canal tocável, com a contagem
+      description: 'Devolve: { items[{name,count}] }'
+      security: []
+      parameters:
+      - name: kind
+        in: query
+        required: false
+        schema:
+          type: string
+          default: tv
+          enum:
+          - tv
+          - radio
+          - all
+        description: '`tv` (padrão) conta canais de TV; `radio` conta estações do Radio Browser; `all` junta os dois.'
+      responses:
+        '200':
+          description: '{ items[{name,count}] }'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ListaRede'
+      tags:
+      - Networks
+components:
+  schemas:
+    ListaRede:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/Rede'
+          description: Todos os itens; estas rotas não paginam.
+      required:
+      - items
+      description: Coleção pequena e completa — faceta de catálogo, que cabe inteira numa resposta.
+    Rede:
+      type: object
+      properties:
+        name:
+          type: string
+          description: Nome da rede, ex. `Globo`.
+        count:
+          type: integer
+          description: Canais tocáveis desta rede.
+      required:
+      - name
+      - count
+      description: Rede/emissora com canal tocável.
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      description: ipt_… (guest) ou iptk_… (API key)

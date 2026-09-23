@@ -1,0 +1,39 @@
+openapi: 3.2.0
+info:
+  title: Grade M API
+  version: dbad45cb
+  description: Catálogo IPTV, biblioteca pessoal com feeds e informações para produtores sobre transmissão autorizada sob consulta.
+servers:
+- url: https://gradetv.net
+tags:
+- name: M
+paths:
+  /api/m/{ticket}:
+    get:
+      operationId: get_api_m_by_ticket
+      summary: 'Desligado: era o pass-through de vídeo. Responde 410 sempre'
+      description: 'Até 05/09/2026 encaminhava os bytes da origem com CORS nosso. Relay de stream de terceiro não é serviço do Grade; a rota fica documentada para quem ainda tiver o endereço numa playlist antiga.
+
+        Devolve: 410 `relay_desligado`, sempre.'
+      security: []
+      parameters:
+      - name: ticket
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: 410 `relay_desligado`, sempre.
+        '404':
+          description: Caminho inexistente fora da família retirada.
+        '410':
+          description: 'Sempre: o Grade não retransmite vídeo.'
+      tags:
+      - M
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      description: ipt_… (guest) ou iptk_… (API key)

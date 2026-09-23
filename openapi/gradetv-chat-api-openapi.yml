@@ -1,0 +1,220 @@
+openapi: 3.2.0
+info:
+  title: Grade Chat API
+  version: dbad45cb
+  description: Catálogo IPTV, biblioteca pessoal com feeds e informações para produtores sobre transmissão autorizada sob consulta.
+servers:
+- url: https://gradetv.net
+tags:
+- name: Chat
+paths:
+  /api/chat/{channel_id}/mensagens:
+    get:
+      operationId: chat_history
+      summary: Últimas mensagens da sala do canal, mais o endereço do WebSocket para…
+      description: 'Devolve: { channel_id, items[{id,autor,body,at}], watching, max_length, _links{self,websocket,channel} }'
+      security: []
+      parameters:
+      - name: channel_id
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: '{ channel_id, items[{id,autor,body,at}], watching, max_length, _links{self,websocket,channel} }'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  channel_id:
+                    type: string
+                    description: Canal a que a sala pertence.
+                  items:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/MensagemChat'
+                    description: As últimas mensagens, da mais antiga para a mais nova.
+                  watching:
+                    type: integer
+                    description: Quantas pessoas estão com a sala aberta agora.
+                  max_length:
+                    type: integer
+                    description: Tamanho máximo de uma mensagem.
+                  _links:
+                    allOf:
+                    - $ref: '#/components/schemas/LinksChat'
+                    description: Esta listagem, o WebSocket e a ficha do canal.
+                required:
+                - channel_id
+                - items
+                - watching
+                - max_length
+                - _links
+        '404':
+          description: Canal não existe no catálogo.
+      tags:
+      - Chat
+    post:
+      operationId: chat_send
+      summary: Manda mensagem na sala sem abrir WebSocket. Exige o passe mensal do chat
+      description: 'Ler é grátis; escrever custa $0.10 por 30 dias. Sem passe válido a resposta é 402 com `accepts[]` — pague e repita a mesma chamada.
+
+        Devolve: { ok, message{id,autor,body,at} }'
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: channel_id
+        in: path
+        required: true
+        schema:
+          type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                body:
+                  type: string
+                  description: O texto da mensagem, dentro de `max_length`.
+                author:
+                  type: string
+                  description: Apelido a usar; sem ele o servidor gera um estável.
+              required:
+              - body
+            example:
+              body: alguém aí?
+              author: Wendel
+      responses:
+        '200':
+          description: '{ ok, message{id,autor,body,at} }'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok:
+                    type: boolean
+                    description: Sempre `true` quando a mensagem entrou.
+                  message:
+                    allOf:
+                    - $ref: '#/components/schemas/MensagemChat'
+                    description: A mensagem publicada na sala.
+                required:
+                - ok
+                - message
+        '400':
+          description: Texto vazio ou longo demais.
+        '401':
+          description: Sem credencial ou credencial inválida. Veja a auth deste endpoint.
+        '402':
+          description: 'Cota estourada. A resposta traz `accepts[]` (x402, USDC na Base): pague e repita a mesma chamada com `X-PAYMENT`.'
+        '404':
+          description: Canal não existe.
+      tags:
+      - Chat
+  /api/chat/pass:
+    post:
+      operationId: chat_pass
+      summary: 'Compra ou confirma o passe mensal do chat: $0.10 por 30 dias, via x402'
+      description: 'Passe já válido devolve 200 sem cobrar de novo — dá para chamar antes de escrever, sem risco de pagar duas vezes.
+
+        Devolve: { ok, charged, until }'
+      security:
+      - bearerAuth: []
+      responses:
+        '200':
+          description: '{ ok, charged, until }'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok:
+                    type: boolean
+                    description: Sempre `true` quando o passe está valendo ao fim da chamada.
+                  charged:
+                    type: boolean
+                    description: '`true` se esta chamada cobrou; `false` se o passe já valia.'
+                  until:
+                    type: string
+                    description: Até quando o passe vale (UTC).
+                required:
+                - ok
+                - charged
+                - until
+        '401':
+          description: Sem credencial ou credencial inválida. Veja a auth deste endpoint.
+        '402':
+          description: 'Cota estourada. A resposta traz `accepts[]` (x402, USDC na Base): pague e repita a mesma chamada com `X-PAYMENT`.'
+      tags:
+      - Chat
+  /api/chat/{channel_id}/ws:
+    get:
+      operationId: get_api_chat_by_channel_id_ws
+      summary: WebSocket da sala do canal — o caminho ao vivo, com presença
+      description: 'Exige `Upgrade: websocket`; sem isso responde 426. O socket entra MUDO: mande `{t:''hello'',token:''ipt_…''}` e depois `{t:''msg'',body:''…''}`. Você recebe `{t:''pronto'',autor,items[],watching}` na entrada e `{t:''msg''|''presenca'',…}` durante a sessão; erro chega como `{t:''erro'',code:''auth''|''vazio''|''pago''}`.
+
+        Devolve: `101 Switching Protocols` e a conexão WebSocket; `426` sem o header de upgrade.'
+      security: []
+      parameters:
+      - name: channel_id
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: '`101 Switching Protocols` e a conexão WebSocket; `426` sem o header de upgrade.'
+        '404':
+          description: Canal não existe no catálogo.
+      tags:
+      - Chat
+components:
+  schemas:
+    LinksChat:
+      type: object
+      properties:
+        self:
+          type: string
+          description: Esta mesma listagem por HTTP.
+        websocket:
+          type: string
+          description: URL `wss://` da sala; mande `{t:'hello',token}` antes de falar.
+        channel:
+          type: string
+          description: Ficha do canal a que a sala pertence.
+      required:
+      - self
+      - websocket
+      - channel
+      description: Endereços da sala — incluindo o WebSocket, que é o caminho ao vivo.
+    MensagemChat:
+      type: object
+      properties:
+        id:
+          type: string
+          description: ID da mensagem dentro da sala.
+        autor:
+          type: string
+          description: Apelido de quem mandou — estável por dono, gerado se não informado.
+        body:
+          type: string
+          description: O texto da mensagem.
+        at:
+          type: string
+          description: Quando foi mandada (UTC).
+      required:
+      - id
+      - autor
+      - body
+      - at
+      description: Mensagem da sala de chat de um canal.
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      description: ipt_… (guest) ou iptk_… (API key)

@@ -1,0 +1,72 @@
+openapi: 3.2.0
+info:
+  title: Grade Qualities API
+  version: dbad45cb
+  description: Catálogo IPTV, biblioteca pessoal com feeds e informações para produtores sobre transmissão autorizada sob consulta.
+servers:
+- url: https://gradetv.net
+tags:
+- name: Qualities
+paths:
+  /api/qualities:
+    get:
+      operationId: list_qualities
+      summary: Qualidades distintas encontradas nos streams do catálogo (em rádio, codec e…
+      description: 'Devolve: { items[{id,name,count}] }'
+      security: []
+      parameters:
+      - name: kind
+        in: query
+        required: false
+        schema:
+          type: string
+          default: tv
+          enum:
+          - tv
+          - radio
+          - all
+        description: '`tv` (padrão) conta canais de TV; `radio` conta estações do Radio Browser; `all` junta os dois.'
+      responses:
+        '200':
+          description: '{ items[{id,name,count}] }'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ListaQualidade'
+      tags:
+      - Qualities
+components:
+  schemas:
+    ListaQualidade:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/Qualidade'
+          description: Todos os itens; estas rotas não paginam.
+      required:
+      - items
+      description: Coleção pequena e completa — faceta de catálogo, que cabe inteira numa resposta.
+    Qualidade:
+      type: object
+      properties:
+        id:
+          type: string
+          description: A qualidade em si, ex. `1080p`.
+        name:
+          type: string
+          description: Mesmo valor, para exibição.
+        count:
+          type: integer
+          description: Streams nesta qualidade.
+      required:
+      - id
+      - name
+      - count
+      description: Qualidade distinta encontrada nos streams.
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      description: ipt_… (guest) ou iptk_… (API key)

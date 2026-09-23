@@ -1,0 +1,873 @@
+openapi: 3.2.0
+info:
+  title: Grade Admin API
+  version: dbad45cb
+  description: Catálogo IPTV, biblioteca pessoal com feeds e informações para produtores sobre transmissão autorizada sob consulta.
+servers:
+- url: https://gradetv.net
+tags:
+- name: Admin
+paths:
+  /api/admin/catalogo/estado:
+    get:
+      operationId: get_api_admin_catalogo_estado
+      summary: Contagens do catálogo no ar e do staging, mais o carimbo da última recarga
+      description: 'Credencial `CATALOGO_TOKEN`. É o que o serviço de recarga lê antes de começar e depois de trocar, para provar que o catálogo inteiro entrou.
+
+        Devolve: { live{channels,channels_fts,channels_fts_ids,streams,blocklist,facet_countries,facet_categories,facet_languages,facet_subdivisions,facet_cities}, staging{channels,channels_fts,channels_fts_ids,streams,blocklist,facet_countries,facet_categories,facet_languages,facet_subdivisions,facet_cities}, meta{synced_at,applied_at,dump_sha256,staging_run} }'
+      security:
+      - bearerAuth: []
+      responses:
+        '200':
+          description: '{ live{channels,channels_fts,channels_fts_ids,streams,blocklist,facet_countries,facet_categories,facet_languages,facet_subdivisions,facet_cities}, staging{channels,channels_fts,channels_fts_ids,streams,blocklist,facet_countries,facet_categories,facet_languages,facet_subdivisions,facet_cities}, meta{synced_at,applied_at,dump_sha256,staging_run} }'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EstadoCatalogo'
+        '401':
+          description: Sem credencial ou credencial inválida. Veja a auth deste endpoint.
+        '503':
+          description: '`CATALOGO_TOKEN` não configurado no Worker: a recarga está desligada.'
+      tags:
+      - Admin
+  /api/admin/catalogo/slugs:
+    get:
+      operationId: get_api_admin_catalogo_slugs
+      summary: Slug publicado de cada canal, paginado por id — a recarga herda para não trocar…
+      description: 'Keyset por `id`: repita com `apos` = `next_after` até vir `null`. Sem herdar estes pares, o mesmo canal trocaria de slug a cada recarga.
+
+        Devolve: { items[{id,slug}], next_after }'
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: apos
+        in: query
+        required: false
+        schema:
+          type: string
+        description: 'Cursor: devolve só ids maiores que este (o `next_after` da página anterior).'
+        example: GloboRJ.br
+      - name: limit
+        in: query
+        required: false
+        schema:
+          type: integer
+        description: Tamanho da página; teto de 5000.
+        example: 5000
+      responses:
+        '200':
+          description: '{ items[{id,slug}], next_after }'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SlugsPublicados'
+        '401':
+          description: Sem credencial ou credencial inválida. Veja a auth deste endpoint.
+        '503':
+          description: Recarga desligada (sem `CATALOGO_TOKEN`).
+      tags:
+      - Admin
+  /api/admin/catalogo/inicio:
+    post:
+      operationId: post_api_admin_catalogo_inicio
+      summary: 'Abre o staging da recarga: as tabelas `*_novo` nascem vazias e o que sobrou de…'
+      description: 'Não toca no catálogo que está servindo. Grava `recarga_id` em `catalog_meta.staging_run`; é ele que os lotes e a troca têm que repetir.
+
+        Devolve: { ok, recarga_id, staging{channels,channels_fts,channels_fts_ids,streams,blocklist,facet_countries,facet_categories,facet_languages,facet_subdivisions,facet_cities} }'
+      security:
+      - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                recarga_id:
+                  type: string
+                  description: Identificador desta execução (4–64 de `[A-Za-z0-9._-]`); lote e troca só valem para a recarga que abriu o staging.
+              required:
+              - recarga_id
+            example:
+              recarga_id: 2026-09-02T09-20-00Z
+      responses:
+        '200':
+          description: '{ ok, recarga_id, staging{channels,channels_fts,channels_fts_ids,streams,blocklist,facet_countries,facet_categories,facet_languages,facet_subdivisions,facet_cities} }'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InicioRecarga'
+        '400':
+          description: '`recarga_id` ausente ou fora do formato.'
+        '401':
+          description: Sem credencial ou credencial inválida. Veja a auth deste endpoint.
+      tags:
+      - Admin
+  /api/admin/catalogo/lote:
+    post:
+      operationId: post_api_admin_catalogo_lote
+      summary: Grava até 1000 linhas de UMA tabela no staging, num batch com no máximo 100…
+      description: 'Idempotente nas tabelas com chave (`INSERT OR IGNORE`): reenviar um lote que o cliente não sabe se chegou não vira erro. As colunas são as do `schema.sql`; chave ausente numa linha reprova o lote inteiro.
+
+        Devolve: { ok, tabela, recebidas, gravadas }'
+      security:
+      - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                recarga_id:
+                  type: string
+                  description: Identificador desta execução (4–64 de `[A-Za-z0-9._-]`); lote e troca só valem para a recarga que abriu o staging.
+                tabela:
+                  type: string
+                  description: Uma de `channels`, `channels_fts`, `streams`, `blocklist`, `facet_countries`, `facet_categories`, `facet_languages`, `facet_subdivisions`, `facet_cities`.
+                linhas:
+                  type: array
+                  items:
+                    type: object
+                  description: Objetos com as colunas da tabela; coluna faltando entra com o DEFAULT do schema (ou `NULL` se for nula). Teto de 1000 por pedido.
+              required:
+              - recarga_id
+              - tabela
+              - linhas
+            example:
+              recarga_id: 2026-09-02T09-20-00Z
+              tabela: facet_countries
+              linhas:
+              - code: BR
+                name: Brazil
+      responses:
+        '200':
+          description: '{ ok, tabela, recebidas, gravadas }'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoteGravado'
+        '400':
+          description: Tabela desconhecida, `linhas` vazia ou linha sem coluna obrigatória (o índice vem na mensagem).
+        '401':
+          description: Sem credencial ou credencial inválida. Veja a auth deste endpoint.
+        '409':
+          description: O staging aberto pertence a outra `recarga_id`.
+        '413':
+          description: Mais de 1000 linhas num pedido.
+      tags:
+      - Admin
+  /api/admin/guia/lote:
+    post:
+      operationId: post_api_admin_guia_lote
+      summary: Grava o dia de programação de até 500 canais em `guia_dia` (INSERT OR REPLACE)
+      description: 'É o que o grabber do c3 (`services/grade-guia`, iptv-org/epg) manda depois de ler os sites de programação. Mesma credencial da recarga. Um canal por linha; programas fora de ordem são ordenados, sem título ou invertidos caem fora; JSON do canal acima de 64 KB recusa o pedido com o índice.
+
+        Devolve: { ok, day, gravados }'
+      security:
+      - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                day:
+                  type: string
+                  description: Dia grabado, `YYYY-MM-DD`.
+                canais:
+                  type: array
+                  items:
+                    type: object
+                  description: '`{ channel_id, site, programas: [{ inicio, fim, titulo, desc?, categoria? }] }`, instantes ISO 8601. Teto de 500 por pedido.'
+              required:
+              - day
+              - canais
+            example:
+              day: '2026-09-04'
+              canais:
+              - channel_id: RecordNews.br
+                site: mi.tv
+                programas:
+                - inicio: '2026-09-04T09:00:00Z'
+                  fim: '2026-09-04T10:00:00Z'
+                  titulo: Jornal da Record
+      responses:
+        '200':
+          description: '{ ok, day, gravados }'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GuiaLoteGravado'
+        '400':
+          description: '`day` torto, `canais` vazia ou canal inválido (o índice e o motivo vêm na mensagem).'
+        '401':
+          description: Sem credencial ou credencial inválida. Veja a auth deste endpoint.
+        '413':
+          description: Mais de 500 canais num pedido.
+      tags:
+      - Admin
+  /api/admin/guia/fim:
+    post:
+      operationId: post_api_admin_guia_fim
+      summary: Registra a fonte `guia` em `catalog_meta.fontes`, ao lado das fontes do catálogo
+      description: 'Fecha a rodada do grabber: `fetched_at`, `itens` (canais, sites, programas…), `stale`, `ausente`. É o que `GET /api/health` mostra em `sources.guia` (limite de 2 dias) e o que o smoke cobra quando a fonte está fresca.
+
+        Devolve: { ok, guia }'
+      security:
+      - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                registro:
+                  type: object
+                  description: 'O mesmo formato de `fontes` da troca: `fetched_at`, `sha256` (pode ser nulo), `itens`, `stale`, `ausente`, `motivo`.'
+              required:
+              - registro
+            example:
+              registro:
+                fetched_at: '2026-09-04T03:20:00Z'
+                sha256: null
+                itens:
+                  canais: 64
+                  sites: 2
+                stale: false
+                ausente: false
+      responses:
+        '200':
+          description: '{ ok, guia }'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GuiaRegistrada'
+        '400':
+          description: Registro com campo de tipo errado.
+        '401':
+          description: Sem credencial ou credencial inválida. Veja a auth deste endpoint.
+      tags:
+      - Admin
+  /api/admin/logos/mortas:
+    get:
+      operationId: get_api_admin_logos_mortas
+      summary: Canais de TV cuja origem de logo morreu (o cron já falhou ao buscá-la) e ainda…
+      description: 'É a lista que `npm run logos:tvlogos` casa com o tv-logos, só por slug exato `[nome]-[cc].png`. Logo de terceiro nunca vai por cima de origem boa.
+
+        Devolve: { items, limit }'
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: limit
+        in: query
+        required: false
+        schema:
+          type: integer
+          default: 2000
+        description: Quantos canais devolver (teto 5000).
+      responses:
+        '200':
+          description: '{ items, limit }'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LogosMortas'
+        '401':
+          description: Sem credencial ou credencial inválida. Veja a auth deste endpoint.
+      tags:
+      - Admin
+  /api/admin/logos/overrides:
+    post:
+      operationId: post_api_admin_logos_overrides
+      summary: 'Grava overrides de logo (`logo_overrides`, INSERT OR REPLACE): a ficha passa a…'
+      description: 'Só https. Sobrevive à recarga (a tabela fica fora da troca). O crédito da fonte sai em `/sobre`.
+
+        Devolve: { ok, fonte, gravados }'
+      security:
+      - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                fonte:
+                  type: string
+                  description: Nome da fonte, ex. `tv-logos`.
+                itens:
+                  type: array
+                  items:
+                    type: object
+                  description: '`{ channel_id, url }`; teto de 500 por pedido.'
+              required:
+              - fonte
+              - itens
+            example:
+              fonte: tv-logos
+              itens:
+              - channel_id: BandNews.br
+                url: https://raw.githubusercontent.com/tv-logo/tv-logos/main/countries/brazil/band-news-br.png
+      responses:
+        '200':
+          description: '{ ok, fonte, gravados }'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OverridesGravados'
+        '400':
+          description: '`fonte` torta, lista vazia ou item sem `channel_id`/https (o índice vem na mensagem).'
+        '401':
+          description: Sem credencial ou credencial inválida. Veja a auth deste endpoint.
+        '413':
+          description: Mais de 500 itens.
+      tags:
+      - Admin
+  /api/admin/catalogo/troca:
+    post:
+      operationId: post_api_admin_catalogo_troca
+      summary: 'Confere o staging e troca o catálogo inteiro num único batch: ou tudo entra, ou…'
+      description: 'Antes de trocar: contagem por tabela igual a `esperado`, coleira (zero canal, zero stream, zero tocável ou menos da metade do que está no ar recusa), nenhum slug publicado trocado, nenhum stream órfão. A troca derruba as tabelas velhas, renomeia as novas, recria os índices e grava `synced_at` — no mesmo batch.
+
+        Devolve: { ok, recarga_id, antes{channels,channels_fts,channels_fts_ids,streams,blocklist,facet_countries,facet_categories,facet_languages,facet_subdivisions,facet_cities}, depois{channels,channels_fts,channels_fts_ids,streams,blocklist,facet_countries,facet_categories,facet_languages,facet_subdivisions,facet_cities}, synced_at }'
+      security:
+      - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                recarga_id:
+                  type: string
+                  description: Identificador desta execução (4–64 de `[A-Za-z0-9._-]`); lote e troca só valem para a recarga que abriu o staging.
+                esperado:
+                  type: object
+                  description: Tabela → quantas linhas o cliente mandou (`channels_fts` conta ids distintos). Diferença é lote perdido.
+                dump_sha256:
+                  type: string
+                  description: SHA-256 do dump da iptv-org que gerou este catálogo; fica em `catalog_meta`.
+                origem:
+                  type: string
+                  description: 'Quem recarregou (ex.: `c3/grade-catalogo`), para o relatório guardado.'
+              required:
+              - recarga_id
+              - esperado
+            example:
+              recarga_id: 2026-09-02T09-20-00Z
+              esperado:
+                channels: 31000
+                channels_fts: 31000
+                streams: 17000
+              dump_sha256: …
+              origem: c3/grade-catalogo
+      responses:
+        '200':
+          description: '{ ok, recarga_id, antes{channels,channels_fts,channels_fts_ids,streams,blocklist,facet_countries,facet_categories,facet_languages,facet_subdivisions,facet_cities}, depois{channels,channels_fts,channels_fts_ids,streams,blocklist,facet_countries,facet_categories,facet_languages,facet_subdivisions,facet_cities}, synced_at }'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RelatorioTroca'
+        '400':
+          description: '`recarga_id` ou `esperado` ausente.'
+        '401':
+          description: Sem credencial ou credencial inválida. Veja a auth deste endpoint.
+        '409':
+          description: '`recarga_divergente` (staging de outra execução) ou `staging_invalido` — a resposta lista `problemas[]` e o catálogo no ar não mudou.'
+      tags:
+      - Admin
+  /api/admin/catalogo/delta/inicio:
+    post:
+      operationId: post_api_admin_catalogo_delta_inicio
+      summary: 'Abre a recarga por diferença: coleira contra o catálogo no ar e a marca da…'
+      description: 'A mesma coleira da troca, antes de tocar em qualquer linha: zero canal, zero stream, zero tocável ou menos da metade do que está no ar recusa (409, `delta_recusado`). Passou, `recarga_id` fica em `catalog_meta.staging_run` e a sobra de staging de execução interrompida cai.
+
+        Devolve: { ok, recarga_id, live{channels,channels_fts,channels_fts_ids,streams,blocklist,facet_countries,facet_categories,facet_languages,facet_subdivisions,facet_cities} }'
+      security:
+      - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                recarga_id:
+                  type: string
+                  description: Identificador desta execução (4–64 de `[A-Za-z0-9._-]`); os pedidos seguintes só valem para a recarga que abriu.
+                esperado:
+                  type: object
+                  description: Tabela → quantas linhas o catálogo INTEIRO terá depois da diferença (`channels_fts` conta ids distintos), mais `playable` (canais de TV tocáveis). É o que o fim confere contra o ar.
+              required:
+              - recarga_id
+              - esperado
+            example:
+              recarga_id: 2026-09-05T18-00-00Z
+              esperado:
+                channels: 93857
+                channels_fts: 93857
+                streams: 80734
+                playable: 9400
+      responses:
+        '200':
+          description: '{ ok, recarga_id, live{channels,channels_fts,channels_fts_ids,streams,blocklist,facet_countries,facet_categories,facet_languages,facet_subdivisions,facet_cities} }'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DeltaAberto'
+        '400':
+          description: '`recarga_id` fora do formato ou `esperado` ausente.'
+        '401':
+          description: Sem credencial ou credencial inválida. Veja a auth deste endpoint.
+        '409':
+          description: '`delta_recusado`: a resposta lista `problemas[]` e o catálogo no ar não mudou.'
+      tags:
+      - Admin
+  /api/admin/catalogo/delta:
+    post:
+      operationId: post_api_admin_catalogo_delta
+      summary: 'Aplica no catálogo vivo, num batch, até 1000 linhas de UMA tabela: `upsert`…'
+      description: '`INSERT … ON CONFLICT DO UPDATE` coluna a coluna — menos a chave e o `slug`, que é do produto (URL indexada não muda). Na FTS os ids são apagados e reinseridos. Reenviar é seguro. Ordem é do cliente: `channels` antes de `streams` nas entradas, o inverso nas remoções (FK).
+
+        Devolve: { ok, tabela, recebidas, gravadas, removidas }'
+      security:
+      - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                recarga_id:
+                  type: string
+                  description: Identificador desta execução (4–64 de `[A-Za-z0-9._-]`); os pedidos seguintes só valem para a recarga que abriu.
+                tabela:
+                  type: string
+                  description: Uma de `channels`, `channels_fts`, `streams`, `blocklist`, `facet_countries`, `facet_categories`, `facet_languages`, `facet_subdivisions`, `facet_cities`.
+                upsert:
+                  type: array
+                  items:
+                    type: object
+                  description: Linhas com as colunas da tabela; coluna faltando entra com o DEFAULT do schema. Pode ser vazia.
+                remover:
+                  type: array
+                  items:
+                    type: string
+                  description: Chaves (`id`, `code` ou `channel_id`, conforme a tabela) a apagar. Pode ser vazia.
+              required:
+              - recarga_id
+              - tabela
+            example:
+              recarga_id: 2026-09-05T18-00-00Z
+              tabela: facet_countries
+              upsert:
+              - code: BR
+                name: Brazil
+              remover:
+              - XX
+      responses:
+        '200':
+          description: '{ ok, tabela, recebidas, gravadas, removidas }'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DeltaAplicado'
+        '400':
+          description: Tabela desconhecida, listas ausentes ou as duas vazias, linha sem chave, chave inválida.
+        '401':
+          description: Sem credencial ou credencial inválida. Veja a auth deste endpoint.
+        '409':
+          description: '`recarga_divergente`: a execução aberta é outra; chame `/delta/inicio`.'
+        '413':
+          description: Mais de 1000 linhas (`upsert` + `remover`).
+      tags:
+      - Admin
+  /api/admin/catalogo/delta/fim:
+    post:
+      operationId: post_api_admin_catalogo_delta_fim
+      summary: Confere o catálogo inteiro contra `esperado` e grava o carimbo (`synced_at`)…
+      description: 'Contagem por tabela igual a `esperado`, um id na FTS por canal, nenhum stream órfão, nenhum canal sem slug. Diferente disso é 409 (`delta_invalido`) sem carimbo: o serviço apaga o último envio e a próxima recarga é completa. O registro por fonte (`fontes`) e o `dump_sha256` ficam em `catalog_meta`, como na troca.
+
+        Devolve: { ok, recarga_id, depois{channels,channels_fts,channels_fts_ids,streams,blocklist,facet_countries,facet_categories,facet_languages,facet_subdivisions,facet_cities}, synced_at }'
+      security:
+      - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                recarga_id:
+                  type: string
+                  description: Identificador desta execução (4–64 de `[A-Za-z0-9._-]`); os pedidos seguintes só valem para a recarga que abriu.
+                esperado:
+                  type: object
+                  description: Tabela → quantas linhas o catálogo INTEIRO terá depois da diferença (`channels_fts` conta ids distintos), mais `playable` (canais de TV tocáveis). É o que o fim confere contra o ar.
+                dump_sha256:
+                  type: string
+                  description: SHA-256 do dump da iptv-org que gerou este catálogo.
+                origem:
+                  type: string
+                  description: 'Quem recarregou (ex.: `c3/grade-catalogo`), para o relatório guardado.'
+                resumo:
+                  type: object
+                  description: Contagens da diferença (`upsert`, `remover`, `refresh`, `iguais`), só para o relatório.
+              required:
+              - recarga_id
+              - esperado
+            example:
+              recarga_id: 2026-09-05T18-00-00Z
+              esperado:
+                channels: 93857
+                channels_fts: 93857
+                streams: 80734
+                playable: 9400
+              dump_sha256: …
+              origem: c3/grade-catalogo
+              resumo:
+                upsert: 41200
+                remover: 310
+                refresh: 7000
+                iguais: 190000
+      responses:
+        '200':
+          description: '{ ok, recarga_id, depois{channels,channels_fts,channels_fts_ids,streams,blocklist,facet_countries,facet_categories,facet_languages,facet_subdivisions,facet_cities}, synced_at }'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RelatorioDelta'
+        '400':
+          description: '`recarga_id`, `esperado` ou `fontes` inválidos.'
+        '401':
+          description: Sem credencial ou credencial inválida. Veja a auth deste endpoint.
+        '409':
+          description: '`recarga_divergente` (outra execução) ou `delta_invalido` — a resposta lista `problemas[]` e o carimbo não foi gravado.'
+      tags:
+      - Admin
+components:
+  schemas:
+    LoteGravado:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          description: Sempre `true`; lote recusado vem como 4xx.
+        tabela:
+          type: string
+          description: A tabela em que o lote entrou.
+        recebidas:
+          type: integer
+          description: Linhas recebidas no pedido.
+        gravadas:
+          type: integer
+          description: Linhas efetivamente inseridas; menor que `recebidas` quando um reenvio repetiu chave.
+      required:
+      - ok
+      - tabela
+      - recebidas
+      - gravadas
+      description: Resultado de um lote.
+    SlugPublicado:
+      type: object
+      properties:
+        id:
+          type: string
+          description: 'Id do canal na iptv-org (ex.: `GloboRJ.br`).'
+        slug:
+          type: string
+          description: Slug publicado; a troca recusa staging em que este id venha com outro.
+      required:
+      - id
+      - slug
+      description: 'O par que a recarga herda: id estável da iptv-org → slug já publicado.'
+    MetaCatalogo:
+      type: object
+      properties:
+        synced_at:
+          type: string
+          description: Instante (ISO-8601) da última troca bem-sucedida; é o que `/api/health` compara com o limite de 2 dias.
+          nullable: true
+        applied_at:
+          type: string
+          description: Instante em que o catálogo novo entrou no ar.
+          nullable: true
+        dump_sha256:
+          type: string
+          description: SHA-256 do dump da iptv-org que gerou o catálogo no ar.
+          nullable: true
+        staging_run:
+          type: string
+          description: '`recarga_id` da execução com staging aberto agora; `null` sem staging.'
+          nullable: true
+      required:
+      - synced_at
+      - applied_at
+      - dump_sha256
+      - staging_run
+      description: Os carimbos da recarga, lidos de `catalog_meta`.
+    ContagemCatalogo:
+      type: object
+      properties:
+        channels:
+          type: integer
+          description: Canais (linhas de `channels`).
+        channels_fts:
+          type: integer
+          description: Linhas do índice de busca (`channels_fts`).
+        channels_fts_ids:
+          type: integer
+          description: Ids distintos no índice de busca; a troca exige que seja igual a `channels`.
+        streams:
+          type: integer
+          description: Streams (linhas de `streams`).
+        blocklist:
+          type: integer
+          description: Canais bloqueados (DMCA), que ficam fora do catálogo.
+        facet_countries:
+          type: integer
+          description: Países na faceta.
+        facet_categories:
+          type: integer
+          description: Categorias na faceta.
+        facet_languages:
+          type: integer
+          description: Idiomas na faceta (ISO 639-3 inteiro).
+        facet_subdivisions:
+          type: integer
+          description: Estados e subdivisões na faceta.
+        facet_cities:
+          type: integer
+          description: Cidades na faceta.
+      required:
+      - channels
+      - channels_fts
+      - channels_fts_ids
+      - streams
+      - blocklist
+      - facet_countries
+      - facet_categories
+      - facet_languages
+      - facet_subdivisions
+      - facet_cities
+      description: Quantas linhas cada tabela do catálogo tem — no ar ou no staging.
+    EstadoCatalogo:
+      type: object
+      properties:
+        live:
+          allOf:
+          - $ref: '#/components/schemas/ContagemCatalogo'
+          description: O catálogo que está servindo agora.
+        staging:
+          allOf:
+          - $ref: '#/components/schemas/ContagemCatalogo'
+          description: As tabelas `*_novo` da recarga em curso; `null` quando não há staging.
+          nullable: true
+        meta:
+          allOf:
+          - $ref: '#/components/schemas/MetaCatalogo'
+          description: Carimbos da última recarga e do staging aberto.
+      required:
+      - live
+      - staging
+      - meta
+      description: O retrato que o serviço de recarga lê antes de começar e depois de trocar.
+    OverridesGravados:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          description: Sempre `true`; pedido recusado vem como 4xx.
+        fonte:
+          type: string
+          description: A fonte gravada em cada linha.
+        gravados:
+          type: integer
+          description: Overrides que entraram (INSERT OR REPLACE).
+      required:
+      - ok
+      - fonte
+      - gravados
+      description: Resultado da gravação de overrides de logo.
+    RelatorioTroca:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          description: Sempre `true`; recusa vem como 409 com `problemas[]`.
+        recarga_id:
+          type: string
+          description: A recarga que entrou no ar.
+        antes:
+          allOf:
+          - $ref: '#/components/schemas/ContagemCatalogo'
+          description: O catálogo que saiu do ar.
+          nullable: true
+        depois:
+          allOf:
+          - $ref: '#/components/schemas/ContagemCatalogo'
+          description: O catálogo que está servindo agora.
+        synced_at:
+          type: string
+          description: O `synced_at` gravado no mesmo batch da troca.
+      required:
+      - ok
+      - recarga_id
+      - antes
+      - depois
+      - synced_at
+      description: 'A troca aconteceu: contagens de antes e de depois, e o carimbo novo.'
+    RelatorioDelta:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          description: Sempre `true`; conferência que falha vem como 409 com `problemas[]`.
+        recarga_id:
+          type: string
+          description: A recarga que entrou no ar.
+        depois:
+          allOf:
+          - $ref: '#/components/schemas/ContagemCatalogo'
+          description: O catálogo que está servindo agora.
+        synced_at:
+          type: string
+          description: O `synced_at` gravado no mesmo batch do fechamento.
+      required:
+      - ok
+      - recarga_id
+      - depois
+      - synced_at
+      description: 'A diferença fechou: o catálogo inteiro bateu com `esperado` e o carimbo foi gravado.'
+    SlugsPublicados:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/SlugPublicado'
+          description: Os pares desta página.
+        next_after:
+          type: string
+          description: Passe em `apos` para a próxima página; `null` quando acabou.
+          nullable: true
+      required:
+      - items
+      - next_after
+      description: Página de slugs publicados, em ordem de id.
+    GuiaRegistrada:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          description: Sempre `true`.
+        guia:
+          type: object
+          description: 'O registro normalizado: `fetched_at`, `itens`, `stale`, `ausente`…'
+      required:
+      - ok
+      - guia
+      description: A fonte `guia` como ficou em `catalog_meta.fontes`.
+    DeltaAplicado:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          description: Sempre `true`; pedido recusado vem como 4xx.
+        tabela:
+          type: string
+          description: A tabela tocada.
+        recebidas:
+          type: integer
+          description: Linhas de `upsert` no pedido.
+        gravadas:
+          type: integer
+          description: Linhas que entraram ou foram atualizadas (na FTS, contando os ids apagados).
+        removidas:
+          type: integer
+          description: Linhas apagadas por `remover`.
+      required:
+      - ok
+      - tabela
+      - recebidas
+      - gravadas
+      - removidas
+      description: Um pedido da diferença entrou no catálogo vivo, num batch.
+    DeltaAberto:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          description: Sempre `true`; recusa vem como 409 com `problemas[]`.
+        recarga_id:
+          type: string
+          description: A execução aberta — os pedidos seguintes repetem.
+        live:
+          allOf:
+          - $ref: '#/components/schemas/ContagemCatalogo'
+          description: O catálogo no ar, antes da diferença.
+      required:
+      - ok
+      - recarga_id
+      - live
+      description: A recarga por diferença passou pela coleira e está marcada; nada mudou no ar ainda.
+    GuiaLoteGravado:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          description: Sempre `true`; lote recusado vem como 4xx.
+        day:
+          type: string
+          description: O dia gravado.
+        gravados:
+          type: integer
+          description: 'Canais que entraram (INSERT OR REPLACE: reenviar não duplica).'
+      required:
+      - ok
+      - day
+      - gravados
+      description: Resultado de um lote da guia.
+    InicioRecarga:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          description: Sempre `true`; falha vem como 4xx/5xx.
+        recarga_id:
+          type: string
+          description: O identificador que os lotes e a troca têm que repetir.
+        staging:
+          allOf:
+          - $ref: '#/components/schemas/ContagemCatalogo'
+          description: As contagens do staging recém-criado (todas zero).
+      required:
+      - ok
+      - recarga_id
+      - staging
+      description: Staging aberto e vazio.
+    LogosMortas:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            type: object
+          description: '`{ id, name, alt_names, country, logo_url, fail_count, last_error }` por canal.'
+        limit:
+          type: integer
+          description: O teto aplicado.
+      required:
+      - items
+      - limit
+      description: Canais com origem de logo morta, para o script de overrides casar.
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      description: ipt_… (guest) ou iptk_… (API key)

@@ -1,0 +1,85 @@
+openapi: 3.2.0
+info:
+  title: Grade Me API
+  version: dbad45cb
+  description: Catálogo IPTV, biblioteca pessoal com feeds e informações para produtores sobre transmissão autorizada sob consulta.
+servers:
+- url: https://gradetv.net
+tags:
+- name: Me
+paths:
+  /api/me:
+    get:
+      operationId: me
+      summary: 'A conta da sessão: e-mail, convidado principal e o tamanho da biblioteca'
+      description: 'Devolve: { user{id,email}, app, guest_token, resources{categories,favorites,history} }'
+      security:
+      - bearerAuth: []
+      responses:
+        '200':
+          description: '{ user{id,email}, app, guest_token, resources{categories,favorites,history} }'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  user:
+                    allOf:
+                    - $ref: '#/components/schemas/Conta'
+                    description: A pessoa dona da sessão.
+                  app:
+                    type: string
+                    description: Nome do produto.
+                  guest_token:
+                    type: string
+                    description: Convidado principal da conta — é o que tem a galeria.
+                  resources:
+                    allOf:
+                    - $ref: '#/components/schemas/Recursos'
+                    description: Quantas pastas, favoritos e canais no histórico existem.
+                required:
+                - user
+                - app
+                - guest_token
+                - resources
+        '401':
+          description: Sem credencial ou credencial inválida. Veja a auth deste endpoint.
+      tags:
+      - Me
+components:
+  schemas:
+    Conta:
+      type: object
+      properties:
+        id:
+          type: string
+          description: ID da conta.
+        email:
+          type: string
+          description: E-mail confirmado por código.
+      required:
+      - id
+      - email
+      description: A pessoa por trás da sessão.
+    Recursos:
+      type: object
+      properties:
+        categories:
+          type: integer
+          description: Quantas pastas o dono tem.
+        favorites:
+          type: integer
+          description: Quantos canais ele favoritou.
+        history:
+          type: integer
+          description: Quantos canais estão no histórico.
+      required:
+      - categories
+      - favorites
+      - history
+      description: O tamanho da biblioteca do dono — para o agente saber o que vai encontrar antes de buscar.
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      description: ipt_… (guest) ou iptk_… (API key)

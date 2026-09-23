@@ -1,0 +1,95 @@
+openapi: 3.2.0
+info:
+  title: Grade Cities API
+  version: dbad45cb
+  description: Catálogo IPTV, biblioteca pessoal com feeds e informações para produtores sobre transmissão autorizada sob consulta.
+servers:
+- url: https://gradetv.net
+tags:
+- name: Cities
+paths:
+  /api/cities:
+    get:
+      operationId: list_cities
+      summary: Cidades que têm canal tocável, filtráveis por país e por estado
+      description: 'Devolve: { items[{code,country,subdivision,name,count}] }'
+      security: []
+      parameters:
+      - name: country
+        in: query
+        required: false
+        schema:
+          type: string
+        description: Restringe a um país, ISO 3166-1 alpha-2.
+        example: BR
+      - name: subdivision
+        in: query
+        required: false
+        schema:
+          type: string
+        description: Restringe a um estado/província.
+        example: BR-SP
+      - name: kind
+        in: query
+        required: false
+        schema:
+          type: string
+          default: tv
+          enum:
+          - tv
+          - radio
+          - all
+        description: '`tv` (padrão) conta canais de TV; `radio` conta estações do Radio Browser; `all` junta os dois.'
+      responses:
+        '200':
+          description: '{ items[{code,country,subdivision,name,count}] }'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ListaCidade'
+      tags:
+      - Cities
+components:
+  schemas:
+    Cidade:
+      type: object
+      properties:
+        code:
+          type: string
+          description: Código do iptv-org.
+        country:
+          type: string
+          description: País, alpha-2.
+        subdivision:
+          type: string
+          description: Subdivisão a que a cidade pertence.
+          nullable: true
+        name:
+          type: string
+          description: Nome da cidade.
+        count:
+          type: integer
+          description: Canais tocáveis nela.
+      required:
+      - code
+      - country
+      - subdivision
+      - name
+      - count
+      description: Cidade com canal tocável.
+    ListaCidade:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/Cidade'
+          description: Todos os itens; estas rotas não paginam.
+      required:
+      - items
+      description: Coleção pequena e completa — faceta de catálogo, que cabe inteira numa resposta.
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      description: ipt_… (guest) ou iptk_… (API key)

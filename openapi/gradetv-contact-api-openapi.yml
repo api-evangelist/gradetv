@@ -1,0 +1,87 @@
+openapi: 3.2.0
+info:
+  title: Grade Contact API
+  version: dbad45cb
+  description: Catálogo IPTV, biblioteca pessoal com feeds e informações para produtores sobre transmissão autorizada sob consulta.
+servers:
+- url: https://gradetv.net
+tags:
+- name: Contact
+paths:
+  /api/contact:
+    post:
+      operationId: contact
+      summary: 'Contato e projetos de produtores: humano usa Turnstile; agente paga $0.10 por…'
+      description: 'Projetos de produtores: consulte GET /api/producers e use contact.message_template na mensagem. O primeiro envio de agente sai sem espera, após pagamento; depois o backoff é 60s dobrando até 1 hora (`Retry-After`). O valor paga somente o envio do contato, não o serviço de transmissão.
+
+        Devolve: { ok }'
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  description: Como chamar quem escreveu.
+                email:
+                  type: string
+                  description: Para onde responder.
+                message:
+                  type: string
+                  description: O que você quer dizer.
+                form_ts:
+                  type: integer
+                  description: 'Início da composição, em milissegundos Unix: entre 2 segundos e 12 horas atrás, obrigatório também para agentes.'
+                cf_turnstile_response:
+                  type: string
+                  description: Token Turnstile do formulário humano; ausente segue pelo pagamento de agente.
+              required:
+              - name
+              - email
+              - message
+              - form_ts
+            example:
+              name: …
+              email: a@example.com
+              message: …
+              form_ts: 0
+      responses:
+        '200':
+          description: '{ ok }'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Ok'
+        '400':
+          description: Campo obrigatório faltando.
+        '402':
+          description: 'Cota estourada. A resposta traz `accepts[]` (x402, USDC na Base): pague e repita a mesma chamada com `X-PAYMENT`.'
+        '403':
+          description: Verificação Turnstile inválida.
+        '429':
+          description: 'Backoff de agente: espere o `Retry-After`.'
+        '502':
+          description: O provedor não aceitou o envio do e-mail; tente novamente mais tarde.
+        '503':
+          description: Envio indisponível por configuração de e-mail incompleta.
+      tags:
+      - Contact
+components:
+  schemas:
+    Ok:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          description: Sempre `true` — a falha vem como status 4xx/5xx, não como `ok:false`.
+      required:
+      - ok
+      description: Confirmação de escrita que não tem corpo próprio a devolver.
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      description: ipt_… (guest) ou iptk_… (API key)

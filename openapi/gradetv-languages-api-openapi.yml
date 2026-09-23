@@ -1,0 +1,72 @@
+openapi: 3.2.0
+info:
+  title: Grade Languages API
+  version: dbad45cb
+  description: Catálogo IPTV, biblioteca pessoal com feeds e informações para produtores sobre transmissão autorizada sob consulta.
+servers:
+- url: https://gradetv.net
+tags:
+- name: Languages
+paths:
+  /api/languages:
+    get:
+      operationId: list_languages
+      summary: Idiomas que têm canal tocável, com a contagem de cada um
+      description: 'Devolve: { items[{code,name,count}] }'
+      security: []
+      parameters:
+      - name: kind
+        in: query
+        required: false
+        schema:
+          type: string
+          default: tv
+          enum:
+          - tv
+          - radio
+          - all
+        description: '`tv` (padrão) conta canais de TV; `radio` conta estações do Radio Browser; `all` junta os dois.'
+      responses:
+        '200':
+          description: '{ items[{code,name,count}] }'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ListaIdioma'
+      tags:
+      - Languages
+components:
+  schemas:
+    ListaIdioma:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/Idioma'
+          description: Todos os itens; estas rotas não paginam.
+      required:
+      - items
+      description: Coleção pequena e completa — faceta de catálogo, que cabe inteira numa resposta.
+    Idioma:
+      type: object
+      properties:
+        code:
+          type: string
+          description: ISO 639-3, ex. `por`.
+        name:
+          type: string
+          description: Nome do idioma.
+        count:
+          type: integer
+          description: Canais tocáveis neste idioma.
+      required:
+      - code
+      - name
+      - count
+      description: Idioma com canal tocável.
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      description: ipt_… (guest) ou iptk_… (API key)

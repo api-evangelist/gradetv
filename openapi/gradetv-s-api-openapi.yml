@@ -1,0 +1,45 @@
+openapi: 3.2.0
+info:
+  title: Grade S API
+  version: dbad45cb
+  description: Catálogo IPTV, biblioteca pessoal com feeds e informações para produtores sobre transmissão autorizada sob consulta.
+servers:
+- url: https://gradetv.net
+tags:
+- name: S
+paths:
+  /api/s/{id}:
+    get:
+      operationId: get_api_s_by_id
+      summary: 'Hop do stream: conta o play (uma vez por pessoa, canal e dia) e devolve a…'
+      description: 'É o endereço que aparece no M3U e na API — nunca a origem crua. O Grade NÃO retransmite vídeo: os segmentos vêm da origem, no browser e no VLC. Origem sem CORS, ou `http` numa página `https`, não toca no browser; a mesma URL toca no VLC.
+
+        Devolve: `application/vnd.apple.mpegurl` (playlist com URI absoluta) ou 302 para a origem.'
+      security: []
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: t
+        in: query
+        required: false
+        schema:
+          type: string
+        description: Ticket curto da ficha do canal; obrigatório quando o canal é adulto.
+      responses:
+        '200':
+          description: '`application/vnd.apple.mpegurl` (playlist com URI absoluta) ou 302 para a origem.'
+        '403':
+          description: Canal adulto sem ticket `t` válido.
+        '404':
+          description: Stream não existe.
+      tags:
+      - S
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      description: ipt_… (guest) ou iptk_… (API key)

@@ -1,0 +1,164 @@
+openapi: 3.2.0
+info:
+  title: Grade Play Reports API
+  version: dbad45cb
+  description: Catálogo IPTV, biblioteca pessoal com feeds e informações para produtores sobre transmissão autorizada sob consulta.
+servers:
+- url: https://gradetv.net
+tags:
+- name: Play Reports
+paths:
+  /api/play-reports:
+    get:
+      operationId: play_reports
+      summary: Relatos crus, com endereço IP, para investigar um canal — só operador
+      description: 'Existe separado do painel público justamente porque traz endereço. A linha some depois do prazo em `retention_days`, e `/api/channels/:id/health` nunca devolve IP.
+
+        Devolve: { items[{channel_id,ok,code,ip,browser,os,country,day,at}], limit, offset, next_offset, retention_days, filters{channel_id,only_failures}, api }'
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: channel_id
+        in: query
+        required: false
+        schema:
+          type: string
+        description: Restringe a um canal.
+        example: Globo.br
+      - name: ok
+        in: query
+        required: false
+        schema:
+          type: boolean
+          enum:
+          - '0'
+        description: '`0` traz só as falhas — é o recorte que interessa numa investigação.'
+      - name: limit
+        in: query
+        required: false
+        schema:
+          type: integer
+          default: 20
+        description: Itens por página. Acima de 50 é silenciosamente reduzido a 50.
+      - name: offset
+        in: query
+        required: false
+        schema:
+          type: integer
+          default: 0
+        description: Quantos itens pular. Use `next_offset` da resposta anterior.
+      responses:
+        '200':
+          description: '{ items[{channel_id,ok,code,ip,browser,os,country,day,at}], limit, offset, next_offset, retention_days, filters{channel_id,only_failures}, api }'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginaDeRelatos'
+        '401':
+          description: Sem credencial ou credencial inválida. Veja a auth deste endpoint.
+      tags:
+      - Play Reports
+components:
+  schemas:
+    PaginaDeRelatos:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/Relato'
+          description: Os relatos, do mais recente para o mais antigo.
+        limit:
+          type: integer
+          description: Tamanho de página aplicado.
+        offset:
+          type: integer
+          description: Deslocamento aplicado.
+        next_offset:
+          type: integer
+          description: Offset da próxima página; `null` quando acabou.
+          nullable: true
+        retention_days:
+          type: integer
+          description: Depois de quantos dias a linha é apagada.
+        filters:
+          allOf:
+          - $ref: '#/components/schemas/FiltrosRelato'
+          description: Os filtros como o servidor os entendeu.
+        api:
+          type: string
+          description: URL absoluta desta listagem.
+      required:
+      - items
+      - limit
+      - offset
+      - next_offset
+      - retention_days
+      - filters
+      - api
+      description: 'Página de relatos crus. Não tem `total` de propósito: contar a tabela inteira a cada consulta de investigação sai caro e não muda a decisão de quem investiga.'
+    Relato:
+      type: object
+      properties:
+        channel_id:
+          type: string
+          description: Canal que a pessoa tentou assistir.
+        ok:
+          type: boolean
+          description: Se tocou (`true`) ou falhou (`false`).
+        code:
+          type: string
+          description: Código da falha, quando falhou.
+          nullable: true
+        ip:
+          type: string
+          description: Endereço de quem relatou. Nunca aparece no painel público.
+          nullable: true
+        browser:
+          type: string
+          description: Navegador deduzido do User-Agent.
+          nullable: true
+        os:
+          type: string
+          description: Sistema deduzido do User-Agent.
+          nullable: true
+        country:
+          type: string
+          description: País deduzido pela borda.
+          nullable: true
+        day:
+          type: string
+          description: Dia do relato (AAAA-MM-DD) — a contagem é uma por dono, canal e dia.
+        at:
+          type: string
+          description: Momento exato do relato (UTC).
+      required:
+      - channel_id
+      - ok
+      - code
+      - ip
+      - browser
+      - os
+      - country
+      - day
+      - at
+      description: Relato cru de reprodução, com endereço — por isso a rota é só de operador e a linha expira.
+    FiltrosRelato:
+      type: object
+      properties:
+        channel_id:
+          type: string
+          description: Canal filtrado, ou `null` para todos.
+          nullable: true
+        only_failures:
+          type: boolean
+          description: Se só as falhas entraram.
+      required:
+      - channel_id
+      - only_failures
+      description: O que o servidor entendeu do filtro de relatos.
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      description: ipt_… (guest) ou iptk_… (API key)

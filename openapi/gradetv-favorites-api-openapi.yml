@@ -1,0 +1,239 @@
+openapi: 3.2.0
+info:
+  title: Grade Favorites API
+  version: dbad45cb
+  description: Catálogo IPTV, biblioteca pessoal com feeds e informações para produtores sobre transmissão autorizada sob consulta.
+servers:
+- url: https://gradetv.net
+tags:
+- name: Favorites
+paths:
+  /api/favorites:
+    get:
+      operationId: list_favorites
+      summary: Canais favoritados pelo dono, do mais recente para o mais antigo
+      description: 'Canal adulto só aparece com consentimento 18+ válido.
+
+        Devolve: { items[{channel_id,name,country,quality,logo_url,is_nsfw,playable_hint,favorites,created_at,stale,api}], total, limit, offset, next_offset, api, max }'
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: limit
+        in: query
+        required: false
+        schema:
+          type: integer
+          default: 20
+        description: Itens por página. Acima de 50 é silenciosamente reduzido a 50.
+      - name: offset
+        in: query
+        required: false
+        schema:
+          type: integer
+          default: 0
+        description: Quantos itens pular. Use `next_offset` da resposta anterior.
+      responses:
+        '200':
+          description: '{ items[{channel_id,name,country,quality,logo_url,is_nsfw,playable_hint,favorites,created_at,stale,api}], total, limit, offset, next_offset, api, max }'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginaDeFavoritos'
+        '401':
+          description: Sem credencial ou credencial inválida. Veja a auth deste endpoint.
+      tags:
+      - Favorites
+    post:
+      operationId: add_favorite
+      summary: Favorita um canal.
+      description: 'Devolve: { ok, favorited, created, channel_id, favorites }'
+      security:
+      - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                channel_id:
+                  type: string
+                  description: Canal a favoritar, ex. `Globo.br`.
+              required:
+              - channel_id
+            example:
+              channel_id: Globo.br
+      responses:
+        '200':
+          description: '{ ok, favorited, created, channel_id, favorites }'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok:
+                    type: boolean
+                    description: Sempre `true`.
+                  favorited:
+                    type: boolean
+                    description: Sempre `true` ao fim desta chamada.
+                  created:
+                    type: boolean
+                    description: '`true` se foi agora; `false` se já era favorito.'
+                  channel_id:
+                    type: string
+                    description: O canal favoritado.
+                  favorites:
+                    type: integer
+                    description: Total de pessoas que favoritaram este canal.
+                required:
+                - ok
+                - favorited
+                - created
+                - channel_id
+                - favorites
+        '400':
+          description: '`channel_id` ausente ou teto de favoritos atingido.'
+        '401':
+          description: Sem credencial ou credencial inválida. Veja a auth deste endpoint.
+      tags:
+      - Favorites
+  /api/favorites/{channel_id}:
+    delete:
+      operationId: remove_favorite
+      summary: Desfavorita o canal e devolve o ponto ao contador público
+      description: 'Devolve: { ok, favorited, channel_id, favorites }'
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: channel_id
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: '{ ok, favorited, channel_id, favorites }'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok:
+                    type: boolean
+                    description: Sempre `true`.
+                  favorited:
+                    type: boolean
+                    description: Sempre `false` ao fim desta chamada.
+                  channel_id:
+                    type: string
+                    description: O canal que saiu dos favoritos.
+                  favorites:
+                    type: integer
+                    description: Total de pessoas que ainda favoritam este canal.
+                required:
+                - ok
+                - favorited
+                - channel_id
+                - favorites
+        '401':
+          description: Sem credencial ou credencial inválida. Veja a auth deste endpoint.
+        '404':
+          description: O canal não estava nos seus favoritos.
+      tags:
+      - Favorites
+components:
+  schemas:
+    PaginaDeFavoritos:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/Favorito'
+          description: Os itens desta página, na ordem que a rota define.
+        total:
+          type: integer
+          description: Quantos itens casam com o filtro, ignorando a paginação.
+        limit:
+          type: integer
+          description: Tamanho de página efetivamente aplicado (pode ser menor que o pedido).
+        offset:
+          type: integer
+          description: Deslocamento aplicado nesta página.
+        next_offset:
+          type: integer
+          description: Offset da próxima página; `null` quando esta é a última.
+          nullable: true
+        api:
+          type: string
+          description: URL absoluta desta própria listagem.
+        max:
+          type: integer
+          description: Quantos favoritos o dono pode ter.
+      required:
+      - items
+      - total
+      - limit
+      - offset
+      - next_offset
+      - api
+      - max
+      description: Página dos favoritos do dono, com o teto de quantos cabem.
+    Favorito:
+      type: object
+      properties:
+        channel_id:
+          type: string
+          description: ID do canal favoritado.
+        name:
+          type: string
+          description: Nome do canal; cai no ID se ele saiu do catálogo.
+        country:
+          type: string
+          description: País do canal.
+          nullable: true
+        quality:
+          type: string
+          description: Melhor qualidade conhecida.
+          nullable: true
+        logo_url:
+          type: string
+          description: Logo servido por nós.
+          nullable: true
+        is_nsfw:
+          type: boolean
+          description: Conteúdo adulto — some da lista sem consentimento 18+.
+        playable_hint:
+          type: boolean
+          description: Se a última verificação achou stream utilizável.
+        favorites:
+          type: integer
+          description: Quantas pessoas favoritaram este canal ao todo.
+        created_at:
+          type: string
+          description: Quando o dono favoritou (UTC).
+        stale:
+          type: boolean
+          description: '`true` quando o canal não existe mais no catálogo.'
+        api:
+          type: string
+          description: URL absoluta da ficha do canal.
+      required:
+      - channel_id
+      - name
+      - country
+      - quality
+      - logo_url
+      - is_nsfw
+      - playable_hint
+      - favorites
+      - created_at
+      - stale
+      - api
+      description: Um canal favoritado pelo dono.
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      description: ipt_… (guest) ou iptk_… (API key)

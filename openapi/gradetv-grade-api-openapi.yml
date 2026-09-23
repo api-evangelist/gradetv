@@ -1,0 +1,73 @@
+openapi: 3.2.0
+info:
+  title: Grade API
+  version: dbad45cb
+  description: Catálogo IPTV, biblioteca pessoal com feeds e informações para produtores sobre transmissão autorizada sob consulta.
+servers:
+- url: https://gradetv.net
+tags:
+- name: Grade
+paths:
+  /api/:
+    get:
+      operationId: api_index
+      summary: Índice auto-descrito da API inteira, com os idiomas e as páginas HTML de cada um
+      description: 'Devolve: { name, description, locales, auth, docs, endpoints, quota, mcp, quickstart }'
+      security: []
+      responses:
+        '200':
+          description: '{ name, description, locales, auth, docs, endpoints, quota, mcp, quickstart }'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  name:
+                    type: string
+                    description: Nome do produto.
+                  description:
+                    type: string
+                    description: O que o produto faz, em uma frase.
+                  locales:
+                    type: object
+                    description: Idiomas atendidos e o caminho de cada página em cada um.
+                  auth:
+                    type: object
+                    description: Cada modo de autenticação e como obtê-lo.
+                  docs:
+                    type: object
+                    description: Links para llms.txt, llms-full.txt, openapi.json, MCP e a UI.
+                  endpoints:
+                    type: array
+                    items:
+                      type: object
+                    description: Todo endpoint com método, caminho, auth, URL absoluta e o que devolve.
+                  quota:
+                    type: object
+                    description: O que é grátis, o que custa e como pagar — antes de você gastar chamada.
+                  mcp:
+                    type: object
+                    description: Endereço e transporte do servidor MCP.
+                  quickstart:
+                    type: array
+                    items:
+                      type: string
+                    description: As quatro chamadas que levam do zero à biblioteca.
+                required:
+                - name
+                - description
+                - locales
+                - auth
+                - docs
+                - endpoints
+                - quota
+                - mcp
+                - quickstart
+      tags:
+      - Grade
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      description: ipt_… (guest) ou iptk_… (API key)
