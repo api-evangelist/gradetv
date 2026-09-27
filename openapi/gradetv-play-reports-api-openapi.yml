@@ -60,43 +60,6 @@ paths:
       - Play Reports
 components:
   schemas:
-    PaginaDeRelatos:
-      type: object
-      properties:
-        items:
-          type: array
-          items:
-            $ref: '#/components/schemas/Relato'
-          description: Os relatos, do mais recente para o mais antigo.
-        limit:
-          type: integer
-          description: Tamanho de página aplicado.
-        offset:
-          type: integer
-          description: Deslocamento aplicado.
-        next_offset:
-          type: integer
-          description: Offset da próxima página; `null` quando acabou.
-          nullable: true
-        retention_days:
-          type: integer
-          description: Depois de quantos dias a linha é apagada.
-        filters:
-          allOf:
-          - $ref: '#/components/schemas/FiltrosRelato'
-          description: Os filtros como o servidor os entendeu.
-        api:
-          type: string
-          description: URL absoluta desta listagem.
-      required:
-      - items
-      - limit
-      - offset
-      - next_offset
-      - retention_days
-      - filters
-      - api
-      description: 'Página de relatos crus. Não tem `total` de propósito: contar a tabela inteira a cada consulta de investigação sai caro e não muda a decisão de quem investiga.'
     Relato:
       type: object
       properties:
@@ -143,6 +106,43 @@ components:
       - day
       - at
       description: Relato cru de reprodução, com endereço — por isso a rota é só de operador e a linha expira.
+    PaginaDeRelatos:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/Relato'
+          description: Os relatos, do mais recente para o mais antigo.
+        limit:
+          type: integer
+          description: Tamanho de página aplicado.
+        offset:
+          type: integer
+          description: Deslocamento aplicado.
+        next_offset:
+          type: integer
+          description: Offset da próxima página; `null` quando acabou.
+          nullable: true
+        retention_days:
+          type: integer
+          description: Depois de quantos dias a linha é apagada.
+        filters:
+          allOf:
+          - $ref: '#/components/schemas/FiltrosRelato'
+          description: Os filtros como o servidor os entendeu.
+        api:
+          type: string
+          description: URL absoluta desta listagem.
+      required:
+      - items
+      - limit
+      - offset
+      - next_offset
+      - retention_days
+      - filters
+      - api
+      description: 'Página de relatos crus. Não tem `total` de propósito: contar a tabela inteira a cada consulta de investigação sai caro e não muda a decisão de quem investiga.'
     FiltrosRelato:
       type: object
       properties:

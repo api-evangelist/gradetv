@@ -37,17 +37,6 @@ paths:
       - Qualities
 components:
   schemas:
-    ListaQualidade:
-      type: object
-      properties:
-        items:
-          type: array
-          items:
-            $ref: '#/components/schemas/Qualidade'
-          description: Todos os itens; estas rotas não paginam.
-      required:
-      - items
-      description: Coleção pequena e completa — faceta de catálogo, que cabe inteira numa resposta.
     Qualidade:
       type: object
       properties:
@@ -65,6 +54,17 @@ components:
       - name
       - count
       description: Qualidade distinta encontrada nos streams.
+    ListaQualidade:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/Qualidade'
+          description: Todos os itens; estas rotas não paginam.
+      required:
+      - items
+      description: Coleção pequena e completa — faceta de catálogo, que cabe inteira numa resposta.
   securitySchemes:
     bearerAuth:
       type: http

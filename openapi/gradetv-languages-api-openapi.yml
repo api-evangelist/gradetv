@@ -37,17 +37,6 @@ paths:
       - Languages
 components:
   schemas:
-    ListaIdioma:
-      type: object
-      properties:
-        items:
-          type: array
-          items:
-            $ref: '#/components/schemas/Idioma'
-          description: Todos os itens; estas rotas não paginam.
-      required:
-      - items
-      description: Coleção pequena e completa — faceta de catálogo, que cabe inteira numa resposta.
     Idioma:
       type: object
       properties:
@@ -65,6 +54,17 @@ components:
       - name
       - count
       description: Idioma com canal tocável.
+    ListaIdioma:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/Idioma'
+          description: Todos os itens; estas rotas não paginam.
+      required:
+      - items
+      description: Coleção pequena e completa — faceta de catálogo, que cabe inteira numa resposta.
   securitySchemes:
     bearerAuth:
       type: http

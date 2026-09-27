@@ -200,33 +200,6 @@ paths:
       - Auth
 components:
   schemas:
-    Conta:
-      type: object
-      properties:
-        id:
-          type: string
-          description: ID da conta.
-        email:
-          type: string
-          description: E-mail confirmado por código.
-      required:
-      - id
-      - email
-      description: A pessoa por trás da sessão.
-    Reivindicacao:
-      type: object
-      properties:
-        ok:
-          type: boolean
-          description: Se havia algo a reivindicar.
-        product:
-          allOf:
-          - $ref: '#/components/schemas/ReivindicacaoProduto'
-          description: O convidado que a conta já tinha, e o que fazer com ele.
-      required:
-      - ok
-      - product
-      description: O que o verify achou de convidado já ligado a este e-mail. É o campo que salva a biblioteca de outro aparelho.
     Recursos:
       type: object
       properties:
@@ -253,6 +226,19 @@ components:
       required:
       - ok
       description: Confirmação de escrita que não tem corpo próprio a devolver.
+    Conta:
+      type: object
+      properties:
+        id:
+          type: string
+          description: ID da conta.
+        email:
+          type: string
+          description: E-mail confirmado por código.
+      required:
+      - id
+      - email
+      description: A pessoa por trás da sessão.
     ReivindicacaoProduto:
       type: object
       properties:
@@ -271,6 +257,20 @@ components:
       - adopt
       - resources
       description: Qual convidado usar depois de entrar — o novo ou o que já existia.
+    Reivindicacao:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          description: Se havia algo a reivindicar.
+        product:
+          allOf:
+          - $ref: '#/components/schemas/ReivindicacaoProduto'
+          description: O convidado que a conta já tinha, e o que fazer com ele.
+      required:
+      - ok
+      - product
+      description: O que o verify achou de convidado já ligado a este e-mail. É o campo que salva a biblioteca de outro aparelho.
   securitySchemes:
     bearerAuth:
       type: http
