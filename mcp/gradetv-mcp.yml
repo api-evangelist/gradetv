@@ -34,48 +34,104 @@ x-evidence:
   method_probe: tools/list
 tools:
 - name: api_index
+  description: Descobre a API Grade.
 - name: health
+  description: Liveness.
 - name: geo
+  description: País sugerido para a UI (fallback BR).
 - name: list_countries
+  description: Países do catálogo com contagem playable e URL da bandeira (kind=radio conta estações).
 - name: list_tags
+  description: Tags das estações de rádio tocáveis, com contagem; opcionalmente por país.
 - name: search_channels
+  description: 'Busca canais públicos (filtros: q, country, category, language, network, quality, playable;
+    kind=radio para estações de rádio, tag para tag de rádio; sort=score ordena pela saúde medida por
+    terceiro, sort=votes pelos votos da rádio; online='
 - name: list_languages
+  description: Idiomas do catálogo tocável.
 - name: list_networks
+  description: Redes (network) do catálogo tocável.
 - name: list_qualities
+  description: Qualidades distintas dos streams.
 - name: list_subdivisions
+  description: Estados/subdivisões com canal tocável.
 - name: list_cities
+  description: Cidades com canal tocável.
 - name: get_channel
+  description: Detalhe de um canal e seus streams.
 - name: get_channel_guide
+  description: 'Programação de hoje do canal (grabada por nós): agora, a seguir e a lista.'
 - name: create_guest
+  description: Cria guest ipt_…
 - name: mint_key
+  description: Gera API key iptk_… (texto 1×).
 - name: get_library
+  description: Árvore organizada do dono + URLs de feed.
 - name: create_category
+  description: Cria tab/categoria pessoal.
 - name: create_group
+  description: Cria sub-aba numa categoria.
 - name: add_item
+  description: Adiciona canal à sub-aba.
 - name: get_history
+  description: Histórico de canais assistidos pelo dono.
 - name: record_watch
+  description: Registra um canal assistido no histórico do dono.
 - name: forget_watch
+  description: Tira um canal do histórico do dono.
 - name: clear_history
+  description: Limpa o histórico inteiro do dono.
 - name: producer_services
+  description: 'Oferta de transmissão autorizada sob consulta: informações e contatos para produtores.
+    Não ativa streams.'
 - name: nsfw_consent_status
+  description: Estado do portão de conteúdo adulto do dono.
 - name: nsfw_consent_accept
+  description: Declara 18+ e aceita os termos de conteúdo adulto; libera nsfw=1 para este dono.
 - name: nsfw_pass_buy
+  description: Compra o passe de conteúdo adulto ($0.10 / 30 dias, x402). Exige consentimento de idade
+    antes.
 - name: nsfw_pass_status
+  description: Diz se o passe adulto do dono está válido e até quando.
 - name: nsfw_consent_revoke
+  description: Revoga o consentimento adulto do dono.
 - name: report_play
+  description: Relata se um canal tocou (ok=true) ou não (ok=false + code). Navegador, SO e país saem
+    do pedido, não do corpo.
 - name: play_reports
+  description: Relatos crus de um canal, com endereço — só operador (METRICS_TOKEN). Use para investigar
+    um canal específico.
 - name: channel_health
+  description: 'Saúde comunitária do canal: taxa de sucesso, motivos de falha e ambientes afetados.'
 - name: list_favorites
+  description: Favoritos do dono.
 - name: add_favorite
+  description: Favorita um canal para o dono.
 - name: remove_favorite
+  description: Tira um canal dos favoritos do dono.
 - name: list_comments
+  description: Comentários da comunidade sobre um canal.
 - name: post_comment
+  description: Comenta num canal (teto de 20/hora por dono).
 - name: delete_comment
+  description: Apaga um comentário do próprio dono.
 - name: chat_history
+  description: Últimas mensagens da sala de um canal (sem WebSocket).
 - name: chat_send
+  description: Manda mensagem na sala de um canal por HTTP.
 - name: chat_pass
+  description: Passe mensal do chat ($0.10 / 30 dias). Sem pagamento → 402.
 - name: auth_start
+  description: Manda o código de login por e-mail.
 - name: auth_verify
+  description: Confere o código, abre sessão e reivindica o convidado (devolve o convidado principal).
 - name: me
+  description: 'Conta da sessão (cookie repassado pelo cliente MCP): e-mail, convidado principal e tamanho
+    da biblioteca.'
 - name: billing
+  description: Preços e tetos.
 - name: contact
+  description: 'Contato, projeto de produtor ou proposta de patrocínio/parceria/anúncio ($0.10 x402/crédito
+    por envio). Após o 1º envio: 429 + Retry-After.'
+descriptions_source: live tools/list (authorship probe or saved capture); filled by backfill-tools-from-authorship.py
+  --descriptions, 2026-09-28
