@@ -110,26 +110,88 @@ paths:
       - Items
 components:
   schemas:
-    Biblioteca:
+    SubAba:
       type: object
       properties:
-        owner:
+        id:
           type: string
-          description: 'Rótulo derivado do dono desta árvore — estável enquanto o feed for o mesmo, e não reversível. NÃO é o token de convidado: publicá-lo aqui faria uma API key delegada escalar para a credencial mestra, que não tem revogação.'
+          description: ID da sub-aba, `grp_…`.
+        name:
+          type: string
+          description: Nome que o dono deu.
+        slug:
+          type: string
+          description: Versão do nome usada na URL do feed.
+        sort:
+          type: integer
+          description: Posição na ordenação dentro da pasta.
+        last_item_id:
+          type: string
+          description: Último canal tocado nesta sub-aba.
+          nullable: true
+        api:
+          type: string
+          description: URL absoluta desta sub-aba.
         feeds:
           allOf:
           - $ref: '#/components/schemas/Feeds'
-          description: Feeds da biblioteca inteira, em quatro formatos.
-        categories:
+          description: Feeds só desta sub-aba.
+        items:
           type: array
           items:
-            $ref: '#/components/schemas/PastaBiblioteca'
-          description: As pastas do dono, na ordem que ele arrumou.
+            $ref: '#/components/schemas/ItemBiblioteca'
+          description: Canais colocados aqui, na ordem do dono.
       required:
-      - owner
+      - id
+      - name
+      - slug
+      - sort
+      - last_item_id
+      - api
       - feeds
-      - categories
-      description: 'A galeria inteira do dono: pastas, sub-abas, canais e as URLs de feed de cada nível.'
+      - items
+      description: Sub-aba dentro de uma pasta; é o nível que agrupa os canais.
+    PastaBiblioteca:
+      type: object
+      properties:
+        id:
+          type: string
+          description: ID da pasta, `cat_…`.
+        name:
+          type: string
+          description: Nome que o dono deu.
+        slug:
+          type: string
+          description: Versão do nome usada na URL do feed.
+        sort:
+          type: integer
+          description: Posição na ordenação do dono.
+        last_group_id:
+          type: string
+          description: Sub-aba aberta por último — é o que devolve a pessoa ao lugar onde parou.
+          nullable: true
+        api:
+          type: string
+          description: URL absoluta desta pasta.
+        feeds:
+          allOf:
+          - $ref: '#/components/schemas/Feeds'
+          description: Feeds só desta pasta.
+        groups:
+          type: array
+          items:
+            $ref: '#/components/schemas/SubAba'
+          description: Sub-abas dentro da pasta.
+      required:
+      - id
+      - name
+      - slug
+      - sort
+      - last_group_id
+      - api
+      - feeds
+      - groups
+      description: Pasta (aba principal) da galeria do dono.
     BibliotecaComItem:
       type: object
       properties:
@@ -215,47 +277,6 @@ components:
       - stale
       - sort
       description: Um canal dentro de uma sub-aba, com o stream já escolhido.
-    PastaBiblioteca:
-      type: object
-      properties:
-        id:
-          type: string
-          description: ID da pasta, `cat_…`.
-        name:
-          type: string
-          description: Nome que o dono deu.
-        slug:
-          type: string
-          description: Versão do nome usada na URL do feed.
-        sort:
-          type: integer
-          description: Posição na ordenação do dono.
-        last_group_id:
-          type: string
-          description: Sub-aba aberta por último — é o que devolve a pessoa ao lugar onde parou.
-          nullable: true
-        api:
-          type: string
-          description: URL absoluta desta pasta.
-        feeds:
-          allOf:
-          - $ref: '#/components/schemas/Feeds'
-          description: Feeds só desta pasta.
-        groups:
-          type: array
-          items:
-            $ref: '#/components/schemas/SubAba'
-          description: Sub-abas dentro da pasta.
-      required:
-      - id
-      - name
-      - slug
-      - sort
-      - last_group_id
-      - api
-      - feeds
-      - groups
-      description: Pasta (aba principal) da galeria do dono.
     Feeds:
       type: object
       properties:
@@ -277,47 +298,26 @@ components:
       - json
       - xspf
       description: O mesmo conteúdo em quatro formatos. São URLs públicas, com o token do feed no caminho — quem tem o link tem o conteúdo.
-    SubAba:
+    Biblioteca:
       type: object
       properties:
-        id:
+        owner:
           type: string
-          description: ID da sub-aba, `grp_…`.
-        name:
-          type: string
-          description: Nome que o dono deu.
-        slug:
-          type: string
-          description: Versão do nome usada na URL do feed.
-        sort:
-          type: integer
-          description: Posição na ordenação dentro da pasta.
-        last_item_id:
-          type: string
-          description: Último canal tocado nesta sub-aba.
-          nullable: true
-        api:
-          type: string
-          description: URL absoluta desta sub-aba.
+          description: 'Rótulo derivado do dono desta árvore — estável enquanto o feed for o mesmo, e não reversível. NÃO é o token de convidado: publicá-lo aqui faria uma API key delegada escalar para a credencial mestra, que não tem revogação.'
         feeds:
           allOf:
           - $ref: '#/components/schemas/Feeds'
-          description: Feeds só desta sub-aba.
-        items:
+          description: Feeds da biblioteca inteira, em quatro formatos.
+        categories:
           type: array
           items:
-            $ref: '#/components/schemas/ItemBiblioteca'
-          description: Canais colocados aqui, na ordem do dono.
+            $ref: '#/components/schemas/PastaBiblioteca'
+          description: As pastas do dono, na ordem que ele arrumou.
       required:
-      - id
-      - name
-      - slug
-      - sort
-      - last_item_id
-      - api
+      - owner
       - feeds
-      - items
-      description: Sub-aba dentro de uma pasta; é o nível que agrupa os canais.
+      - categories
+      description: 'A galeria inteira do dono: pastas, sub-abas, canais e as URLs de feed de cada nível.'
   securitySchemes:
     bearerAuth:
       type: http

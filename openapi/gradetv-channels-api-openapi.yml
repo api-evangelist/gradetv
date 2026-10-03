@@ -353,80 +353,182 @@ components:
       required:
       - categories
       description: Recortes da busca atual. Hoje só categoria; o formato aceita mais sem quebrar cliente.
-    FiltrosCanal:
+    LatenciaPais:
       type: object
       properties:
-        q:
-          type: string
-          description: Busca textual aplicada.
-          nullable: true
         country:
           type: string
-          description: País aplicado, já em maiúsculas.
-          nullable: true
-        category:
+          description: País onde a medição aconteceu, alpha-2.
+        samples:
+          type: integer
+          description: Quantas aberturas entraram na média.
+        avg_ms:
+          type: integer
+          description: Tempo médio até a playlist chegar, em milissegundos.
+        grade:
           type: string
-          description: Categoria aplicada.
-          nullable: true
-        language:
+          description: '`otima` (<600ms), `boa` (<1500ms), `lenta` (<3500ms) ou `ruim`.'
+        grade_label:
           type: string
-          description: Idioma aplicado, já normalizado para ISO 639-3.
-          nullable: true
-        network:
+          description: A nota em uma palavra, para exibir.
+        last_at:
           type: string
-          description: Rede aplicada.
-          nullable: true
-        quality:
-          type: string
-          description: Qualidade aplicada.
-          nullable: true
-        guide:
-          type: boolean
-          description: Se o filtro de grade de programação estava ligado.
-        subdivision:
-          type: string
-          description: Subdivisão aplicada.
-          nullable: true
-        city:
-          type: string
-          description: Cidade aplicada.
-          nullable: true
-        nsfw:
-          type: boolean
-          description: Se o conteúdo adulto foi incluído.
-        playable:
-          type: boolean
-          description: Se só canal com stream utilizável entrou.
-        sort:
-          type: string
-          description: 'Ordem aplicada: `name`, `score` (saúde medida por terceiro) ou `votes` (rádio).'
-        online:
-          type: boolean
-          description: Se só canal visto online pela fonte nas 48 h anteriores à última recarga entrou.
-        kind:
-          type: string
-          description: '`tv`, `radio` ou `all` — sem `kind` na chamada, é `tv`.'
-        tag:
-          type: string
-          description: Tag de rádio aplicada.
+          description: Última medição (UTC).
           nullable: true
       required:
-      - q
       - country
-      - category
-      - language
-      - network
-      - quality
-      - guide
-      - subdivision
-      - city
-      - nsfw
-      - playable
-      - sort
-      - online
-      - kind
-      - tag
-      description: O que o servidor entendeu do que você mandou — útil para saber por que um filtro não pegou.
+      - samples
+      - avg_ms
+      - grade
+      - grade_label
+      - last_at
+      description: Quanto tempo a playlist leva para abrir, medido na borda do país — a Grade busca a origem por você, então sabe.
+    FacetaCategoria:
+      type: object
+      properties:
+        id:
+          type: string
+          description: ID da categoria no iptv-org, ex. `news`.
+        name:
+          type: string
+          description: Nome da categoria para exibição.
+        count:
+          type: integer
+          description: Canais desta categoria dentro do filtro atual.
+        icon:
+          type: string
+          description: Nome do ícone usado na interface.
+          nullable: true
+      required:
+      - id
+      - name
+      - count
+      - icon
+      description: Categoria com a contagem dentro da busca que acabou de ser feita.
+    Comentario:
+      type: object
+      properties:
+        id:
+          type: string
+          description: ID do comentário, para apagar.
+        channel_id:
+          type: string
+          description: Canal em que o comentário foi escrito.
+        author:
+          type: string
+          description: Apelido de quem escreveu; `Visitante` quando não informado.
+        body:
+          type: string
+          description: O texto do comentário.
+        created_at:
+          type: string
+          description: Quando foi escrito (UTC, com milissegundos).
+        mine:
+          type: boolean
+          description: '`true` se é seu — só você pode apagar.'
+        api:
+          type: string
+          description: URL absoluta deste comentário.
+      required:
+      - id
+      - channel_id
+      - author
+      - body
+      - created_at
+      - mine
+      - api
+      description: Comentário público num canal.
+    GeoCanal:
+      type: object
+      properties:
+        tipo:
+          type: string
+          description: '`geo` (falha numa região, funciona noutra), `down` (falha em toda região medida), `ok` ou `unknown` (sem relato suficiente).'
+        bloqueado_em:
+          type: array
+          items:
+            type: string
+          description: Regiões onde só há relato de falha (teto de 8; `ZZ` = país desconhecido).
+        funciona_em:
+          type: array
+          items:
+            type: string
+          description: Países com pelo menos um sucesso (teto de 8).
+        label:
+          type: string
+          description: O veredito em uma frase; vazio quando não há o que dizer.
+      required:
+      - tipo
+      - bloqueado_em
+      - funciona_em
+      - label
+      description: O que separa 'está bloqueado onde eu moro' de 'saiu do ar para todo mundo'.
+    SaudeMedidaStream:
+      type: object
+      properties:
+        status:
+          type: string
+          description: '`online`, `offline`, `blocked` (geo), `timeout`, `error` ou `unknown`.'
+        score:
+          type: integer
+          description: '0–100, média móvel: uma falha só não derruba o stream.'
+          nullable: true
+        checked_at:
+          type: string
+          description: Instante (ISO-8601) da sondagem gravada; regravado quando o status ou o score mudam, ou a cada 7 dias.
+          nullable: true
+        resolution:
+          type: string
+          description: Resolução vista pelo ffprobe, ex. `1080p`.
+          nullable: true
+        bitrate:
+          type: integer
+          description: Bitrate em bits por segundo, quando medido.
+          nullable: true
+        latency_ms:
+          type: integer
+          description: Tempo até o primeiro byte na sondagem, em ms.
+          nullable: true
+      required:
+      - status
+      - score
+      - checked_at
+      - resolution
+      - bitrate
+      - latency_ms
+      description: A sondagem mais recente deste stream pelo IPTV Nexus; `null` quando o stream não foi medido.
+    RegiaoSaude:
+      type: object
+      properties:
+        country:
+          type: string
+          description: País, alpha-2; `ZZ` quando a borda não disse.
+        plays:
+          type: integer
+          description: Relatos de sucesso neste país.
+        fails:
+          type: integer
+          description: Relatos de falha neste país.
+        health:
+          type: integer
+          description: Percentual de sucesso aqui; `null` sem relato bastante.
+          nullable: true
+        latency_ms:
+          type: integer
+          description: Latência média da playlist medida na borda deste país; só em `your_country`.
+          nullable: true
+        latency_grade:
+          type: string
+          description: 'Nota da latência: `otima`, `boa`, `lenta` ou `ruim`; só em `your_country`.'
+          nullable: true
+      required:
+      - country
+      - plays
+      - fails
+      - health
+      - latency_ms
+      - latency_grade
+      description: O comportamento do canal num país — sem quebrar por navegador/SO.
     SaudeCanal:
       type: object
       properties:
@@ -530,6 +632,67 @@ components:
       - codes
       - _links
       description: Por que um canal falha e para quem — o que separa 'está fora do ar' de 'está bloqueado no seu país'.
+    PaginaDeCanais:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/Canal'
+          description: 'Os canais desta página, na ordem pedida (`sort`): nome, ou melhor saúde medida primeiro.'
+        total:
+          type: integer
+          description: Canais que casam com o filtro, ignorando a paginação.
+        limit:
+          type: integer
+          description: Tamanho de página aplicado (teto de 50).
+        offset:
+          type: integer
+          description: Deslocamento aplicado nesta página.
+        next_offset:
+          type: integer
+          description: Offset da próxima página; `null` quando acabou.
+          nullable: true
+        facets:
+          allOf:
+          - $ref: '#/components/schemas/FacetasCanal'
+          description: Contagem por categoria DENTRO do filtro atual — serve para montar o menu lateral.
+        filters:
+          allOf:
+          - $ref: '#/components/schemas/FiltrosCanal'
+          description: Os filtros como o servidor os entendeu, já normalizados.
+      required:
+      - items
+      - total
+      - limit
+      - offset
+      - next_offset
+      - facets
+      - filters
+      description: A resposta da busca de canais. Não usa o envelope `Pagina<T>` porque troca `api` por `facets` e `filters`.
+    Programa:
+      type: object
+      properties:
+        inicio:
+          type: string
+          description: Começo do programa, ISO 8601.
+        fim:
+          type: string
+          description: Fim do programa, ISO 8601.
+        titulo:
+          type: string
+          description: Título como o site da programação escreve.
+        desc:
+          type: string
+          description: Sinopse curta (até 300 caracteres).
+        categoria:
+          type: string
+          description: Categoria do site, quando ele dá.
+      required:
+      - inicio
+      - fim
+      - titulo
+      description: Um programa da grade do dia, com os instantes em ISO 8601 (UTC).
     PaginaDeComentarios:
       type: object
       properties:
@@ -570,6 +733,87 @@ components:
       - channel_id
       - max_length
       description: Página de comentários de um canal, com o teto de tamanho de quem for escrever a seguir.
+    GuiaDoDia:
+      type: object
+      properties:
+        channel_id:
+          type: string
+          description: ID do canal no iptv-org.
+        day:
+          type: string
+          description: Dia grabado, YYYY-MM-DD.
+        site:
+          type: string
+          description: Site de programação de origem.
+          nullable: true
+        agora:
+          allOf:
+          - $ref: '#/components/schemas/Programa'
+          description: O programa no ar neste instante.
+          nullable: true
+        a_seguir:
+          allOf:
+          - $ref: '#/components/schemas/Programa'
+          description: O próximo programa.
+          nullable: true
+        programas:
+          type: array
+          items:
+            $ref: '#/components/schemas/Programa'
+          description: Todos os programas do dia, em ordem (até 200).
+      required:
+      - channel_id
+      - day
+      - site
+      - agora
+      - a_seguir
+      - programas
+      description: A guia inteira do dia de um canal, grabada por nós (iptv-org/epg no c3).
+    Youtube:
+      type: object
+      properties:
+        video:
+          type: string
+          description: Id do vídeo da live (11 caracteres), quando a fonte deu um vídeo.
+        channel:
+          type: string
+          description: 'Id do canal (`UC…`), quando a fonte deu o canal: o embed abre a live corrente.'
+        embed:
+          type: string
+          description: URL do embed oficial sem cookies (`youtube-nocookie.com`).
+        assistir:
+          type: string
+          description: URL para abrir no YouTube (botão do player e destino do hop).
+      required:
+      - embed
+      - assistir
+      description: 'Um stream que é uma live do YouTube: o player embute o oficial; M3U/XSPF não o levam.'
+    GuiaAgora:
+      type: object
+      properties:
+        day:
+          type: string
+          description: Dia grabado, YYYY-MM-DD (UTC do grabber).
+        site:
+          type: string
+          description: Site de programação de onde a grade veio (ex. `mi.tv`).
+          nullable: true
+        agora:
+          allOf:
+          - $ref: '#/components/schemas/Programa'
+          description: O programa no ar neste instante; `null` fora da grade.
+          nullable: true
+        a_seguir:
+          allOf:
+          - $ref: '#/components/schemas/Programa'
+          description: O próximo programa; `null` no fim da grade.
+          nullable: true
+      required:
+      - day
+      - site
+      - agora
+      - a_seguir
+      description: 'Resumo da guia do dia que a ficha carrega: o programa de agora e o próximo.'
     Stream:
       type: object
       properties:
@@ -633,94 +877,260 @@ components:
       - origem
       - health_ext
       description: Uma das transmissões de um canal. A `url` já é o hop nosso, não a origem.
-    LatenciaPais:
+    MotivoFalha:
       type: object
       properties:
-        country:
+        code:
           type: string
-          description: País onde a medição aconteceu, alpha-2.
-        samples:
-          type: integer
-          description: Quantas aberturas entraram na média.
-        avg_ms:
-          type: integer
-          description: Tempo médio até a playlist chegar, em milissegundos.
-        grade:
-          type: string
-          description: '`otima` (<600ms), `boa` (<1500ms), `lenta` (<3500ms) ou `ruim`.'
-        grade_label:
-          type: string
-          description: A nota em uma palavra, para exibir.
-        last_at:
-          type: string
-          description: Última medição (UTC).
-          nullable: true
-      required:
-      - country
-      - samples
-      - avg_ms
-      - grade
-      - grade_label
-      - last_at
-      description: Quanto tempo a playlist leva para abrir, medido na borda do país — a Grade busca a origem por você, então sabe.
-    GeoCanal:
-      type: object
-      properties:
-        tipo:
-          type: string
-          description: '`geo` (falha numa região, funciona noutra), `down` (falha em toda região medida), `ok` ou `unknown` (sem relato suficiente).'
-        bloqueado_em:
-          type: array
-          items:
-            type: string
-          description: Regiões onde só há relato de falha (teto de 8; `ZZ` = país desconhecido).
-        funciona_em:
-          type: array
-          items:
-            type: string
-          description: Países com pelo menos um sucesso (teto de 8).
+          description: 'Código: `cors`, `geo`, `sumiu`, `codec`, `playlist`, `sem_resposta`, `protocolo`, `sem_stream`, `outro`.'
         label:
           type: string
-          description: O veredito em uma frase; vazio quando não há o que dizer.
+          description: O motivo em uma frase curta.
+        hint:
+          type: string
+          description: O que a pessoa pode fazer a respeito.
+        count:
+          type: integer
+          description: Quantos relatos trouxeram este código.
+        last_at:
+          type: string
+          description: Relato mais recente com este código (UTC).
+          nullable: true
       required:
-      - tipo
-      - bloqueado_em
-      - funciona_em
+      - code
       - label
-      description: O que separa 'está bloqueado onde eu moro' de 'saiu do ar para todo mundo'.
-    Comentario:
+      - hint
+      - count
+      - last_at
+      description: Um motivo de falha agregado, já com o texto que a interface mostra.
+    Social:
       type: object
       properties:
-        id:
+        plays:
+          type: integer
+          description: Relatos de que o canal tocou.
+        fails:
+          type: integer
+          description: Relatos de que o canal falhou.
+        favorites:
+          type: integer
+          description: Quantas pessoas favoritaram — conta pessoas, não cliques.
+        comments:
+          type: integer
+          description: Comentários públicos no canal.
+        last_fail_code:
           type: string
-          description: ID do comentário, para apagar.
-        channel_id:
+          description: Código da falha mais recente relatada.
+          nullable: true
+        health:
+          type: integer
+          description: Percentual de sucesso; `null` enquanto houver menos de 3 relatos.
+          nullable: true
+        your_plays:
+          type: integer
+          description: Relatos de sucesso no SEU navegador, sistema e país.
+        your_fails:
+          type: integer
+          description: Relatos de falha no seu ambiente — é o que distingue 'fora do ar' de 'bloqueado para você'.
+        your_fail_code:
           type: string
-          description: Canal em que o comentário foi escrito.
-        author:
-          type: string
-          description: Apelido de quem escreveu; `Visitante` quando não informado.
-        body:
-          type: string
-          description: O texto do comentário.
-        created_at:
-          type: string
-          description: Quando foi escrito (UTC, com milissegundos).
-        mine:
+          description: Código da última falha no seu ambiente.
+          nullable: true
+        your_country_ok:
+          type: integer
+          description: Relatos de sucesso no SEU país, sem quebrar por navegador/SO.
+        your_country_fail:
+          type: integer
+          description: Relatos de falha no seu país.
+        your_geo_ok:
           type: boolean
-          description: '`true` se é seu — só você pode apagar.'
-        api:
+          description: '`false` = todas as tentativas relatadas no seu país falharam (suspeita de geo-bloqueio); `null` sem relato suficiente.'
+          nullable: true
+        your_latency_ms:
+          type: integer
+          description: Latência média da playlist medida no hop, na borda do seu país; `null` sem medição.
+          nullable: true
+        your_latency_grade:
           type: string
-          description: URL absoluta deste comentário.
+          description: '`otima`, `boa`, `lenta` ou `ruim`; `null` sem medição.'
+          nullable: true
       required:
-      - id
-      - channel_id
-      - author
-      - body
-      - created_at
-      - mine
-      - api
-      description: Comentário público num canal.
+      - plays
+      - fails
+      - favorites
+      - comments
+      - last_fail_code
+      - health
+      - your_plays
+      - your_fails
+      - your_fail_code
+      - your_country_ok
+      - your_country_fail
+      - your_geo_ok
+      - your_latency_ms
+      - your_latency_grade
+      description: Contadores da comunidade sobre um canal, incluindo o recorte do ambiente e do país de quem pediu.
+    Radio:
+      type: object
+      properties:
+        tags:
+          type: array
+          items:
+            type: string
+          description: Tags da estação, vocabulário livre da fonte.
+        votes:
+          type: integer
+          description: Votos da comunidade do Radio Browser.
+        clicks:
+          type: integer
+          description: Cliques contados pelo Radio Browser.
+        codec:
+          type: string
+          description: Codec do stream (`MP3`, `AAC+`…), quando a fonte sabe.
+          nullable: true
+        bitrate:
+          type: integer
+          description: Bitrate em kbps, quando a fonte sabe.
+          nullable: true
+        geo:
+          type: object
+          description: '`{ lat, lon }` da estação, quando a fonte tem; senão `null`.'
+          nullable: true
+      required:
+      - tags
+      - votes
+      - clicks
+      - codec
+      - bitrate
+      - geo
+      description: O que só uma estação de rádio tem (Radio Browser). Vem em `Canal.radio` quando `kind` é `radio`.
+    FiltrosCanal:
+      type: object
+      properties:
+        q:
+          type: string
+          description: Busca textual aplicada.
+          nullable: true
+        country:
+          type: string
+          description: País aplicado, já em maiúsculas.
+          nullable: true
+        category:
+          type: string
+          description: Categoria aplicada.
+          nullable: true
+        language:
+          type: string
+          description: Idioma aplicado, já normalizado para ISO 639-3.
+          nullable: true
+        network:
+          type: string
+          description: Rede aplicada.
+          nullable: true
+        quality:
+          type: string
+          description: Qualidade aplicada.
+          nullable: true
+        guide:
+          type: boolean
+          description: Se o filtro de grade de programação estava ligado.
+        subdivision:
+          type: string
+          description: Subdivisão aplicada.
+          nullable: true
+        city:
+          type: string
+          description: Cidade aplicada.
+          nullable: true
+        nsfw:
+          type: boolean
+          description: Se o conteúdo adulto foi incluído.
+        playable:
+          type: boolean
+          description: Se só canal com stream utilizável entrou.
+        sort:
+          type: string
+          description: 'Ordem aplicada: `name`, `score` (saúde medida por terceiro) ou `votes` (rádio).'
+        online:
+          type: boolean
+          description: Se só canal visto online pela fonte nas 48 h anteriores à última recarga entrou.
+        kind:
+          type: string
+          description: '`tv`, `radio` ou `all` — sem `kind` na chamada, é `tv`.'
+        tag:
+          type: string
+          description: Tag de rádio aplicada.
+          nullable: true
+      required:
+      - q
+      - country
+      - category
+      - language
+      - network
+      - quality
+      - guide
+      - subdivision
+      - city
+      - nsfw
+      - playable
+      - sort
+      - online
+      - kind
+      - tag
+      description: O que o servidor entendeu do que você mandou — útil para saber por que um filtro não pegou.
+    SaudeMedida:
+      type: object
+      properties:
+        score:
+          type: integer
+          description: 0–100, média móvel das sondagens do melhor stream do canal.
+          nullable: true
+        online:
+          type: boolean
+          description: 'Algum stream do canal respondeu `online` numa sondagem das 48 h anteriores à última recarga do catálogo (rádio: o checker do Radio Browser).'
+        checked_at:
+          type: string
+          description: Instante (ISO-8601) da sondagem mais recente gravada; a recarga só o regrava quando algo mais do canal mudou ou a cada 7 dias, então pode estar até uma semana atrás da sondagem real.
+          nullable: true
+      required:
+      - score
+      - online
+      - checked_at
+      description: Saúde do canal medida por terceiro (IPTV Nexus, que sonda cada stream do iptv-org duas vezes por dia). É o melhor stream medido; `null` quando ninguém mediu — não medido não é ruim.
+    LinksSaude:
+      type: object
+      properties:
+        self:
+          type: string
+          description: Este mesmo painel.
+        channel:
+          type: string
+          description: Ficha do canal.
+        report:
+          type: string
+          description: Onde mandar um relato novo.
+      required:
+      - self
+      - channel
+      - report
+      description: Endereços relacionados ao painel de saúde.
+    LinksCanal:
+      type: object
+      properties:
+        self:
+          type: string
+          description: Esta mesma ficha em JSON.
+        app:
+          type: string
+          description: A mesma coisa na interface humana.
+        api_index:
+          type: string
+          description: Índice auto-descrito da API.
+      required:
+      - self
+      - app
+      - api_index
+      description: URLs relacionadas, para o agente não montar caminho na mão.
     CanalCompleto:
       type: object
       properties:
@@ -903,227 +1313,6 @@ components:
       - streams
       - _links
       description: 'A ficha de um canal: tudo que a busca traz, mais os streams e os links relacionados.'
-    Radio:
-      type: object
-      properties:
-        tags:
-          type: array
-          items:
-            type: string
-          description: Tags da estação, vocabulário livre da fonte.
-        votes:
-          type: integer
-          description: Votos da comunidade do Radio Browser.
-        clicks:
-          type: integer
-          description: Cliques contados pelo Radio Browser.
-        codec:
-          type: string
-          description: Codec do stream (`MP3`, `AAC+`…), quando a fonte sabe.
-          nullable: true
-        bitrate:
-          type: integer
-          description: Bitrate em kbps, quando a fonte sabe.
-          nullable: true
-        geo:
-          type: object
-          description: '`{ lat, lon }` da estação, quando a fonte tem; senão `null`.'
-          nullable: true
-      required:
-      - tags
-      - votes
-      - clicks
-      - codec
-      - bitrate
-      - geo
-      description: O que só uma estação de rádio tem (Radio Browser). Vem em `Canal.radio` quando `kind` é `radio`.
-    Youtube:
-      type: object
-      properties:
-        video:
-          type: string
-          description: Id do vídeo da live (11 caracteres), quando a fonte deu um vídeo.
-        channel:
-          type: string
-          description: 'Id do canal (`UC…`), quando a fonte deu o canal: o embed abre a live corrente.'
-        embed:
-          type: string
-          description: URL do embed oficial sem cookies (`youtube-nocookie.com`).
-        assistir:
-          type: string
-          description: URL para abrir no YouTube (botão do player e destino do hop).
-      required:
-      - embed
-      - assistir
-      description: 'Um stream que é uma live do YouTube: o player embute o oficial; M3U/XSPF não o levam.'
-    GuiaDoDia:
-      type: object
-      properties:
-        channel_id:
-          type: string
-          description: ID do canal no iptv-org.
-        day:
-          type: string
-          description: Dia grabado, YYYY-MM-DD.
-        site:
-          type: string
-          description: Site de programação de origem.
-          nullable: true
-        agora:
-          allOf:
-          - $ref: '#/components/schemas/Programa'
-          description: O programa no ar neste instante.
-          nullable: true
-        a_seguir:
-          allOf:
-          - $ref: '#/components/schemas/Programa'
-          description: O próximo programa.
-          nullable: true
-        programas:
-          type: array
-          items:
-            $ref: '#/components/schemas/Programa'
-          description: Todos os programas do dia, em ordem (até 200).
-      required:
-      - channel_id
-      - day
-      - site
-      - agora
-      - a_seguir
-      - programas
-      description: A guia inteira do dia de um canal, grabada por nós (iptv-org/epg no c3).
-    SaudeMedida:
-      type: object
-      properties:
-        score:
-          type: integer
-          description: 0–100, média móvel das sondagens do melhor stream do canal.
-          nullable: true
-        online:
-          type: boolean
-          description: 'Algum stream do canal respondeu `online` numa sondagem das 48 h anteriores à última recarga do catálogo (rádio: o checker do Radio Browser).'
-        checked_at:
-          type: string
-          description: Instante (ISO-8601) da sondagem mais recente gravada; a recarga só o regrava quando algo mais do canal mudou ou a cada 7 dias, então pode estar até uma semana atrás da sondagem real.
-          nullable: true
-      required:
-      - score
-      - online
-      - checked_at
-      description: Saúde do canal medida por terceiro (IPTV Nexus, que sonda cada stream do iptv-org duas vezes por dia). É o melhor stream medido; `null` quando ninguém mediu — não medido não é ruim.
-    LinksCanal:
-      type: object
-      properties:
-        self:
-          type: string
-          description: Esta mesma ficha em JSON.
-        app:
-          type: string
-          description: A mesma coisa na interface humana.
-        api_index:
-          type: string
-          description: Índice auto-descrito da API.
-      required:
-      - self
-      - app
-      - api_index
-      description: URLs relacionadas, para o agente não montar caminho na mão.
-    FacetaCategoria:
-      type: object
-      properties:
-        id:
-          type: string
-          description: ID da categoria no iptv-org, ex. `news`.
-        name:
-          type: string
-          description: Nome da categoria para exibição.
-        count:
-          type: integer
-          description: Canais desta categoria dentro do filtro atual.
-        icon:
-          type: string
-          description: Nome do ícone usado na interface.
-          nullable: true
-      required:
-      - id
-      - name
-      - count
-      - icon
-      description: Categoria com a contagem dentro da busca que acabou de ser feita.
-    Programa:
-      type: object
-      properties:
-        inicio:
-          type: string
-          description: Começo do programa, ISO 8601.
-        fim:
-          type: string
-          description: Fim do programa, ISO 8601.
-        titulo:
-          type: string
-          description: Título como o site da programação escreve.
-        desc:
-          type: string
-          description: Sinopse curta (até 300 caracteres).
-        categoria:
-          type: string
-          description: Categoria do site, quando ele dá.
-      required:
-      - inicio
-      - fim
-      - titulo
-      description: Um programa da grade do dia, com os instantes em ISO 8601 (UTC).
-    LinksSaude:
-      type: object
-      properties:
-        self:
-          type: string
-          description: Este mesmo painel.
-        channel:
-          type: string
-          description: Ficha do canal.
-        report:
-          type: string
-          description: Onde mandar um relato novo.
-      required:
-      - self
-      - channel
-      - report
-      description: Endereços relacionados ao painel de saúde.
-    SaudeMedidaStream:
-      type: object
-      properties:
-        status:
-          type: string
-          description: '`online`, `offline`, `blocked` (geo), `timeout`, `error` ou `unknown`.'
-        score:
-          type: integer
-          description: '0–100, média móvel: uma falha só não derruba o stream.'
-          nullable: true
-        checked_at:
-          type: string
-          description: Instante (ISO-8601) da sondagem gravada; regravado quando o status ou o score mudam, ou a cada 7 dias.
-          nullable: true
-        resolution:
-          type: string
-          description: Resolução vista pelo ffprobe, ex. `1080p`.
-          nullable: true
-        bitrate:
-          type: integer
-          description: Bitrate em bits por segundo, quando medido.
-          nullable: true
-        latency_ms:
-          type: integer
-          description: Tempo até o primeiro byte na sondagem, em ms.
-          nullable: true
-      required:
-      - status
-      - score
-      - checked_at
-      - resolution
-      - bitrate
-      - latency_ms
-      description: A sondagem mais recente deste stream pelo IPTV Nexus; `null` quando o stream não foi medido.
     Canal:
       type: object
       properties:
@@ -1295,195 +1484,6 @@ components:
       - health_ext
       - api
       description: Um canal do catálogo público (fonte iptv-org), do jeito que a busca e a ficha devolvem.
-    GuiaAgora:
-      type: object
-      properties:
-        day:
-          type: string
-          description: Dia grabado, YYYY-MM-DD (UTC do grabber).
-        site:
-          type: string
-          description: Site de programação de onde a grade veio (ex. `mi.tv`).
-          nullable: true
-        agora:
-          allOf:
-          - $ref: '#/components/schemas/Programa'
-          description: O programa no ar neste instante; `null` fora da grade.
-          nullable: true
-        a_seguir:
-          allOf:
-          - $ref: '#/components/schemas/Programa'
-          description: O próximo programa; `null` no fim da grade.
-          nullable: true
-      required:
-      - day
-      - site
-      - agora
-      - a_seguir
-      description: 'Resumo da guia do dia que a ficha carrega: o programa de agora e o próximo.'
-    PaginaDeCanais:
-      type: object
-      properties:
-        items:
-          type: array
-          items:
-            $ref: '#/components/schemas/Canal'
-          description: 'Os canais desta página, na ordem pedida (`sort`): nome, ou melhor saúde medida primeiro.'
-        total:
-          type: integer
-          description: Canais que casam com o filtro, ignorando a paginação.
-        limit:
-          type: integer
-          description: Tamanho de página aplicado (teto de 50).
-        offset:
-          type: integer
-          description: Deslocamento aplicado nesta página.
-        next_offset:
-          type: integer
-          description: Offset da próxima página; `null` quando acabou.
-          nullable: true
-        facets:
-          allOf:
-          - $ref: '#/components/schemas/FacetasCanal'
-          description: Contagem por categoria DENTRO do filtro atual — serve para montar o menu lateral.
-        filters:
-          allOf:
-          - $ref: '#/components/schemas/FiltrosCanal'
-          description: Os filtros como o servidor os entendeu, já normalizados.
-      required:
-      - items
-      - total
-      - limit
-      - offset
-      - next_offset
-      - facets
-      - filters
-      description: A resposta da busca de canais. Não usa o envelope `Pagina<T>` porque troca `api` por `facets` e `filters`.
-    RegiaoSaude:
-      type: object
-      properties:
-        country:
-          type: string
-          description: País, alpha-2; `ZZ` quando a borda não disse.
-        plays:
-          type: integer
-          description: Relatos de sucesso neste país.
-        fails:
-          type: integer
-          description: Relatos de falha neste país.
-        health:
-          type: integer
-          description: Percentual de sucesso aqui; `null` sem relato bastante.
-          nullable: true
-        latency_ms:
-          type: integer
-          description: Latência média da playlist medida na borda deste país; só em `your_country`.
-          nullable: true
-        latency_grade:
-          type: string
-          description: 'Nota da latência: `otima`, `boa`, `lenta` ou `ruim`; só em `your_country`.'
-          nullable: true
-      required:
-      - country
-      - plays
-      - fails
-      - health
-      - latency_ms
-      - latency_grade
-      description: O comportamento do canal num país — sem quebrar por navegador/SO.
-    Social:
-      type: object
-      properties:
-        plays:
-          type: integer
-          description: Relatos de que o canal tocou.
-        fails:
-          type: integer
-          description: Relatos de que o canal falhou.
-        favorites:
-          type: integer
-          description: Quantas pessoas favoritaram — conta pessoas, não cliques.
-        comments:
-          type: integer
-          description: Comentários públicos no canal.
-        last_fail_code:
-          type: string
-          description: Código da falha mais recente relatada.
-          nullable: true
-        health:
-          type: integer
-          description: Percentual de sucesso; `null` enquanto houver menos de 3 relatos.
-          nullable: true
-        your_plays:
-          type: integer
-          description: Relatos de sucesso no SEU navegador, sistema e país.
-        your_fails:
-          type: integer
-          description: Relatos de falha no seu ambiente — é o que distingue 'fora do ar' de 'bloqueado para você'.
-        your_fail_code:
-          type: string
-          description: Código da última falha no seu ambiente.
-          nullable: true
-        your_country_ok:
-          type: integer
-          description: Relatos de sucesso no SEU país, sem quebrar por navegador/SO.
-        your_country_fail:
-          type: integer
-          description: Relatos de falha no seu país.
-        your_geo_ok:
-          type: boolean
-          description: '`false` = todas as tentativas relatadas no seu país falharam (suspeita de geo-bloqueio); `null` sem relato suficiente.'
-          nullable: true
-        your_latency_ms:
-          type: integer
-          description: Latência média da playlist medida no hop, na borda do seu país; `null` sem medição.
-          nullable: true
-        your_latency_grade:
-          type: string
-          description: '`otima`, `boa`, `lenta` ou `ruim`; `null` sem medição.'
-          nullable: true
-      required:
-      - plays
-      - fails
-      - favorites
-      - comments
-      - last_fail_code
-      - health
-      - your_plays
-      - your_fails
-      - your_fail_code
-      - your_country_ok
-      - your_country_fail
-      - your_geo_ok
-      - your_latency_ms
-      - your_latency_grade
-      description: Contadores da comunidade sobre um canal, incluindo o recorte do ambiente e do país de quem pediu.
-    MotivoFalha:
-      type: object
-      properties:
-        code:
-          type: string
-          description: 'Código: `cors`, `geo`, `sumiu`, `codec`, `playlist`, `sem_resposta`, `protocolo`, `sem_stream`, `outro`.'
-        label:
-          type: string
-          description: O motivo em uma frase curta.
-        hint:
-          type: string
-          description: O que a pessoa pode fazer a respeito.
-        count:
-          type: integer
-          description: Quantos relatos trouxeram este código.
-        last_at:
-          type: string
-          description: Relato mais recente com este código (UTC).
-          nullable: true
-      required:
-      - code
-      - label
-      - hint
-      - count
-      - last_at
-      description: Um motivo de falha agregado, já com o texto que a interface mostra.
     Ambiente:
       type: object
       properties:

@@ -51,6 +51,17 @@ paths:
       - Cities
 components:
   schemas:
+    ListaCidade:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/Cidade'
+          description: Todos os itens; estas rotas não paginam.
+      required:
+      - items
+      description: Coleção pequena e completa — faceta de catálogo, que cabe inteira numa resposta.
     Cidade:
       type: object
       properties:
@@ -77,17 +88,6 @@ components:
       - name
       - count
       description: Cidade com canal tocável.
-    ListaCidade:
-      type: object
-      properties:
-        items:
-          type: array
-          items:
-            $ref: '#/components/schemas/Cidade'
-          description: Todos os itens; estas rotas não paginam.
-      required:
-      - items
-      description: Coleção pequena e completa — faceta de catálogo, que cabe inteira numa resposta.
   securitySchemes:
     bearerAuth:
       type: http

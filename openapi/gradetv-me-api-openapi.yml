@@ -48,19 +48,6 @@ paths:
       - Me
 components:
   schemas:
-    Conta:
-      type: object
-      properties:
-        id:
-          type: string
-          description: ID da conta.
-        email:
-          type: string
-          description: E-mail confirmado por código.
-      required:
-      - id
-      - email
-      description: A pessoa por trás da sessão.
     Recursos:
       type: object
       properties:
@@ -78,6 +65,19 @@ components:
       - favorites
       - history
       description: O tamanho da biblioteca do dono — para o agente saber o que vai encontrar antes de buscar.
+    Conta:
+      type: object
+      properties:
+        id:
+          type: string
+          description: ID da conta.
+        email:
+          type: string
+          description: E-mail confirmado por código.
+      required:
+      - id
+      - email
+      description: A pessoa por trás da sessão.
   securitySchemes:
     bearerAuth:
       type: http

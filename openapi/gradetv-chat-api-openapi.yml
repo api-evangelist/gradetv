@@ -175,23 +175,6 @@ paths:
       - Chat
 components:
   schemas:
-    LinksChat:
-      type: object
-      properties:
-        self:
-          type: string
-          description: Esta mesma listagem por HTTP.
-        websocket:
-          type: string
-          description: URL `wss://` da sala; mande `{t:'hello',token}` antes de falar.
-        channel:
-          type: string
-          description: Ficha do canal a que a sala pertence.
-      required:
-      - self
-      - websocket
-      - channel
-      description: Endereços da sala — incluindo o WebSocket, que é o caminho ao vivo.
     MensagemChat:
       type: object
       properties:
@@ -213,6 +196,23 @@ components:
       - body
       - at
       description: Mensagem da sala de chat de um canal.
+    LinksChat:
+      type: object
+      properties:
+        self:
+          type: string
+          description: Esta mesma listagem por HTTP.
+        websocket:
+          type: string
+          description: URL `wss://` da sala; mande `{t:'hello',token}` antes de falar.
+        channel:
+          type: string
+          description: Ficha do canal a que a sala pertence.
+      required:
+      - self
+      - websocket
+      - channel
+      description: Endereços da sala — incluindo o WebSocket, que é o caminho ao vivo.
   securitySchemes:
     bearerAuth:
       type: http

@@ -27,6 +27,33 @@ paths:
       - Billing
 components:
   schemas:
+    Passe:
+      type: object
+      properties:
+        active:
+          type: boolean
+          description: Se o passe vale neste momento.
+        until:
+          type: string
+          description: Até quando vale (UTC); `null` quando não há passe.
+          nullable: true
+      required:
+      - active
+      - until
+      description: Passe mensal — do chat ou de conteúdo adulto. São contas separadas, mesmo formato.
+    Precos:
+      type: object
+      properties:
+        contact_agent_usd:
+          type: number
+          description: Custo de um contato de agente.
+        chat_month_usd:
+          type: number
+          description: Custo do passe de chat por 30 dias.
+      required:
+      - contact_agent_usd
+      - chat_month_usd
+      description: Preços em vigor, em dólar. Leia daqui, não da documentação.
     TetosGaleria:
       type: object
       properties:
@@ -44,19 +71,6 @@ components:
       - groups_per_category
       - items_per_group
       description: Os limites da galeria pessoal — existem para o catálogo público não ser despejado numa biblioteca.
-    Precos:
-      type: object
-      properties:
-        contact_agent_usd:
-          type: number
-          description: Custo de um contato de agente.
-        chat_month_usd:
-          type: number
-          description: Custo do passe de chat por 30 dias.
-      required:
-      - contact_agent_usd
-      - chat_month_usd
-      description: Preços em vigor, em dólar. Leia daqui, não da documentação.
     Billing:
       type: object
       properties:
@@ -136,20 +150,6 @@ components:
       - chat
       - limits
       description: 'Tudo que decide se uma chamada vai custar: a configuração x402, os preços do produto, o seu passe e os tetos da galeria.'
-    Passe:
-      type: object
-      properties:
-        active:
-          type: boolean
-          description: Se o passe vale neste momento.
-        until:
-          type: string
-          description: Até quando vale (UTC); `null` quando não há passe.
-          nullable: true
-      required:
-      - active
-      - until
-      description: Passe mensal — do chat ou de conteúdo adulto. São contas separadas, mesmo formato.
   securitySchemes:
     bearerAuth:
       type: http

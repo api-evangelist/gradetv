@@ -28,26 +28,6 @@ paths:
       - Library
 components:
   schemas:
-    Biblioteca:
-      type: object
-      properties:
-        owner:
-          type: string
-          description: 'Rótulo derivado do dono desta árvore — estável enquanto o feed for o mesmo, e não reversível. NÃO é o token de convidado: publicá-lo aqui faria uma API key delegada escalar para a credencial mestra, que não tem revogação.'
-        feeds:
-          allOf:
-          - $ref: '#/components/schemas/Feeds'
-          description: Feeds da biblioteca inteira, em quatro formatos.
-        categories:
-          type: array
-          items:
-            $ref: '#/components/schemas/PastaBiblioteca'
-          description: As pastas do dono, na ordem que ele arrumou.
-      required:
-      - owner
-      - feeds
-      - categories
-      description: 'A galeria inteira do dono: pastas, sub-abas, canais e as URLs de feed de cada nível.'
     SubAba:
       type: object
       properties:
@@ -130,27 +110,6 @@ components:
       - feeds
       - groups
       description: Pasta (aba principal) da galeria do dono.
-    Feeds:
-      type: object
-      properties:
-        m3u:
-          type: string
-          description: Playlist M3U — é o que se cola no VLC.
-        m3u8:
-          type: string
-          description: Mesma playlist, extensão `.m3u8` para players que só aceitam ela.
-        json:
-          type: string
-          description: Mesma lista em JSON, para quem programa em cima.
-        xspf:
-          type: string
-          description: Mesma lista em XSPF, para players que preferem XML.
-      required:
-      - m3u
-      - m3u8
-      - json
-      - xspf
-      description: O mesmo conteúdo em quatro formatos. São URLs públicas, com o token do feed no caminho — quem tem o link tem o conteúdo.
     ItemBiblioteca:
       type: object
       properties:
@@ -204,6 +163,47 @@ components:
       - stale
       - sort
       description: Um canal dentro de uma sub-aba, com o stream já escolhido.
+    Feeds:
+      type: object
+      properties:
+        m3u:
+          type: string
+          description: Playlist M3U — é o que se cola no VLC.
+        m3u8:
+          type: string
+          description: Mesma playlist, extensão `.m3u8` para players que só aceitam ela.
+        json:
+          type: string
+          description: Mesma lista em JSON, para quem programa em cima.
+        xspf:
+          type: string
+          description: Mesma lista em XSPF, para players que preferem XML.
+      required:
+      - m3u
+      - m3u8
+      - json
+      - xspf
+      description: O mesmo conteúdo em quatro formatos. São URLs públicas, com o token do feed no caminho — quem tem o link tem o conteúdo.
+    Biblioteca:
+      type: object
+      properties:
+        owner:
+          type: string
+          description: 'Rótulo derivado do dono desta árvore — estável enquanto o feed for o mesmo, e não reversível. NÃO é o token de convidado: publicá-lo aqui faria uma API key delegada escalar para a credencial mestra, que não tem revogação.'
+        feeds:
+          allOf:
+          - $ref: '#/components/schemas/Feeds'
+          description: Feeds da biblioteca inteira, em quatro formatos.
+        categories:
+          type: array
+          items:
+            $ref: '#/components/schemas/PastaBiblioteca'
+          description: As pastas do dono, na ordem que ele arrumou.
+      required:
+      - owner
+      - feeds
+      - categories
+      description: 'A galeria inteira do dono: pastas, sub-abas, canais e as URLs de feed de cada nível.'
   securitySchemes:
     bearerAuth:
       type: http

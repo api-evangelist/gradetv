@@ -144,42 +144,6 @@ paths:
       - Favorites
 components:
   schemas:
-    PaginaDeFavoritos:
-      type: object
-      properties:
-        items:
-          type: array
-          items:
-            $ref: '#/components/schemas/Favorito'
-          description: Os itens desta página, na ordem que a rota define.
-        total:
-          type: integer
-          description: Quantos itens casam com o filtro, ignorando a paginação.
-        limit:
-          type: integer
-          description: Tamanho de página efetivamente aplicado (pode ser menor que o pedido).
-        offset:
-          type: integer
-          description: Deslocamento aplicado nesta página.
-        next_offset:
-          type: integer
-          description: Offset da próxima página; `null` quando esta é a última.
-          nullable: true
-        api:
-          type: string
-          description: URL absoluta desta própria listagem.
-        max:
-          type: integer
-          description: Quantos favoritos o dono pode ter.
-      required:
-      - items
-      - total
-      - limit
-      - offset
-      - next_offset
-      - api
-      - max
-      description: Página dos favoritos do dono, com o teto de quantos cabem.
     Favorito:
       type: object
       properties:
@@ -232,6 +196,42 @@ components:
       - stale
       - api
       description: Um canal favoritado pelo dono.
+    PaginaDeFavoritos:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/Favorito'
+          description: Os itens desta página, na ordem que a rota define.
+        total:
+          type: integer
+          description: Quantos itens casam com o filtro, ignorando a paginação.
+        limit:
+          type: integer
+          description: Tamanho de página efetivamente aplicado (pode ser menor que o pedido).
+        offset:
+          type: integer
+          description: Deslocamento aplicado nesta página.
+        next_offset:
+          type: integer
+          description: Offset da próxima página; `null` quando esta é a última.
+          nullable: true
+        api:
+          type: string
+          description: URL absoluta desta própria listagem.
+        max:
+          type: integer
+          description: Quantos favoritos o dono pode ter.
+      required:
+      - items
+      - total
+      - limit
+      - offset
+      - next_offset
+      - api
+      - max
+      description: Página dos favoritos do dono, com o teto de quantos cabem.
   securitySchemes:
     bearerAuth:
       type: http
