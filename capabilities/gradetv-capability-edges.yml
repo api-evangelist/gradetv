@@ -1,0 +1,25 @@
+slug: gradetv
+provider: Grade
+generated_by: planning/capability-mapping/scripts/classify_capabilities.py
+model: claude-opus-5
+frame:
+- Software & Technology
+min_confidence: 0.7
+capability_model:
+  source: https://github.com/vincentmakes/turbo-ea-capabilities
+  license: CC-BY-4.0
+  attribution: Turbo EA Capabilities by Vincent Verdet — Turbo EA, https://github.com/vincentmakes/turbo-ea-capabilities,
+    CC BY 4.0
+  notice: NOTICE
+edge_count: 1
+edges:
+- tag: Nsfw
+  spec_file: gradetv-nsfw-api-openapi.yml
+  capability_id: BC-4240
+  capability_id_l1: BC-4240
+  capability_name: Subscription Lifecycle Management
+  confidence: 0.7
+  evidence: 'Compra o passe de conteúdo adulto: $0.10 por 30 dias, via x402'
+  reason: Purchases a time-boxed paid pass and reports whether the owner's pass is valid and until when
+    — i.e. buying and checking a commercial entitlement. Sits across provisioning and entitlement checking,
+    so only the L1 is asserted; the purchase/payment framing leaves some chance the better home is billing.

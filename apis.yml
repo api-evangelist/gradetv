@@ -865,6 +865,9 @@ x-enrichment:
   artifacts_added: 26
   pass: local-v3
 common:
+- type: CapabilityMap
+  url: capabilities/gradetv-capability-edges.yml
+  name: Grade Business Capability Map
 - type: MCPServer
   url: https://gradetv.net/mcp
 - type: Website
