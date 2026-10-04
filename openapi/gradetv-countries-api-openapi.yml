@@ -37,6 +37,17 @@ paths:
       - Countries
 components:
   schemas:
+    ListaPais:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/Pais'
+          description: Todos os itens; estas rotas não paginam.
+      required:
+      - items
+      description: Coleção pequena e completa — faceta de catálogo, que cabe inteira numa resposta.
     Pais:
       type: object
       properties:
@@ -58,17 +69,6 @@ components:
       - count
       - flag
       description: País com canal tocável no catálogo.
-    ListaPais:
-      type: object
-      properties:
-        items:
-          type: array
-          items:
-            $ref: '#/components/schemas/Pais'
-          description: Todos os itens; estas rotas não paginam.
-      required:
-      - items
-      description: Coleção pequena e completa — faceta de catálogo, que cabe inteira numa resposta.
   securitySchemes:
     bearerAuth:
       type: http

@@ -37,17 +37,6 @@ paths:
       - Networks
 components:
   schemas:
-    ListaRede:
-      type: object
-      properties:
-        items:
-          type: array
-          items:
-            $ref: '#/components/schemas/Rede'
-          description: Todos os itens; estas rotas não paginam.
-      required:
-      - items
-      description: Coleção pequena e completa — faceta de catálogo, que cabe inteira numa resposta.
     Rede:
       type: object
       properties:
@@ -61,6 +50,17 @@ components:
       - name
       - count
       description: Rede/emissora com canal tocável.
+    ListaRede:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/Rede'
+          description: Todos os itens; estas rotas não paginam.
+      required:
+      - items
+      description: Coleção pequena e completa — faceta de catálogo, que cabe inteira numa resposta.
   securitySchemes:
     bearerAuth:
       type: http

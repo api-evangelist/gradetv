@@ -116,15 +116,6 @@ paths:
       - Keys
 components:
   schemas:
-    Ok:
-      type: object
-      properties:
-        ok:
-          type: boolean
-          description: Sempre `true` — a falha vem como status 4xx/5xx, não como `ok:false`.
-      required:
-      - ok
-      description: Confirmação de escrita que não tem corpo próprio a devolver.
     Chave:
       type: object
       properties:
@@ -151,6 +142,15 @@ components:
       - revoked
       - created_at
       description: API key do dono, sempre mascarada. O texto completo só aparece na criação.
+    Ok:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          description: Sempre `true` — a falha vem como status 4xx/5xx, não como `ok:false`.
+      required:
+      - ok
+      description: Confirmação de escrita que não tem corpo próprio a devolver.
   securitySchemes:
     bearerAuth:
       type: http

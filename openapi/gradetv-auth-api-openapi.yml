@@ -200,23 +200,24 @@ paths:
       - Auth
 components:
   schemas:
-    Recursos:
+    ReivindicacaoProduto:
       type: object
       properties:
-        categories:
-          type: integer
-          description: Quantas pastas o dono tem.
-        favorites:
-          type: integer
-          description: Quantos canais ele favoritou.
-        history:
-          type: integer
-          description: Quantos canais estão no histórico.
+        guest_token:
+          type: string
+          description: O convidado ANTIGO da conta. É este que tem a biblioteca.
+        adopt:
+          type: boolean
+          description: '`true` quer dizer: jogue fora o convidado local e passe a usar o de cima.'
+        resources:
+          allOf:
+          - $ref: '#/components/schemas/Recursos'
+          description: O que existe nesse convidado antigo.
       required:
-      - categories
-      - favorites
-      - history
-      description: O tamanho da biblioteca do dono — para o agente saber o que vai encontrar antes de buscar.
+      - guest_token
+      - adopt
+      - resources
+      description: Qual convidado usar depois de entrar — o novo ou o que já existia.
     Ok:
       type: object
       properties:
@@ -240,24 +241,6 @@ components:
       - ok
       - product
       description: O que o verify achou de convidado já ligado a este e-mail. É o campo que salva a biblioteca de outro aparelho.
-    ReivindicacaoProduto:
-      type: object
-      properties:
-        guest_token:
-          type: string
-          description: O convidado ANTIGO da conta. É este que tem a biblioteca.
-        adopt:
-          type: boolean
-          description: '`true` quer dizer: jogue fora o convidado local e passe a usar o de cima.'
-        resources:
-          allOf:
-          - $ref: '#/components/schemas/Recursos'
-          description: O que existe nesse convidado antigo.
-      required:
-      - guest_token
-      - adopt
-      - resources
-      description: Qual convidado usar depois de entrar — o novo ou o que já existia.
     Conta:
       type: object
       properties:
@@ -271,6 +254,23 @@ components:
       - id
       - email
       description: A pessoa por trás da sessão.
+    Recursos:
+      type: object
+      properties:
+        categories:
+          type: integer
+          description: Quantas pastas o dono tem.
+        favorites:
+          type: integer
+          description: Quantos canais ele favoritou.
+        history:
+          type: integer
+          description: Quantos canais estão no histórico.
+      required:
+      - categories
+      - favorites
+      - history
+      description: O tamanho da biblioteca do dono — para o agente saber o que vai encontrar antes de buscar.
   securitySchemes:
     bearerAuth:
       type: http

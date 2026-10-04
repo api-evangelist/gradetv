@@ -106,20 +106,6 @@ components:
       - day
       - at
       description: Relato cru de reprodução, com endereço — por isso a rota é só de operador e a linha expira.
-    FiltrosRelato:
-      type: object
-      properties:
-        channel_id:
-          type: string
-          description: Canal filtrado, ou `null` para todos.
-          nullable: true
-        only_failures:
-          type: boolean
-          description: Se só as falhas entraram.
-      required:
-      - channel_id
-      - only_failures
-      description: O que o servidor entendeu do filtro de relatos.
     PaginaDeRelatos:
       type: object
       properties:
@@ -157,6 +143,20 @@ components:
       - filters
       - api
       description: 'Página de relatos crus. Não tem `total` de propósito: contar a tabela inteira a cada consulta de investigação sai caro e não muda a decisão de quem investiga.'
+    FiltrosRelato:
+      type: object
+      properties:
+        channel_id:
+          type: string
+          description: Canal filtrado, ou `null` para todos.
+          nullable: true
+        only_failures:
+          type: boolean
+          description: Se só as falhas entraram.
+      required:
+      - channel_id
+      - only_failures
+      description: O que o servidor entendeu do filtro de relatos.
   securitySchemes:
     bearerAuth:
       type: http

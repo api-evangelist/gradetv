@@ -164,6 +164,42 @@ paths:
       - History
 components:
   schemas:
+    PaginaDeHistorico:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/Visita'
+          description: Os itens desta página, na ordem que a rota define.
+        total:
+          type: integer
+          description: Quantos itens casam com o filtro, ignorando a paginação.
+        limit:
+          type: integer
+          description: Tamanho de página efetivamente aplicado (pode ser menor que o pedido).
+        offset:
+          type: integer
+          description: Deslocamento aplicado nesta página.
+        next_offset:
+          type: integer
+          description: Offset da próxima página; `null` quando esta é a última.
+          nullable: true
+        api:
+          type: string
+          description: URL absoluta desta própria listagem.
+        max:
+          type: integer
+          description: Quantos canais o histórico guarda no máximo.
+      required:
+      - items
+      - total
+      - limit
+      - offset
+      - next_offset
+      - api
+      - max
+      description: Página do histórico do dono. `max` é o teto de linhas guardadas — passou disso, a mais antiga sai.
     Visita:
       type: object
       properties:
@@ -215,42 +251,6 @@ components:
       - stale
       - api
       description: Um canal no histórico do dono, com quantas vezes ele assistiu.
-    PaginaDeHistorico:
-      type: object
-      properties:
-        items:
-          type: array
-          items:
-            $ref: '#/components/schemas/Visita'
-          description: Os itens desta página, na ordem que a rota define.
-        total:
-          type: integer
-          description: Quantos itens casam com o filtro, ignorando a paginação.
-        limit:
-          type: integer
-          description: Tamanho de página efetivamente aplicado (pode ser menor que o pedido).
-        offset:
-          type: integer
-          description: Deslocamento aplicado nesta página.
-        next_offset:
-          type: integer
-          description: Offset da próxima página; `null` quando esta é a última.
-          nullable: true
-        api:
-          type: string
-          description: URL absoluta desta própria listagem.
-        max:
-          type: integer
-          description: Quantos canais o histórico guarda no máximo.
-      required:
-      - items
-      - total
-      - limit
-      - offset
-      - next_offset
-      - api
-      - max
-      description: Página do histórico do dono. `max` é o teto de linhas guardadas — passou disso, a mais antiga sai.
   securitySchemes:
     bearerAuth:
       type: http

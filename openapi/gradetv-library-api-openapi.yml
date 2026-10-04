@@ -28,47 +28,27 @@ paths:
       - Library
 components:
   schemas:
-    SubAba:
+    Feeds:
       type: object
       properties:
-        id:
+        m3u:
           type: string
-          description: ID da sub-aba, `grp_…`.
-        name:
+          description: Playlist M3U — é o que se cola no VLC.
+        m3u8:
           type: string
-          description: Nome que o dono deu.
-        slug:
+          description: Mesma playlist, extensão `.m3u8` para players que só aceitam ela.
+        json:
           type: string
-          description: Versão do nome usada na URL do feed.
-        sort:
-          type: integer
-          description: Posição na ordenação dentro da pasta.
-        last_item_id:
+          description: Mesma lista em JSON, para quem programa em cima.
+        xspf:
           type: string
-          description: Último canal tocado nesta sub-aba.
-          nullable: true
-        api:
-          type: string
-          description: URL absoluta desta sub-aba.
-        feeds:
-          allOf:
-          - $ref: '#/components/schemas/Feeds'
-          description: Feeds só desta sub-aba.
-        items:
-          type: array
-          items:
-            $ref: '#/components/schemas/ItemBiblioteca'
-          description: Canais colocados aqui, na ordem do dono.
+          description: Mesma lista em XSPF, para players que preferem XML.
       required:
-      - id
-      - name
-      - slug
-      - sort
-      - last_item_id
-      - api
-      - feeds
-      - items
-      description: Sub-aba dentro de uma pasta; é o nível que agrupa os canais.
+      - m3u
+      - m3u8
+      - json
+      - xspf
+      description: O mesmo conteúdo em quatro formatos. São URLs públicas, com o token do feed no caminho — quem tem o link tem o conteúdo.
     PastaBiblioteca:
       type: object
       properties:
@@ -110,6 +90,47 @@ components:
       - feeds
       - groups
       description: Pasta (aba principal) da galeria do dono.
+    SubAba:
+      type: object
+      properties:
+        id:
+          type: string
+          description: ID da sub-aba, `grp_…`.
+        name:
+          type: string
+          description: Nome que o dono deu.
+        slug:
+          type: string
+          description: Versão do nome usada na URL do feed.
+        sort:
+          type: integer
+          description: Posição na ordenação dentro da pasta.
+        last_item_id:
+          type: string
+          description: Último canal tocado nesta sub-aba.
+          nullable: true
+        api:
+          type: string
+          description: URL absoluta desta sub-aba.
+        feeds:
+          allOf:
+          - $ref: '#/components/schemas/Feeds'
+          description: Feeds só desta sub-aba.
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/ItemBiblioteca'
+          description: Canais colocados aqui, na ordem do dono.
+      required:
+      - id
+      - name
+      - slug
+      - sort
+      - last_item_id
+      - api
+      - feeds
+      - items
+      description: Sub-aba dentro de uma pasta; é o nível que agrupa os canais.
     ItemBiblioteca:
       type: object
       properties:
@@ -163,27 +184,6 @@ components:
       - stale
       - sort
       description: Um canal dentro de uma sub-aba, com o stream já escolhido.
-    Feeds:
-      type: object
-      properties:
-        m3u:
-          type: string
-          description: Playlist M3U — é o que se cola no VLC.
-        m3u8:
-          type: string
-          description: Mesma playlist, extensão `.m3u8` para players que só aceitam ela.
-        json:
-          type: string
-          description: Mesma lista em JSON, para quem programa em cima.
-        xspf:
-          type: string
-          description: Mesma lista em XSPF, para players que preferem XML.
-      required:
-      - m3u
-      - m3u8
-      - json
-      - xspf
-      description: O mesmo conteúdo em quatro formatos. São URLs públicas, com o token do feed no caminho — quem tem o link tem o conteúdo.
     Biblioteca:
       type: object
       properties:

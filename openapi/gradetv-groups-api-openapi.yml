@@ -79,6 +79,27 @@ paths:
       - Groups
 components:
   schemas:
+    Feeds:
+      type: object
+      properties:
+        m3u:
+          type: string
+          description: Playlist M3U — é o que se cola no VLC.
+        m3u8:
+          type: string
+          description: Mesma playlist, extensão `.m3u8` para players que só aceitam ela.
+        json:
+          type: string
+          description: Mesma lista em JSON, para quem programa em cima.
+        xspf:
+          type: string
+          description: Mesma lista em XSPF, para players que preferem XML.
+      required:
+      - m3u
+      - m3u8
+      - json
+      - xspf
+      description: O mesmo conteúdo em quatro formatos. São URLs públicas, com o token do feed no caminho — quem tem o link tem o conteúdo.
     SubAba:
       type: object
       properties:
@@ -120,47 +141,6 @@ components:
       - feeds
       - items
       description: Sub-aba dentro de uma pasta; é o nível que agrupa os canais.
-    PastaBiblioteca:
-      type: object
-      properties:
-        id:
-          type: string
-          description: ID da pasta, `cat_…`.
-        name:
-          type: string
-          description: Nome que o dono deu.
-        slug:
-          type: string
-          description: Versão do nome usada na URL do feed.
-        sort:
-          type: integer
-          description: Posição na ordenação do dono.
-        last_group_id:
-          type: string
-          description: Sub-aba aberta por último — é o que devolve a pessoa ao lugar onde parou.
-          nullable: true
-        api:
-          type: string
-          description: URL absoluta desta pasta.
-        feeds:
-          allOf:
-          - $ref: '#/components/schemas/Feeds'
-          description: Feeds só desta pasta.
-        groups:
-          type: array
-          items:
-            $ref: '#/components/schemas/SubAba'
-          description: Sub-abas dentro da pasta.
-      required:
-      - id
-      - name
-      - slug
-      - sort
-      - last_group_id
-      - api
-      - feeds
-      - groups
-      description: Pasta (aba principal) da galeria do dono.
     ItemBiblioteca:
       type: object
       properties:
@@ -214,27 +194,6 @@ components:
       - stale
       - sort
       description: Um canal dentro de uma sub-aba, com o stream já escolhido.
-    Feeds:
-      type: object
-      properties:
-        m3u:
-          type: string
-          description: Playlist M3U — é o que se cola no VLC.
-        m3u8:
-          type: string
-          description: Mesma playlist, extensão `.m3u8` para players que só aceitam ela.
-        json:
-          type: string
-          description: Mesma lista em JSON, para quem programa em cima.
-        xspf:
-          type: string
-          description: Mesma lista em XSPF, para players que preferem XML.
-      required:
-      - m3u
-      - m3u8
-      - json
-      - xspf
-      description: O mesmo conteúdo em quatro formatos. São URLs públicas, com o token do feed no caminho — quem tem o link tem o conteúdo.
     BibliotecaComSubAba:
       type: object
       properties:
@@ -291,6 +250,47 @@ components:
       - feeds
       - categories
       description: 'A galeria inteira do dono: pastas, sub-abas, canais e as URLs de feed de cada nível.'
+    PastaBiblioteca:
+      type: object
+      properties:
+        id:
+          type: string
+          description: ID da pasta, `cat_…`.
+        name:
+          type: string
+          description: Nome que o dono deu.
+        slug:
+          type: string
+          description: Versão do nome usada na URL do feed.
+        sort:
+          type: integer
+          description: Posição na ordenação do dono.
+        last_group_id:
+          type: string
+          description: Sub-aba aberta por último — é o que devolve a pessoa ao lugar onde parou.
+          nullable: true
+        api:
+          type: string
+          description: URL absoluta desta pasta.
+        feeds:
+          allOf:
+          - $ref: '#/components/schemas/Feeds'
+          description: Feeds só desta pasta.
+        groups:
+          type: array
+          items:
+            $ref: '#/components/schemas/SubAba'
+          description: Sub-abas dentro da pasta.
+      required:
+      - id
+      - name
+      - slug
+      - sort
+      - last_group_id
+      - api
+      - feeds
+      - groups
+      description: Pasta (aba principal) da galeria do dono.
   securitySchemes:
     bearerAuth:
       type: http

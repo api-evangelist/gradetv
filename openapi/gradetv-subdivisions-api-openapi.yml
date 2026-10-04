@@ -44,6 +44,17 @@ paths:
       - Subdivisions
 components:
   schemas:
+    ListaSubdivisao:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/Subdivisao'
+          description: Todos os itens; estas rotas não paginam.
+      required:
+      - items
+      description: Coleção pequena e completa — faceta de catálogo, que cabe inteira numa resposta.
     Subdivisao:
       type: object
       properties:
@@ -65,17 +76,6 @@ components:
       - name
       - count
       description: Estado/província com canal tocável.
-    ListaSubdivisao:
-      type: object
-      properties:
-        items:
-          type: array
-          items:
-            $ref: '#/components/schemas/Subdivisao'
-          description: Todos os itens; estas rotas não paginam.
-      required:
-      - items
-      description: Coleção pequena e completa — faceta de catálogo, que cabe inteira numa resposta.
   securitySchemes:
     bearerAuth:
       type: http

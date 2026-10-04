@@ -25,6 +25,29 @@ paths:
       - Health
 components:
   schemas:
+    FrescorCatalogo:
+      type: object
+      properties:
+        synced_at:
+          type: string
+          description: Instante (ISO-8601) da última recarga que entrou no ar; `null` se nunca.
+          nullable: true
+        age_hours:
+          type: integer
+          description: Horas inteiras desde `synced_at`; `null` sem carimbo.
+          nullable: true
+        stale:
+          type: boolean
+          description: '`true` quando passou de `limit_days` — o cron avisa por e-mail e o smoke reprova.'
+        limit_days:
+          type: integer
+          description: O limite em dias (2).
+      required:
+      - synced_at
+      - age_hours
+      - stale
+      - limit_days
+      description: Idade do catálogo, como sai em `/api/health`.
     Saude:
       type: object
       properties:
@@ -55,29 +78,6 @@ components:
       - catalog
       - sources
       description: 'A resposta de `/api/health`: liveness, o commit publicado e a idade do catálogo.'
-    FrescorCatalogo:
-      type: object
-      properties:
-        synced_at:
-          type: string
-          description: Instante (ISO-8601) da última recarga que entrou no ar; `null` se nunca.
-          nullable: true
-        age_hours:
-          type: integer
-          description: Horas inteiras desde `synced_at`; `null` sem carimbo.
-          nullable: true
-        stale:
-          type: boolean
-          description: '`true` quando passou de `limit_days` — o cron avisa por e-mail e o smoke reprova.'
-        limit_days:
-          type: integer
-          description: O limite em dias (2).
-      required:
-      - synced_at
-      - age_hours
-      - stale
-      - limit_days
-      description: Idade do catálogo, como sai em `/api/health`.
   securitySchemes:
     bearerAuth:
       type: http
