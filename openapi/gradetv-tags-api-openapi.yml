@@ -40,17 +40,6 @@ paths:
       - Tags
 components:
   schemas:
-    ListaTag:
-      type: object
-      properties:
-        items:
-          type: array
-          items:
-            $ref: '#/components/schemas/Tag'
-          description: Todos os itens; estas rotas não paginam.
-      required:
-      - items
-      description: Coleção pequena e completa — faceta de catálogo, que cabe inteira numa resposta.
     Tag:
       type: object
       properties:
@@ -68,6 +57,17 @@ components:
       - name
       - count
       description: Tag de estação de rádio, vocabulário livre do Radio Browser, com a contagem no recorte.
+    ListaTag:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/Tag'
+          description: Todos os itens; estas rotas não paginam.
+      required:
+      - items
+      description: Coleção pequena e completa — faceta de catálogo, que cabe inteira numa resposta.
   securitySchemes:
     bearerAuth:
       type: http

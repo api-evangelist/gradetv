@@ -552,59 +552,6 @@ paths:
       - Admin
 components:
   schemas:
-    GuiaRegistrada:
-      type: object
-      properties:
-        ok:
-          type: boolean
-          description: Sempre `true`.
-        guia:
-          type: object
-          description: 'O registro normalizado: `fetched_at`, `itens`, `stale`, `ausente`…'
-      required:
-      - ok
-      - guia
-      description: A fonte `guia` como ficou em `catalog_meta.fontes`.
-    LogosMortas:
-      type: object
-      properties:
-        items:
-          type: array
-          items:
-            type: object
-          description: '`{ id, name, alt_names, country, logo_url, fail_count, last_error }` por canal.'
-        limit:
-          type: integer
-          description: O teto aplicado.
-      required:
-      - items
-      - limit
-      description: Canais com origem de logo morta, para o script de overrides casar.
-    DeltaAplicado:
-      type: object
-      properties:
-        ok:
-          type: boolean
-          description: Sempre `true`; pedido recusado vem como 4xx.
-        tabela:
-          type: string
-          description: A tabela tocada.
-        recebidas:
-          type: integer
-          description: Linhas de `upsert` no pedido.
-        gravadas:
-          type: integer
-          description: Linhas que entraram ou foram atualizadas (na FTS, contando os ids apagados).
-        removidas:
-          type: integer
-          description: Linhas apagadas por `remover`.
-      required:
-      - ok
-      - tabela
-      - recebidas
-      - gravadas
-      - removidas
-      description: Um pedido da diferença entrou no catálogo vivo, num batch.
     SlugPublicado:
       type: object
       properties:
@@ -618,6 +565,41 @@ components:
       - id
       - slug
       description: 'O par que a recarga herda: id estável da iptv-org → slug já publicado.'
+    DeltaAberto:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          description: Sempre `true`; recusa vem como 409 com `problemas[]`.
+        recarga_id:
+          type: string
+          description: A execução aberta — os pedidos seguintes repetem.
+        live:
+          allOf:
+          - $ref: '#/components/schemas/ContagemCatalogo'
+          description: O catálogo no ar, antes da diferença.
+      required:
+      - ok
+      - recarga_id
+      - live
+      description: A recarga por diferença passou pela coleira e está marcada; nada mudou no ar ainda.
+    GuiaLoteGravado:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          description: Sempre `true`; lote recusado vem como 4xx.
+        day:
+          type: string
+          description: O dia gravado.
+        gravados:
+          type: integer
+          description: 'Canais que entraram (INSERT OR REPLACE: reenviar não duplica).'
+      required:
+      - ok
+      - day
+      - gravados
+      description: Resultado de um lote da guia.
     RelatorioDelta:
       type: object
       properties:
@@ -640,22 +622,44 @@ components:
       - depois
       - synced_at
       description: 'A diferença fechou: o catálogo inteiro bateu com `esperado` e o carimbo foi gravado.'
-    SlugsPublicados:
+    GuiaRegistrada:
       type: object
       properties:
-        items:
-          type: array
-          items:
-            $ref: '#/components/schemas/SlugPublicado'
-          description: Os pares desta página.
-        next_after:
+        ok:
+          type: boolean
+          description: Sempre `true`.
+        guia:
+          type: object
+          description: 'O registro normalizado: `fetched_at`, `itens`, `stale`, `ausente`…'
+      required:
+      - ok
+      - guia
+      description: A fonte `guia` como ficou em `catalog_meta.fontes`.
+    MetaCatalogo:
+      type: object
+      properties:
+        synced_at:
           type: string
-          description: Passe em `apos` para a próxima página; `null` quando acabou.
+          description: Instante (ISO-8601) da última troca bem-sucedida; é o que `/api/health` compara com o limite de 2 dias.
+          nullable: true
+        applied_at:
+          type: string
+          description: Instante em que o catálogo novo entrou no ar.
+          nullable: true
+        dump_sha256:
+          type: string
+          description: SHA-256 do dump da iptv-org que gerou o catálogo no ar.
+          nullable: true
+        staging_run:
+          type: string
+          description: '`recarga_id` da execução com staging aberto agora; `null` sem staging.'
           nullable: true
       required:
-      - items
-      - next_after
-      description: Página de slugs publicados, em ordem de id.
+      - synced_at
+      - applied_at
+      - dump_sha256
+      - staging_run
+      description: Os carimbos da recarga, lidos de `catalog_meta`.
     InicioRecarga:
       type: object
       properties:
@@ -674,128 +678,21 @@ components:
       - recarga_id
       - staging
       description: Staging aberto e vazio.
-    LoteGravado:
+    LogosMortas:
       type: object
       properties:
-        ok:
-          type: boolean
-          description: Sempre `true`; lote recusado vem como 4xx.
-        tabela:
-          type: string
-          description: A tabela em que o lote entrou.
-        recebidas:
+        items:
+          type: array
+          items:
+            type: object
+          description: '`{ id, name, alt_names, country, logo_url, fail_count, last_error }` por canal.'
+        limit:
           type: integer
-          description: Linhas recebidas no pedido.
-        gravadas:
-          type: integer
-          description: Linhas efetivamente inseridas; menor que `recebidas` quando um reenvio repetiu chave.
+          description: O teto aplicado.
       required:
-      - ok
-      - tabela
-      - recebidas
-      - gravadas
-      description: Resultado de um lote.
-    DeltaAberto:
-      type: object
-      properties:
-        ok:
-          type: boolean
-          description: Sempre `true`; recusa vem como 409 com `problemas[]`.
-        recarga_id:
-          type: string
-          description: A execução aberta — os pedidos seguintes repetem.
-        live:
-          allOf:
-          - $ref: '#/components/schemas/ContagemCatalogo'
-          description: O catálogo no ar, antes da diferença.
-      required:
-      - ok
-      - recarga_id
-      - live
-      description: A recarga por diferença passou pela coleira e está marcada; nada mudou no ar ainda.
-    RelatorioTroca:
-      type: object
-      properties:
-        ok:
-          type: boolean
-          description: Sempre `true`; recusa vem como 409 com `problemas[]`.
-        recarga_id:
-          type: string
-          description: A recarga que entrou no ar.
-        antes:
-          allOf:
-          - $ref: '#/components/schemas/ContagemCatalogo'
-          description: O catálogo que saiu do ar.
-          nullable: true
-        depois:
-          allOf:
-          - $ref: '#/components/schemas/ContagemCatalogo'
-          description: O catálogo que está servindo agora.
-        synced_at:
-          type: string
-          description: O `synced_at` gravado no mesmo batch da troca.
-      required:
-      - ok
-      - recarga_id
-      - antes
-      - depois
-      - synced_at
-      description: 'A troca aconteceu: contagens de antes e de depois, e o carimbo novo.'
-    OverridesGravados:
-      type: object
-      properties:
-        ok:
-          type: boolean
-          description: Sempre `true`; pedido recusado vem como 4xx.
-        fonte:
-          type: string
-          description: A fonte gravada em cada linha.
-        gravados:
-          type: integer
-          description: Overrides que entraram (INSERT OR REPLACE).
-      required:
-      - ok
-      - fonte
-      - gravados
-      description: Resultado da gravação de overrides de logo.
-    EstadoCatalogo:
-      type: object
-      properties:
-        live:
-          allOf:
-          - $ref: '#/components/schemas/ContagemCatalogo'
-          description: O catálogo que está servindo agora.
-        staging:
-          allOf:
-          - $ref: '#/components/schemas/ContagemCatalogo'
-          description: As tabelas `*_novo` da recarga em curso; `null` quando não há staging.
-          nullable: true
-        meta:
-          allOf:
-          - $ref: '#/components/schemas/MetaCatalogo'
-          description: Carimbos da última recarga e do staging aberto.
-      required:
-      - live
-      - staging
-      - meta
-      description: O retrato que o serviço de recarga lê antes de começar e depois de trocar.
-    GuiaLoteGravado:
-      type: object
-      properties:
-        ok:
-          type: boolean
-          description: Sempre `true`; lote recusado vem como 4xx.
-        day:
-          type: string
-          description: O dia gravado.
-        gravados:
-          type: integer
-          description: 'Canais que entraram (INSERT OR REPLACE: reenviar não duplica).'
-      required:
-      - ok
-      - day
-      - gravados
-      description: Resultado de um lote da guia.
+      - items
+      - limit
+      description: Canais com origem de logo morta, para o script de overrides casar.
     ContagemCatalogo:
       type: object
       properties:
@@ -841,31 +738,134 @@ components:
       - facet_subdivisions
       - facet_cities
       description: Quantas linhas cada tabela do catálogo tem — no ar ou no staging.
-    MetaCatalogo:
+    SlugsPublicados:
       type: object
       properties:
-        synced_at:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/SlugPublicado'
+          description: Os pares desta página.
+        next_after:
           type: string
-          description: Instante (ISO-8601) da última troca bem-sucedida; é o que `/api/health` compara com o limite de 2 dias.
-          nullable: true
-        applied_at:
-          type: string
-          description: Instante em que o catálogo novo entrou no ar.
-          nullable: true
-        dump_sha256:
-          type: string
-          description: SHA-256 do dump da iptv-org que gerou o catálogo no ar.
-          nullable: true
-        staging_run:
-          type: string
-          description: '`recarga_id` da execução com staging aberto agora; `null` sem staging.'
+          description: Passe em `apos` para a próxima página; `null` quando acabou.
           nullable: true
       required:
+      - items
+      - next_after
+      description: Página de slugs publicados, em ordem de id.
+    DeltaAplicado:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          description: Sempre `true`; pedido recusado vem como 4xx.
+        tabela:
+          type: string
+          description: A tabela tocada.
+        recebidas:
+          type: integer
+          description: Linhas de `upsert` no pedido.
+        gravadas:
+          type: integer
+          description: Linhas que entraram ou foram atualizadas (na FTS, contando os ids apagados).
+        removidas:
+          type: integer
+          description: Linhas apagadas por `remover`.
+      required:
+      - ok
+      - tabela
+      - recebidas
+      - gravadas
+      - removidas
+      description: Um pedido da diferença entrou no catálogo vivo, num batch.
+    EstadoCatalogo:
+      type: object
+      properties:
+        live:
+          allOf:
+          - $ref: '#/components/schemas/ContagemCatalogo'
+          description: O catálogo que está servindo agora.
+        staging:
+          allOf:
+          - $ref: '#/components/schemas/ContagemCatalogo'
+          description: As tabelas `*_novo` da recarga em curso; `null` quando não há staging.
+          nullable: true
+        meta:
+          allOf:
+          - $ref: '#/components/schemas/MetaCatalogo'
+          description: Carimbos da última recarga e do staging aberto.
+      required:
+      - live
+      - staging
+      - meta
+      description: O retrato que o serviço de recarga lê antes de começar e depois de trocar.
+    OverridesGravados:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          description: Sempre `true`; pedido recusado vem como 4xx.
+        fonte:
+          type: string
+          description: A fonte gravada em cada linha.
+        gravados:
+          type: integer
+          description: Overrides que entraram (INSERT OR REPLACE).
+      required:
+      - ok
+      - fonte
+      - gravados
+      description: Resultado da gravação de overrides de logo.
+    LoteGravado:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          description: Sempre `true`; lote recusado vem como 4xx.
+        tabela:
+          type: string
+          description: A tabela em que o lote entrou.
+        recebidas:
+          type: integer
+          description: Linhas recebidas no pedido.
+        gravadas:
+          type: integer
+          description: Linhas efetivamente inseridas; menor que `recebidas` quando um reenvio repetiu chave.
+      required:
+      - ok
+      - tabela
+      - recebidas
+      - gravadas
+      description: Resultado de um lote.
+    RelatorioTroca:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          description: Sempre `true`; recusa vem como 409 com `problemas[]`.
+        recarga_id:
+          type: string
+          description: A recarga que entrou no ar.
+        antes:
+          allOf:
+          - $ref: '#/components/schemas/ContagemCatalogo'
+          description: O catálogo que saiu do ar.
+          nullable: true
+        depois:
+          allOf:
+          - $ref: '#/components/schemas/ContagemCatalogo'
+          description: O catálogo que está servindo agora.
+        synced_at:
+          type: string
+          description: O `synced_at` gravado no mesmo batch da troca.
+      required:
+      - ok
+      - recarga_id
+      - antes
+      - depois
       - synced_at
-      - applied_at
-      - dump_sha256
-      - staging_run
-      description: Os carimbos da recarga, lidos de `catalog_meta`.
+      description: 'A troca aconteceu: contagens de antes e de depois, e o carimbo novo.'
   securitySchemes:
     bearerAuth:
       type: http

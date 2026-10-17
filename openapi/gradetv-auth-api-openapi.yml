@@ -200,6 +200,20 @@ paths:
       - Auth
 components:
   schemas:
+    Reivindicacao:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          description: Se havia algo a reivindicar.
+        product:
+          allOf:
+          - $ref: '#/components/schemas/ReivindicacaoProduto'
+          description: O convidado que a conta já tinha, e o que fazer com ele.
+      required:
+      - ok
+      - product
+      description: O que o verify achou de convidado já ligado a este e-mail. É o campo que salva a biblioteca de outro aparelho.
     ReivindicacaoProduto:
       type: object
       properties:
@@ -218,29 +232,6 @@ components:
       - adopt
       - resources
       description: Qual convidado usar depois de entrar — o novo ou o que já existia.
-    Ok:
-      type: object
-      properties:
-        ok:
-          type: boolean
-          description: Sempre `true` — a falha vem como status 4xx/5xx, não como `ok:false`.
-      required:
-      - ok
-      description: Confirmação de escrita que não tem corpo próprio a devolver.
-    Reivindicacao:
-      type: object
-      properties:
-        ok:
-          type: boolean
-          description: Se havia algo a reivindicar.
-        product:
-          allOf:
-          - $ref: '#/components/schemas/ReivindicacaoProduto'
-          description: O convidado que a conta já tinha, e o que fazer com ele.
-      required:
-      - ok
-      - product
-      description: O que o verify achou de convidado já ligado a este e-mail. É o campo que salva a biblioteca de outro aparelho.
     Conta:
       type: object
       properties:
@@ -271,6 +262,15 @@ components:
       - favorites
       - history
       description: O tamanho da biblioteca do dono — para o agente saber o que vai encontrar antes de buscar.
+    Ok:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          description: Sempre `true` — a falha vem como status 4xx/5xx, não como `ok:false`.
+      required:
+      - ok
+      description: Confirmação de escrita que não tem corpo próprio a devolver.
   securitySchemes:
     bearerAuth:
       type: http
