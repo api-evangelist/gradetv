@@ -1,8 +1,8 @@
 openapi: 3.2.0
 info:
-  title: Grade Apis.json API
-  version: dbad45cb
-  description: Catálogo IPTV, biblioteca pessoal com feeds e informações para produtores sobre transmissão autorizada sob consulta.
+  title: GradeTV Apis.json API
+  version: 1d751aaf
+  description: Find TV and radio, check the schedule and organize personal lists. Present authorized broadcast projects for evaluation, without activation.
 servers:
 - url: https://gradetv.net
 tags:
@@ -11,12 +11,12 @@ paths:
   /apis.json:
     get:
       operationId: get_apis_json
-      summary: 'APIs.json (apisjson.org, 0.19): o índice que o APIs.io colhe — a API, o MCP…'
-      description: 'Devolve: `application/json` no formato APIs.json 0.19: `apis[]` com `baseURL`, `humanURL` e `properties[]`.'
+      summary: 'APIs.json (apisjson.org, 0.19): the index that APIs.io collects, with the API…'
+      description: 'Returns: `application/json` in the APIs.json 0.19 format: `apis[]` with `baseURL`, `humanURL` and `properties[]`.'
       security: []
       responses:
         '200':
-          description: '`application/json` no formato APIs.json 0.19: `apis[]` com `baseURL`, `humanURL` e `properties[]`.'
+          description: '`application/json` in the APIs.json 0.19 format: `apis[]` with `baseURL`, `humanURL` and `properties[]`.'
       tags:
       - Apis.json
 components:
@@ -24,4 +24,28 @@ components:
     bearerAuth:
       type: http
       scheme: bearer
-      description: ipt_… (guest) ou iptk_… (API key)
+      description: ipt_… (guest); the account is a cookie, never a bearer
+    globalAccount:
+      type: apiKey
+      in: cookie
+      name: __Host-mm-auth
+      description: Global session in the product's HttpOnly cookie; writes require exact Origin and X-CSRF-Token.
+    contaChaveApi:
+      type: http
+      scheme: bearer
+      bearerFormat: mmk_…
+      description: 'Account API key: `Authorization: Bearer mmk_…` or `X-Api-Key: mmk_…`. Created on the account page (API keys), valid only in the product where it was created; it acts as the account (or the organization that owns it).'
+    carteiraAgente:
+      type: http
+      scheme: bearer
+      bearerFormat: mmw_…
+      description: 'Wallet credential of an agent without an account (`Authorization: Bearer mmw_…`, 30 days, this product only): POST /api/auth/wallet/agent/start, sign the message with the wallet, POST /api/auth/wallet/agent/token. The owner is `x402:<address>`.'
+x-service-info:
+  categories:
+  - tv-guide
+  - media
+  - directory
+  docs:
+    homepage: https://gradetv.net/
+    apiReference: https://gradetv.net/developers
+    llms: https://gradetv.net/llms.txt

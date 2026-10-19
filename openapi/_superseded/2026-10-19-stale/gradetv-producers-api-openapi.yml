@@ -1,0 +1,97 @@
+openapi: 3.2.0
+info:
+  title: Grade Producers API
+  version: dbad45cb
+  description: Catálogo IPTV, biblioteca pessoal com feeds e informações para produtores sobre transmissão autorizada sob consulta.
+servers:
+- url: https://gradetv.net
+tags:
+- name: Producers
+paths:
+  /api/producers:
+    get:
+      operationId: producer_services
+      summary: Oferta sob consulta para produtores com conteúdo autorizado e canais de contato
+      description: 'Somente informações e captação de interesse. Não provisiona, não cobra e não ativa transmissão. Use contact.form_url no browser, contact.email por e-mail ou POST /api/contact para apresentar o projeto. O envio por API mantém o gate x402 ou crédito pré-pago; o formulário humano usa Turnstile.
+
+        Devolve: { status, activation_available, title, description, audience, services, requirements, availability, pricing, contact, _links }'
+      security: []
+      parameters:
+      - name: lang
+        in: query
+        required: false
+        schema:
+          type: string
+          default: pt
+          enum:
+          - pt
+          - en
+          - es
+          - fr
+          - de
+        description: 'Idioma da oferta: pt, en, es, fr ou de; ausente ou desconhecido volta a pt.'
+      responses:
+        '200':
+          description: '{ status, activation_available, title, description, audience, services, requirements, availability, pricing, contact, _links }'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    description: '`sob_consulta`: proposta sujeita a avaliação individual.'
+                  activation_available:
+                    type: boolean
+                    description: 'Sempre false: não há ativação de transmissão nesta superfície.'
+                  title:
+                    type: string
+                    description: Nome da oferta no idioma solicitado.
+                  description:
+                    type: string
+                    description: Apresentação do serviço sob consulta.
+                  audience:
+                    type: string
+                    description: Perfil de produtores e organizações atendidos pela proposta.
+                  services:
+                    type: array
+                    items:
+                      type: string
+                    description: Capacidades a avaliar no projeto, sem compromisso de disponibilidade.
+                  requirements:
+                    type: string
+                    description: Necessidade de autorização para sinal e obras, território e prazo.
+                  availability:
+                    type: string
+                    description: Condição de avaliação antes de confirmar início e escopo.
+                  pricing:
+                    type: string
+                    description: Orçamento sob consulta; enviar interesse não contrata o serviço.
+                  contact:
+                    type: object
+                    description: email, form_url e api_url absolutos, message_template e instructions para apresentar canal/evento, direitos, audiência, duração e data.
+                  _links:
+                    type: object
+                    description: 'self (esta API com idioma) e page (página da oferta): URLs absolutas.'
+                required:
+                - status
+                - activation_available
+                - title
+                - description
+                - audience
+                - services
+                - requirements
+                - availability
+                - pricing
+                - contact
+                - _links
+        '405':
+          description: A oferta só aceita GET; não existe provisionamento por POST.
+      tags:
+      - Producers
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      description: ipt_… (guest) ou iptk_… (API key)

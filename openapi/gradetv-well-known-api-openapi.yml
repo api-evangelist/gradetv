@@ -1,8 +1,8 @@
 openapi: 3.2.0
 info:
-  title: Grade .well Known API
-  version: dbad45cb
-  description: Catálogo IPTV, biblioteca pessoal com feeds e informações para produtores sobre transmissão autorizada sob consulta.
+  title: GradeTV .well Known API
+  version: 1d751aaf
+  description: Find TV and radio, check the schedule and organize personal lists. Present authorized broadcast projects for evaluation, without activation.
 servers:
 - url: https://gradetv.net
 tags:
@@ -11,8 +11,8 @@ paths:
   /.well-known/{arquivo}:
     get:
       operationId: get_well_known_by_arquivo
-      summary: 'Descoberta de máquina antes da home: `api-catalog` (RFC 9727, linkset com a API…'
-      description: 'Devolve: `application/linkset+json` no api-catalog; `text/plain` nos outros dois.'
+      summary: 'Machine discovery before the home page: `api-catalog` (RFC 9727, linkset with…'
+      description: 'Returns: `application/linkset+json` for api-catalog; `application/json` for x402, agent-card.json and apis.json; `text/plain` for the other two.'
       security: []
       parameters:
       - name: arquivo
@@ -20,11 +20,13 @@ paths:
         required: true
         schema:
           type: string
+        description: '`api-catalog`, `security.txt`, `x402`, `agent-card.json`, `mcp-registry-auth` or `apis.json`.'
+        example: api-catalog
       responses:
         '200':
-          description: '`application/linkset+json` no api-catalog; `text/plain` nos outros dois.'
+          description: '`application/linkset+json` for api-catalog; `application/json` for x402, agent-card.json and apis.json; `text/plain` for the other two.'
         '404':
-          description: Nome fora dos quatro publicados.
+          description: Name outside the six published ones.
       tags:
       - .well Known
 components:
@@ -32,4 +34,28 @@ components:
     bearerAuth:
       type: http
       scheme: bearer
-      description: ipt_… (guest) ou iptk_… (API key)
+      description: ipt_… (guest); the account is a cookie, never a bearer
+    globalAccount:
+      type: apiKey
+      in: cookie
+      name: __Host-mm-auth
+      description: Global session in the product's HttpOnly cookie; writes require exact Origin and X-CSRF-Token.
+    contaChaveApi:
+      type: http
+      scheme: bearer
+      bearerFormat: mmk_…
+      description: 'Account API key: `Authorization: Bearer mmk_…` or `X-Api-Key: mmk_…`. Created on the account page (API keys), valid only in the product where it was created; it acts as the account (or the organization that owns it).'
+    carteiraAgente:
+      type: http
+      scheme: bearer
+      bearerFormat: mmw_…
+      description: 'Wallet credential of an agent without an account (`Authorization: Bearer mmw_…`, 30 days, this product only): POST /api/auth/wallet/agent/start, sign the message with the wallet, POST /api/auth/wallet/agent/token. The owner is `x402:<address>`.'
+x-service-info:
+  categories:
+  - tv-guide
+  - media
+  - directory
+  docs:
+    homepage: https://gradetv.net/
+    apiReference: https://gradetv.net/developers
+    llms: https://gradetv.net/llms.txt

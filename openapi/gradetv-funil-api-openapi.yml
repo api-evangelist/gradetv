@@ -1,0 +1,184 @@
+openapi: 3.2.0
+info:
+  title: GradeTV Funil API
+  version: 1d751aaf
+  description: Find TV and radio, check the schedule and organize personal lists. Present authorized broadcast projects for evaluation, without activation.
+servers:
+- url: https://gradetv.net
+tags:
+- name: Funil
+paths:
+  /api/funil:
+    post:
+      operationId: post_api_funil
+      summary: The interface reports the steps of the visit (conversion funnel).
+      description: 'A same-origin batch, sent by the page itself: page views, engagement, offer in view, click on buy, payment window, payment sent or accepted. It keeps the random browser ID, the path without query, the host that referred the person and the utm values; never the IP, e-mail or account. It does not write to a database: one line per batch in the daily log, with a cap. Declared robots and smoke tests are left out.
+
+        Returns: 202 with no body if stored; 204 if ignored. Always no-store.'
+      security: []
+      parameters:
+      - name: Origin
+        in: header
+        required: false
+        schema:
+          type: string
+        description: The page origin, identical to the origin of this route.
+      - name: Content-Type
+        in: header
+        required: true
+        schema:
+          type: string
+        description: '`application/json` or `text/plain`.'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                v:
+                  type: number
+                  description: 'Batch version: `1`.'
+                vid:
+                  type: string
+                  description: Random ID of this browser (UUID v4).
+                sid:
+                  type: string
+                  description: Session ID (30 min without activity ends it).
+                sn:
+                  type: number
+                  description: Session number of this browser.
+                pv:
+                  type: string
+                  description: ID of the page view.
+                e:
+                  type: array
+                  items:
+                    type: object
+                  description: Up to 40 events `{ t, n, p? }` from the funnel vocabulary.
+              required:
+              - v
+              - vid
+              - sid
+              - sn
+              - pv
+              - e
+      responses:
+        '202':
+          description: 202 with no body if stored; 204 if ignored. Always no-store.
+      tags:
+      - Funil
+  /api/funil/arquivos:
+    get:
+      operationId: get_api_funil_arquivos
+      summary: 'Operator: the days of the funnel log stored in this app, with the size of each…'
+      description: 'Returns: { v, produto, teto, dias }'
+      security: []
+      parameters:
+      - name: Authorization
+        in: header
+        required: true
+        schema:
+          type: string
+        description: '`Bearer <METRICS_TOKEN>`.'
+      responses:
+        '200':
+          description: '{ v, produto, teto, dias }'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  v:
+                    type: number
+                    description: Version of the stored batch.
+                  produto:
+                    type: string
+                    description: O produto.
+                  teto:
+                    type: object
+                    description: '`bytesDia` e `dias` guardados.'
+                  dias:
+                    type: array
+                    items:
+                      type: object
+                    description: '`{ dia, bytes }`, from the oldest to today.'
+                required:
+                - v
+                - produto
+                - teto
+                - dias
+        '401':
+          description: Unauthorized
+        '503':
+          description: Not configured
+      tags:
+      - Funil
+  /api/funil/arquivo:
+    get:
+      operationId: get_api_funil_arquivo
+      summary: 'Operator: a part of one day of the funnel log, in NDJSON, from a given byte'
+      description: 'Up to 4 MiB per response, cut at the last complete line. `X-MM-Funil-Proximo` tells where to request the rest from; `X-MM-Funil-Tamanho`, the current size of the day.
+
+        Returns: JSON lines, one per stored batch.'
+      security: []
+      parameters:
+      - name: dia
+        in: query
+        required: true
+        schema:
+          type: string
+        description: O dia, `AAAA-MM-DD` (UTC).
+      - name: desde
+        in: query
+        required: false
+        schema:
+          type: number
+        description: The byte to read from; `0` at the start.
+      - name: Authorization
+        in: header
+        required: true
+        schema:
+          type: string
+        description: '`Bearer <METRICS_TOKEN>`.'
+      responses:
+        '200':
+          description: JSON lines, one per stored batch.
+        '400':
+          description: Invalid parameters
+        '401':
+          description: Unauthorized
+        '503':
+          description: Not configured
+      tags:
+      - Funil
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      description: ipt_… (guest); the account is a cookie, never a bearer
+    globalAccount:
+      type: apiKey
+      in: cookie
+      name: __Host-mm-auth
+      description: Global session in the product's HttpOnly cookie; writes require exact Origin and X-CSRF-Token.
+    contaChaveApi:
+      type: http
+      scheme: bearer
+      bearerFormat: mmk_…
+      description: 'Account API key: `Authorization: Bearer mmk_…` or `X-Api-Key: mmk_…`. Created on the account page (API keys), valid only in the product where it was created; it acts as the account (or the organization that owns it).'
+    carteiraAgente:
+      type: http
+      scheme: bearer
+      bearerFormat: mmw_…
+      description: 'Wallet credential of an agent without an account (`Authorization: Bearer mmw_…`, 30 days, this product only): POST /api/auth/wallet/agent/start, sign the message with the wallet, POST /api/auth/wallet/agent/token. The owner is `x402:<address>`.'
+x-service-info:
+  categories:
+  - tv-guide
+  - media
+  - directory
+  docs:
+    homepage: https://gradetv.net/
+    apiReference: https://gradetv.net/developers
+    llms: https://gradetv.net/llms.txt

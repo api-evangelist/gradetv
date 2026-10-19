@@ -1,8 +1,8 @@
 openapi: 3.2.0
 info:
-  title: Grade Guest API
-  version: dbad45cb
-  description: Catálogo IPTV, biblioteca pessoal com feeds e informações para produtores sobre transmissão autorizada sob consulta.
+  title: GradeTV Guest API
+  version: 1d751aaf
+  description: Find TV and radio, check the schedule and organize personal lists. Present authorized broadcast projects for evaluation, without activation.
 servers:
 - url: https://gradetv.net
 tags:
@@ -11,10 +11,10 @@ paths:
   /api/guest:
     post:
       operationId: create_guest
-      summary: Cria um convidado `ipt_…` — é a identidade que guarda galeria, histórico e…
-      description: 'Não pede e-mail nem nada. Guarde o token: perdeu o token, perdeu a biblioteca (a não ser que você já tenha amarrado a um e-mail com `POST /api/auth/start`).
+      summary: 'Creates a guest `ipt_…`: it is the identity that keeps the gallery, history and…'
+      description: 'It asks for no e-mail or anything else. Keep the token: if you lose the token, you lose the library, unless the account already claimed it (`POST /api/auth/claim`); then what it kept is in the account.
 
-        Devolve: { token }'
+        Returns: { token }'
       security: []
       responses:
         '200':
@@ -26,7 +26,7 @@ paths:
                 properties:
                   token:
                     type: string
-                    description: O convidado, prefixo `ipt_`. Mande em `X-Guest-Token` ou como Bearer.
+                    description: The guest, prefix `ipt_`. Send it in `X-Guest-Token` or as Bearer.
                 required:
                 - token
       tags:
@@ -36,4 +36,28 @@ components:
     bearerAuth:
       type: http
       scheme: bearer
-      description: ipt_… (guest) ou iptk_… (API key)
+      description: ipt_… (guest); the account is a cookie, never a bearer
+    globalAccount:
+      type: apiKey
+      in: cookie
+      name: __Host-mm-auth
+      description: Global session in the product's HttpOnly cookie; writes require exact Origin and X-CSRF-Token.
+    contaChaveApi:
+      type: http
+      scheme: bearer
+      bearerFormat: mmk_…
+      description: 'Account API key: `Authorization: Bearer mmk_…` or `X-Api-Key: mmk_…`. Created on the account page (API keys), valid only in the product where it was created; it acts as the account (or the organization that owns it).'
+    carteiraAgente:
+      type: http
+      scheme: bearer
+      bearerFormat: mmw_…
+      description: 'Wallet credential of an agent without an account (`Authorization: Bearer mmw_…`, 30 days, this product only): POST /api/auth/wallet/agent/start, sign the message with the wallet, POST /api/auth/wallet/agent/token. The owner is `x402:<address>`.'
+x-service-info:
+  categories:
+  - tv-guide
+  - media
+  - directory
+  docs:
+    homepage: https://gradetv.net/
+    apiReference: https://gradetv.net/developers
+    llms: https://gradetv.net/llms.txt

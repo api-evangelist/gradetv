@@ -1,0 +1,131 @@
+openapi: 3.2.0
+info:
+  title: GradeTV Partners API
+  version: 1d751aaf
+  description: Find TV and radio, check the schedule and organize personal lists. Present authorized broadcast projects for evaluation, without activation.
+servers:
+- url: https://gradetv.net
+tags:
+- name: Partners
+paths:
+  /api/partners:
+    get:
+      operationId: get_api_partners
+      summary: 'Partnership, sponsorship and ads: the product slots with a suggested price, the…'
+      description: 'Information on request, with no activation: slots in the house catalog with a price in USD per 30 days (90 and 365 days at a discount), current sponsors, an extract of `/api/vitrine`, the house wallet (USDC on Base) and the contact path; deposit, PIX or invoice are agreed in the answer. Cache of 1 hour.
+
+        Returns: { status, produto, idioma, titulo, descricao, publico, modalidades, placements, house_bundle, parcerias, current_sponsors, stats, payment, contact, politica, _links }'
+      security: []
+      responses:
+        '200':
+          description: '{ status, produto, idioma, titulo, descricao, publico, modalidades, placements, house_bundle, parcerias, current_sponsors, stats, payment, contact, politica, _links }'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    description: '`sob_consulta`: information and proposal, with no activation and no charge.'
+                  produto:
+                    type: string
+                    description: Product name.
+                  idioma:
+                    type: string
+                    description: Language of the texts (the product's language).
+                  titulo:
+                    type: string
+                    description: Offer title.
+                  descricao:
+                    type: string
+                    description: One sentence about the offer.
+                  publico:
+                    type: string
+                    description: 'Who uses the product: the audience that the sponsor reaches.'
+                  modalidades:
+                    type: array
+                    items:
+                      type: object
+                    description: '`{ id, nome }`: patrocinio, parceria, anuncio.'
+                  placements:
+                    type: array
+                    items:
+                      type: object
+                    description: 'The product slots: `id`, `nome`, `onde`, `formato`, `exclusivo`, `medicao`, `price_usd_30d` (suggestion; `null` is on request), `exposure[{ dias, price_usd }]` for 30, 90 and 365 days, `disponivel`.'
+                  house_bundle:
+                    type: object
+                    description: 'The house bundle: footer and agent mention in the ten products, at a discount.'
+                  parcerias:
+                    type: array
+                    items:
+                      type: string
+                    description: Partnership ideas that the product is open to discuss.
+                  current_sponsors:
+                    type: array
+                    items:
+                      type: object
+                    description: 'Active sponsors: `id`, `nome`, `url`, `frase`, `espacos`, `ate`.'
+                  stats:
+                    type: object
+                    description: 'Extract of the public numbers (`hoje`, `janelas`, `agentes`, `confiabilidade`) and the `link` to `/api/vitrine`; `publicado: false` before the first publication.'
+                  payment:
+                    type: object
+                    description: 'How to pay: `rede`, `chain_id`, `ativo`, `pay_to`, `eip681` (the house wallet, when declared), `alternativas` and the `nota`: deposit, PIX or invoice through the answer.'
+                  contact:
+                    type: object
+                    description: '`email`, `form_url`, `api_url` (`POST /api/contact`, open: one message every 10 s per network), `campos` (the required ones), `campos_proposta` (the optional fields of a proposal, with the accepted values of each one), `message_template`, `instructions`.'
+                  politica:
+                    type: object
+                    description: Slot label, refused sectors, payment in advance, terms.
+                  _links:
+                    type: object
+                    description: '`self`, `stats`, `page` (`null` until the page exists), `contact`, `casa` (the same path in the ten products).'
+                required:
+                - status
+                - produto
+                - idioma
+                - titulo
+                - descricao
+                - publico
+                - modalidades
+                - placements
+                - house_bundle
+                - parcerias
+                - current_sponsors
+                - stats
+                - payment
+                - contact
+                - politica
+                - _links
+      tags:
+      - Partners
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      description: ipt_… (guest); the account is a cookie, never a bearer
+    globalAccount:
+      type: apiKey
+      in: cookie
+      name: __Host-mm-auth
+      description: Global session in the product's HttpOnly cookie; writes require exact Origin and X-CSRF-Token.
+    contaChaveApi:
+      type: http
+      scheme: bearer
+      bearerFormat: mmk_…
+      description: 'Account API key: `Authorization: Bearer mmk_…` or `X-Api-Key: mmk_…`. Created on the account page (API keys), valid only in the product where it was created; it acts as the account (or the organization that owns it).'
+    carteiraAgente:
+      type: http
+      scheme: bearer
+      bearerFormat: mmw_…
+      description: 'Wallet credential of an agent without an account (`Authorization: Bearer mmw_…`, 30 days, this product only): POST /api/auth/wallet/agent/start, sign the message with the wallet, POST /api/auth/wallet/agent/token. The owner is `x402:<address>`.'
+x-service-info:
+  categories:
+  - tv-guide
+  - media
+  - directory
+  docs:
+    homepage: https://gradetv.net/
+    apiReference: https://gradetv.net/developers
+    llms: https://gradetv.net/llms.txt

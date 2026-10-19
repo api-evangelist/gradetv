@@ -1,8 +1,8 @@
 openapi: 3.2.0
 info:
-  title: Grade Networks API
-  version: dbad45cb
-  description: Catálogo IPTV, biblioteca pessoal com feeds e informações para produtores sobre transmissão autorizada sob consulta.
+  title: GradeTV Networks API
+  version: 1d751aaf
+  description: Find TV and radio, check the schedule and organize personal lists. Present authorized broadcast projects for evaluation, without activation.
 servers:
 - url: https://gradetv.net
 tags:
@@ -11,8 +11,8 @@ paths:
   /api/networks:
     get:
       operationId: list_networks
-      summary: Redes e emissoras que têm canal tocável, com a contagem
-      description: 'Devolve: { items[{name,count}] }'
+      summary: Networks and broadcasters that have a playable channel, with the count
+      description: 'Returns: { items[{name,count}] }'
       security: []
       parameters:
       - name: kind
@@ -25,7 +25,7 @@ paths:
           - tv
           - radio
           - all
-        description: '`tv` (padrão) conta canais de TV; `radio` conta estações do Radio Browser; `all` junta os dois.'
+        description: '`tv` (default) counts TV channels; `radio` counts radio stations; `all` joins both.'
       responses:
         '200':
           description: '{ items[{name,count}] }'
@@ -42,14 +42,14 @@ components:
       properties:
         name:
           type: string
-          description: Nome da rede, ex. `Globo`.
+          description: Network name, e.g. `Globo`.
         count:
           type: integer
-          description: Canais tocáveis desta rede.
+          description: Playable channels of this network.
       required:
       - name
       - count
-      description: Rede/emissora com canal tocável.
+      description: Network/broadcaster with a playable channel.
     ListaRede:
       type: object
       properties:
@@ -57,12 +57,36 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/Rede'
-          description: Todos os itens; estas rotas não paginam.
+          description: All the items; these routes do not paginate.
       required:
       - items
-      description: Coleção pequena e completa — faceta de catálogo, que cabe inteira numa resposta.
+      description: 'Small, complete collection: a catalog facet that fits whole in one answer.'
   securitySchemes:
     bearerAuth:
       type: http
       scheme: bearer
-      description: ipt_… (guest) ou iptk_… (API key)
+      description: ipt_… (guest); the account is a cookie, never a bearer
+    globalAccount:
+      type: apiKey
+      in: cookie
+      name: __Host-mm-auth
+      description: Global session in the product's HttpOnly cookie; writes require exact Origin and X-CSRF-Token.
+    contaChaveApi:
+      type: http
+      scheme: bearer
+      bearerFormat: mmk_…
+      description: 'Account API key: `Authorization: Bearer mmk_…` or `X-Api-Key: mmk_…`. Created on the account page (API keys), valid only in the product where it was created; it acts as the account (or the organization that owns it).'
+    carteiraAgente:
+      type: http
+      scheme: bearer
+      bearerFormat: mmw_…
+      description: 'Wallet credential of an agent without an account (`Authorization: Bearer mmw_…`, 30 days, this product only): POST /api/auth/wallet/agent/start, sign the message with the wallet, POST /api/auth/wallet/agent/token. The owner is `x402:<address>`.'
+x-service-info:
+  categories:
+  - tv-guide
+  - media
+  - directory
+  docs:
+    homepage: https://gradetv.net/
+    apiReference: https://gradetv.net/developers
+    llms: https://gradetv.net/llms.txt

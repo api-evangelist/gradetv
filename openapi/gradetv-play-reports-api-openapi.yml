@@ -1,8 +1,8 @@
 openapi: 3.2.0
 info:
-  title: Grade Play Reports API
-  version: dbad45cb
-  description: Catálogo IPTV, biblioteca pessoal com feeds e informações para produtores sobre transmissão autorizada sob consulta.
+  title: GradeTV Play Reports API
+  version: 1d751aaf
+  description: Find TV and radio, check the schedule and organize personal lists. Present authorized broadcast projects for evaluation, without activation.
 servers:
 - url: https://gradetv.net
 tags:
@@ -11,10 +11,10 @@ paths:
   /api/play-reports:
     get:
       operationId: play_reports
-      summary: Relatos crus, com endereço IP, para investigar um canal — só operador
-      description: 'Existe separado do painel público justamente porque traz endereço. A linha some depois do prazo em `retention_days`, e `/api/channels/:id/health` nunca devolve IP.
+      summary: Reads individual playback reports. Operator access only
+      description: 'In current reports, the `ip` field contains an identifier calculated from the network and a secret value. The retention period is in `retention_days`. The public dashboard does not return this identifier.
 
-        Devolve: { items[{channel_id,ok,code,ip,browser,os,country,day,at}], limit, offset, next_offset, retention_days, filters{channel_id,only_failures}, api }'
+        Returns: { items[{channel_id,ok,code,ip,browser,os,country,day,at}], limit, offset, next_offset, retention_days, filters{channel_id,only_failures}, api }'
       security:
       - bearerAuth: []
       parameters:
@@ -23,8 +23,8 @@ paths:
         required: false
         schema:
           type: string
-        description: Restringe a um canal.
-        example: Globo.br
+        description: Restricts to one channel.
+        example: GloboNews.br
       - name: ok
         in: query
         required: false
@@ -32,21 +32,21 @@ paths:
           type: boolean
           enum:
           - '0'
-        description: '`0` traz só as falhas — é o recorte que interessa numa investigação.'
+        description: '`0` brings only the failures: it is the segment that matters in an investigation.'
       - name: limit
         in: query
         required: false
         schema:
           type: integer
           default: 20
-        description: Itens por página. Acima de 50 é silenciosamente reduzido a 50.
+        description: Items per page. Above 50, it is silently reduced to 50.
       - name: offset
         in: query
         required: false
         schema:
           type: integer
           default: 0
-        description: Quantos itens pular. Use `next_offset` da resposta anterior.
+        description: How many items to skip. Use `next_offset` of the previous answer.
       responses:
         '200':
           description: '{ items[{channel_id,ok,code,ip,browser,os,country,day,at}], limit, offset, next_offset, retention_days, filters{channel_id,only_failures}, api }'
@@ -55,7 +55,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/PaginaDeRelatos'
         '401':
-          description: Sem credencial ou credencial inválida. Veja a auth deste endpoint.
+          description: No credential or invalid credential. See the auth of this endpoint.
       tags:
       - Play Reports
 components:
@@ -65,36 +65,36 @@ components:
       properties:
         channel_id:
           type: string
-          description: Canal que a pessoa tentou assistir.
+          description: Channel that the person tried to watch.
         ok:
           type: boolean
-          description: Se tocou (`true`) ou falhou (`false`).
+          description: Whether it played (`true`) or failed (`false`).
         code:
           type: string
-          description: Código da falha, quando falhou.
+          description: Failure code, when it failed.
           nullable: true
         ip:
           type: string
-          description: Endereço de quem relatou. Nunca aparece no painel público.
+          description: In current reports, an identifier calculated from the network and a secret value. The field keeps the name `ip`. The public lookup does not return it.
           nullable: true
         browser:
           type: string
-          description: Navegador deduzido do User-Agent.
+          description: Browser deduced from the User-Agent.
           nullable: true
         os:
           type: string
-          description: Sistema deduzido do User-Agent.
+          description: System deduced from the User-Agent.
           nullable: true
         country:
           type: string
-          description: País deduzido pela borda.
+          description: Country deduced by the edge.
           nullable: true
         day:
           type: string
-          description: Dia do relato (AAAA-MM-DD) — a contagem é uma por dono, canal e dia.
+          description: Day of the report (YYYY-MM-DD). It counts up to once per owner, channel, day and result.
         at:
           type: string
-          description: Momento exato do relato (UTC).
+          description: Exact time of the report (UTC).
       required:
       - channel_id
       - ok
@@ -105,21 +105,7 @@ components:
       - country
       - day
       - at
-      description: Relato cru de reprodução, com endereço — por isso a rota é só de operador e a linha expira.
-    FiltrosRelato:
-      type: object
-      properties:
-        channel_id:
-          type: string
-          description: Canal filtrado, ou `null` para todos.
-          nullable: true
-        only_failures:
-          type: boolean
-          description: Se só as falhas entraram.
-      required:
-      - channel_id
-      - only_failures
-      description: O que o servidor entendeu do filtro de relatos.
+      description: Individual playback report, available only to the operator.
     PaginaDeRelatos:
       type: object
       properties:
@@ -127,24 +113,24 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/Relato'
-          description: Os relatos, do mais recente para o mais antigo.
+          description: The reports, from the most recent to the oldest.
         limit:
           type: integer
-          description: Tamanho de página aplicado.
+          description: Applied page size.
         offset:
           type: integer
           description: Deslocamento aplicado.
         next_offset:
           type: integer
-          description: Offset da próxima página; `null` quando acabou.
+          description: Offset of the next page; `null` when it ended.
           nullable: true
         retention_days:
           type: integer
-          description: Depois de quantos dias a linha é apagada.
+          description: Retention period of the individual reports, in days.
         filters:
           allOf:
           - $ref: '#/components/schemas/FiltrosRelato'
-          description: Os filtros como o servidor os entendeu.
+          description: The filters as the server understood them.
         api:
           type: string
           description: URL absoluta desta listagem.
@@ -156,9 +142,47 @@ components:
       - retention_days
       - filters
       - api
-      description: 'Página de relatos crus. Não tem `total` de propósito: contar a tabela inteira a cada consulta de investigação sai caro e não muda a decisão de quem investiga.'
+      description: Page of individual reports, available only to the operator. Use `next_offset` to continue.
+    FiltrosRelato:
+      type: object
+      properties:
+        channel_id:
+          type: string
+          description: Filtered channel, or `null` for all.
+          nullable: true
+        only_failures:
+          type: boolean
+          description: Whether only the failures entered.
+      required:
+      - channel_id
+      - only_failures
+      description: What the server understood from the report filter.
   securitySchemes:
     bearerAuth:
       type: http
       scheme: bearer
-      description: ipt_… (guest) ou iptk_… (API key)
+      description: ipt_… (guest); the account is a cookie, never a bearer
+    globalAccount:
+      type: apiKey
+      in: cookie
+      name: __Host-mm-auth
+      description: Global session in the product's HttpOnly cookie; writes require exact Origin and X-CSRF-Token.
+    contaChaveApi:
+      type: http
+      scheme: bearer
+      bearerFormat: mmk_…
+      description: 'Account API key: `Authorization: Bearer mmk_…` or `X-Api-Key: mmk_…`. Created on the account page (API keys), valid only in the product where it was created; it acts as the account (or the organization that owns it).'
+    carteiraAgente:
+      type: http
+      scheme: bearer
+      bearerFormat: mmw_…
+      description: 'Wallet credential of an agent without an account (`Authorization: Bearer mmw_…`, 30 days, this product only): POST /api/auth/wallet/agent/start, sign the message with the wallet, POST /api/auth/wallet/agent/token. The owner is `x402:<address>`.'
+x-service-info:
+  categories:
+  - tv-guide
+  - media
+  - directory
+  docs:
+    homepage: https://gradetv.net/
+    apiReference: https://gradetv.net/developers
+    llms: https://gradetv.net/llms.txt

@@ -1,8 +1,8 @@
 openapi: 3.2.0
 info:
-  title: Grade Comments API
-  version: dbad45cb
-  description: Catálogo IPTV, biblioteca pessoal com feeds e informações para produtores sobre transmissão autorizada sob consulta.
+  title: GradeTV Comments API
+  version: 1d751aaf
+  description: Find TV and radio, check the schedule and organize personal lists. Present authorized broadcast projects for evaluation, without activation.
 servers:
 - url: https://gradetv.net
 tags:
@@ -11,10 +11,10 @@ paths:
   /api/comments/{id}:
     delete:
       operationId: delete_comment
-      summary: Apaga um comentário seu. Comentário alheio responde 404, não 403
-      description: 'O 404 é de propósito: a API não confirma que existe um comentário com aquele id se ele não é seu.
+      summary: Deletes one of your comments. Another person's comment answers 404, not 403
+      description: 'The 404 is on purpose: the API does not confirm that a comment with that ID exists if it is not yours.
 
-        Devolve: { ok, removed, channel_id }'
+        Returns: { ok, removed, channel_id }'
       security:
       - bearerAuth: []
       parameters:
@@ -23,6 +23,8 @@ paths:
         required: true
         schema:
           type: string
+        description: Comment ID, from `Comentario.id`.
+        example: cm_9f3c2b1d7a4e58b0c2
       responses:
         '200':
           description: '{ ok, removed, channel_id }'
@@ -33,21 +35,21 @@ paths:
                 properties:
                   ok:
                     type: boolean
-                    description: Sempre `true`.
+                    description: Always `true`.
                   removed:
                     type: string
-                    description: O id que saiu.
+                    description: The id that was removed.
                   channel_id:
                     type: string
-                    description: Canal de onde o comentário saiu.
+                    description: Channel where the comment came from.
                 required:
                 - ok
                 - removed
                 - channel_id
         '401':
-          description: Sem credencial ou credencial inválida. Veja a auth deste endpoint.
+          description: No credential or invalid credential. See the auth of this endpoint.
         '404':
-          description: Recurso não existe (ou não é seu — a API não distingue os dois de propósito).
+          description: 'The resource does not exist (or it is not yours: the API does not tell the two apart, on purpose).'
       tags:
       - Comments
 components:
@@ -55,4 +57,28 @@ components:
     bearerAuth:
       type: http
       scheme: bearer
-      description: ipt_… (guest) ou iptk_… (API key)
+      description: ipt_… (guest); the account is a cookie, never a bearer
+    globalAccount:
+      type: apiKey
+      in: cookie
+      name: __Host-mm-auth
+      description: Global session in the product's HttpOnly cookie; writes require exact Origin and X-CSRF-Token.
+    contaChaveApi:
+      type: http
+      scheme: bearer
+      bearerFormat: mmk_…
+      description: 'Account API key: `Authorization: Bearer mmk_…` or `X-Api-Key: mmk_…`. Created on the account page (API keys), valid only in the product where it was created; it acts as the account (or the organization that owns it).'
+    carteiraAgente:
+      type: http
+      scheme: bearer
+      bearerFormat: mmw_…
+      description: 'Wallet credential of an agent without an account (`Authorization: Bearer mmw_…`, 30 days, this product only): POST /api/auth/wallet/agent/start, sign the message with the wallet, POST /api/auth/wallet/agent/token. The owner is `x402:<address>`.'
+x-service-info:
+  categories:
+  - tv-guide
+  - media
+  - directory
+  docs:
+    homepage: https://gradetv.net/
+    apiReference: https://gradetv.net/developers
+    llms: https://gradetv.net/llms.txt

@@ -1,0 +1,272 @@
+openapi: 3.2.0
+info:
+  title: GradeTV Tv API
+  version: 1d751aaf
+  description: Find TV and radio, check the schedule and organize personal lists. Present authorized broadcast projects for evaluation, without activation.
+servers:
+- url: https://gradetv.net
+tags:
+- name: TV
+paths:
+  /api/tv/tela.js:
+    get:
+      operationId: get_api_tv_tela_js
+      summary: Loads the global behavior of the activation screen
+      description: 'Returns: JavaScript of the AtivaTv island, Paywall and HLS resume.'
+      security: []
+      responses:
+        '200':
+          description: JavaScript of the AtivaTv island, Paywall and HLS resume.
+        '404':
+          description: Activation screen not configured.
+      tags:
+      - TV
+  /api/tv/{codigo}/estado:
+    get:
+      operationId: tv_state
+      summary: Checks the TV activation without using minutes
+      description: 'Returns: { ativo, retomar }'
+      security: []
+      parameters:
+      - name: codigo
+        in: path
+        required: true
+        schema:
+          type: string
+        description: Six digits shown in the TV notice; valid for ten minutes.
+        example: '123456'
+      responses:
+        '200':
+          description: '{ ativo, retomar }'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ativo:
+                    type: boolean
+                    description: There is a valid pass for the TV network.
+                  retomar:
+                    type: string
+                    description: Hop of the channel that was open on the TV.
+                    nullable: true
+                required:
+                - ativo
+                - retomar
+        '404':
+          description: Route not recognized.
+        '410':
+          description: Invalid or expired code.
+        '429':
+          description: Limit of distinct codes; repeat after Retry-After.
+        '503':
+          description: Lookup unavailable.
+      tags:
+      - TV
+  /api/tv/{codigo}/ws:
+    get:
+      operationId: get_api_tv_by_codigo_ws
+      summary: Follows the confirmation through the WebSocket
+      description: 'Send {"tipo":"acompanhar"} after opening the socket. The server sends {"ativo":boolean,"retomar":string|null}. The HTTP twin is GET /api/tv/:codigo/estado. Same domain; until the code expires.
+
+        Returns: WebSocket upgrade; initial state and change after the purchase.'
+      security: []
+      parameters:
+      - name: codigo
+        in: path
+        required: true
+        schema:
+          type: string
+        description: Six digits shown in the TV notice; valid for ten minutes.
+        example: '123456'
+      responses:
+        '200':
+          description: WebSocket upgrade; initial state and change after the purchase.
+        '403':
+          description: Origem recusada.
+        '404':
+          description: Route not recognized.
+        '410':
+          description: Expired code.
+        '429':
+          description: Limit of distinct codes; repeat after Retry-After.
+        '503':
+          description: Channel unavailable or busy.
+      tags:
+      - TV
+  /api/tv/{codigo}/comprar:
+    post:
+      operationId: tv_pass
+      summary: 'Buys the TV network pass: 30 days for 0.10 USDC, 90 for 0.29 or 365 for 0.99'
+      description: 'No automatic renewal. It answers 402 x402 on Base; repeat the same call with PAYMENT-SIGNATURE (v2) or X-PAYMENT (v1). It uses the global payment and records the attempt, the settlement and the right. A payment on the phone releases the network that the code identifies. Repeating the receipt does not buy another pass.
+
+        Returns: { ativo, retomar, valido_ate }'
+      x-price-usd: 0.1
+      security: []
+      parameters:
+      - name: codigo
+        in: path
+        required: true
+        schema:
+          type: string
+        description: Six digits shown in the TV notice; valid for ten minutes.
+        example: '123456'
+      - name: plano
+        in: query
+        required: false
+        schema:
+          type: string
+          enum:
+          - mes
+          - trimestre
+          - ano
+        description: The pass period; without it, 30 days.
+        example: trimestre
+      responses:
+        '200':
+          description: '{ ativo, retomar, valido_ate }'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ativo:
+                    type: boolean
+                    description: There is a valid pass for the TV network.
+                  retomar:
+                    type: string
+                    description: Hop of the channel that was open on the TV.
+                    nullable: true
+                  valido_ate:
+                    type: string
+                    description: End of the purchased period, in UTC.
+                required:
+                - ativo
+                - retomar
+                - valido_ate
+        '402':
+          description: Payment required or refused.
+        '404':
+          description: Unknown pass period (`tv_plano_invalido`) or route not recognized.
+        '410':
+          description: Invalid or expired code.
+        '429':
+          description: Limit of distinct codes; repeat after Retry-After.
+        '503':
+          description: Payment unavailable.
+      tags:
+      - TV
+  /api/tv/{codigo}/aviso.{formato}:
+    get:
+      operationId: get_api_tv_by_codigo_aviso_formato
+      summary: Image or video of the Grade with a QR and a payment code
+      description: 'Chosen/detected language, a QR for /pay and six numbers. The audio track of the notice is silence that the server reuses. The own media is delivered by the list server within the network budget. The list resumes the channel for the released network; the code does not grant access to another network. It does not retransmit third-party signals.
+
+        Returns: PNG, MP4, MPEG-TS or HLS; no shared cache. On the main domain, 307 to the hop.'
+      security: []
+      parameters:
+      - name: codigo
+        in: path
+        required: true
+        schema:
+          type: string
+        description: Six digits shown in the TV notice; valid for ten minutes.
+        example: '123456'
+      - name: formato
+        in: path
+        required: true
+        schema:
+          type: string
+          enum:
+          - png
+          - mp4
+          - ts
+          - audio.ts
+          - m3u8
+        description: Format of the notice itself.
+        example: m3u8
+      - name: faixa
+        in: query
+        required: false
+        schema:
+          type: string
+          enum:
+          - audio
+          - video
+        description: Inner track of the stable HLS list; copy the issued URI.
+      responses:
+        '200':
+          description: PNG, MP4, MPEG-TS or HLS; no shared cache. On the main domain, 307 to the hop.
+        '404':
+          description: Route or format not recognized.
+        '410':
+          description: Invalid or expired code.
+        '422':
+          description: The broadcaster did not deliver a valid list; try another mirror.
+        '429':
+          description: Limit of distinct codes; repeat after Retry-After.
+        '503':
+          description: Notice unavailable or budget reached.
+      tags:
+      - TV
+  /api/tv/hop/playlist:
+    get:
+      operationId: get_api_tv_hop_playlist
+      summary: Private capability of the list server to check the allowance and the pass
+      description: 'X-MM-TV-Hop: an HMAC bound to the method, URL, network and a 15 s term. Only the list server calls it; no payment runs in it. Without a signature, 403 before checking the allowance.
+
+        Returns: personalized HLS or an error answer, always no-store.'
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: caminho
+        in: query
+        required: false
+        schema:
+          type: string
+        description: Exact path/query of /api/s/ validated by the hop.
+      responses:
+        '200':
+          description: Personalized HLS or an error answer, always no-store.
+        '400':
+          description: Invalid path.
+        '403':
+          description: Invalid signature.
+        '404':
+          description: Channel not recognized.
+        '422':
+          description: Broadcaster list unavailable, with the code and the origin data.
+        '503':
+          description: Service unavailable or busy; obey Retry-After.
+      tags:
+      - TV
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      description: ipt_… (guest); the account is a cookie, never a bearer
+    globalAccount:
+      type: apiKey
+      in: cookie
+      name: __Host-mm-auth
+      description: Global session in the product's HttpOnly cookie; writes require exact Origin and X-CSRF-Token.
+    contaChaveApi:
+      type: http
+      scheme: bearer
+      bearerFormat: mmk_…
+      description: 'Account API key: `Authorization: Bearer mmk_…` or `X-Api-Key: mmk_…`. Created on the account page (API keys), valid only in the product where it was created; it acts as the account (or the organization that owns it).'
+    carteiraAgente:
+      type: http
+      scheme: bearer
+      bearerFormat: mmw_…
+      description: 'Wallet credential of an agent without an account (`Authorization: Bearer mmw_…`, 30 days, this product only): POST /api/auth/wallet/agent/start, sign the message with the wallet, POST /api/auth/wallet/agent/token. The owner is `x402:<address>`.'
+x-service-info:
+  categories:
+  - tv-guide
+  - media
+  - directory
+  docs:
+    homepage: https://gradetv.net/
+    apiReference: https://gradetv.net/developers
+    llms: https://gradetv.net/llms.txt

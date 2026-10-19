@@ -1,8 +1,8 @@
 openapi: 3.2.0
 info:
-  title: Grade Play Report API
-  version: dbad45cb
-  description: Catálogo IPTV, biblioteca pessoal com feeds e informações para produtores sobre transmissão autorizada sob consulta.
+  title: GradeTV Play Report API
+  version: 1d751aaf
+  description: Find TV and radio, check the schedule and organize personal lists. Present authorized broadcast projects for evaluation, without activation.
 servers:
 - url: https://gradetv.net
 tags:
@@ -11,10 +11,10 @@ paths:
   /api/play-report:
     post:
       operationId: report_play
-      summary: Relata se o canal tocou ou falhou — é o que alimenta a saúde pública do catálogo
-      description: 'Conta uma vez por dono, por canal, por dia e por resultado; relatar de novo devolve 200 com `reason: ja_relatado_hoje`, e não é erro. Navegador e sistema saem do User-Agent e o país da borda — mandar isso no corpo não muda nada. Sem relato, o catálogo não aprende: é assim que `GET /api/channels/:id/health` sabe distinguir canal fora do ar de canal bloqueado para você.
+      summary: Tells whether the channel played or failed
+      description: 'The first report of this result in the day returns 201. It counts up to once per owner, channel, day and result. Repeating returns 200 with `reason: ja_relatado_hoje`. Browser and system come from the User-Agent. The country comes from the request data. The body cannot change these fields. The reports help to compare results in `GET /api/channels/:id/health`, but they do not confirm the cause of the failure.
 
-        Devolve: { ok, counted, reason?, channel_id, stats{plays,fails,favorites,comments,last_fail_code,health,your_plays,your_fails,your_fail_code,your_country_ok,your_country_fail,your_geo_ok,your_latency_ms,your_latency_grade}, health }'
+        Returns: { ok, counted, reason?, channel_id, stats{plays,fails,favorites,comments,last_fail_code,health,your_plays,your_fails,your_fail_code,your_country_ok,your_country_fail,your_geo_ok,your_latency_ms,your_latency_grade}, health }'
       security:
       - bearerAuth: []
       requestBody:
@@ -26,18 +26,29 @@ paths:
               properties:
                 channel_id:
                   type: string
-                  description: Canal que você tentou assistir.
+                  description: Channel that you tried to watch.
                 ok:
                   type: boolean
-                  description: '`true` se tocou, `false` se falhou.'
+                  description: '`true` if it played, `false` if it failed.'
                 code:
                   type: string
-                  description: Por que falhou; só quando `ok` é `false`.
+                  description: Failure code; only when `ok` is `false`. A missing or unknown code enters as `outro`.
+                  enum:
+                  - cors
+                  - geo
+                  - sumiu
+                  - codec
+                  - playlist
+                  - sem_resposta
+                  - protocolo
+                  - sem_stream
+                  - embed
+                  - outro
               required:
               - channel_id
               - ok
             example:
-              channel_id: Globo.br
+              channel_id: GloboNews.br
               ok: false
               code: cors
       responses:
@@ -50,23 +61,55 @@ paths:
                 properties:
                   ok:
                     type: boolean
-                    description: Sempre `true` — o relato foi aceito.
+                    description: 'Always `true`: the report was accepted.'
                   counted:
                     type: boolean
-                    description: '`false` quando você já tinha relatado o mesmo hoje.'
+                    description: '`false` when you already reported the same today.'
                   reason:
                     type: string
-                    description: Por que não contou; só aparece quando `counted` é `false`.
+                    description: Why it did not count; it appears only when `counted` is `false`.
                   channel_id:
                     type: string
                     description: O canal relatado.
                   stats:
                     allOf:
                     - $ref: '#/components/schemas/Social'
-                    description: Os contadores do canal já com este relato dentro.
+                    description: The channel counters with this report already included.
                   health:
                     type: string
-                    description: URL do painel de saúde completo deste canal.
+                    description: URL of the full health dashboard of this channel.
+                required:
+                - ok
+                - counted
+                - channel_id
+                - stats
+                - health
+        '201':
+          description: '{ ok, counted, reason?, channel_id, stats{plays,fails,favorites,comments,last_fail_code,health,your_plays,your_fails,your_fail_code,your_country_ok,your_country_fail,your_geo_ok,your_latency_ms,your_latency_grade}, health }'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok:
+                    type: boolean
+                    description: 'Always `true`: the report was accepted.'
+                  counted:
+                    type: boolean
+                    description: '`false` when you already reported the same today.'
+                  reason:
+                    type: string
+                    description: Why it did not count; it appears only when `counted` is `false`.
+                  channel_id:
+                    type: string
+                    description: O canal relatado.
+                  stats:
+                    allOf:
+                    - $ref: '#/components/schemas/Social'
+                    description: The channel counters with this report already included.
+                  health:
+                    type: string
+                    description: URL of the full health dashboard of this channel.
                 required:
                 - ok
                 - counted
@@ -74,9 +117,11 @@ paths:
                 - stats
                 - health
         '400':
-          description: '`channel_id` ausente, `ok` faltando ou `code` fora da lista.'
+          description: Invalid JSON, missing `channel_id`, or `ok` other than `true` or `false`.
         '401':
-          description: Sem credencial ou credencial inválida. Veja a auth deste endpoint.
+          description: No credential or invalid credential. See the auth of this endpoint.
+        '404':
+          description: Channel not found in the catalog.
       tags:
       - Play Report
 components:
@@ -86,51 +131,51 @@ components:
       properties:
         plays:
           type: integer
-          description: Relatos de que o canal tocou.
+          description: Reports that the channel played.
         fails:
           type: integer
-          description: Relatos de que o canal falhou.
+          description: Reports that the channel failed.
         favorites:
           type: integer
-          description: Quantas pessoas favoritaram — conta pessoas, não cliques.
+          description: 'How many people marked it as favorite: it counts people, not clicks.'
         comments:
           type: integer
-          description: Comentários públicos no canal.
+          description: Public comments on the channel.
         last_fail_code:
           type: string
-          description: Código da falha mais recente relatada.
+          description: Code of the most recent reported failure.
           nullable: true
         health:
           type: integer
-          description: Percentual de sucesso; `null` enquanto houver menos de 3 relatos.
+          description: Success percentage; `null` while there are fewer than 3 reports.
           nullable: true
         your_plays:
           type: integer
-          description: Relatos de sucesso no SEU navegador, sistema e país.
+          description: Success reports in YOUR browser, system and country.
         your_fails:
           type: integer
-          description: Relatos de falha no seu ambiente — é o que distingue 'fora do ar' de 'bloqueado para você'.
+          description: 'Failure reports in your environment: this is what tells ''down'' from ''blocked for you''.'
         your_fail_code:
           type: string
-          description: Código da última falha no seu ambiente.
+          description: Code of the last failure in your environment.
           nullable: true
         your_country_ok:
           type: integer
-          description: Relatos de sucesso no SEU país, sem quebrar por navegador/SO.
+          description: Success reports in YOUR country, without a split by browser/OS.
         your_country_fail:
           type: integer
-          description: Relatos de falha no seu país.
+          description: Failure reports in your country.
         your_geo_ok:
           type: boolean
-          description: '`false` = todas as tentativas relatadas no seu país falharam (suspeita de geo-bloqueio); `null` sem relato suficiente.'
+          description: '`false` = all the attempts reported in your country failed (a suspected geo-block); `null` without enough reports.'
           nullable: true
         your_latency_ms:
           type: integer
-          description: Latência média da playlist medida no hop, na borda do seu país; `null` sem medição.
+          description: Average playlist latency measured at the hop, at the edge of your country; `null` without a measurement.
           nullable: true
         your_latency_grade:
           type: string
-          description: '`otima`, `boa`, `lenta` ou `ruim`; `null` sem medição.'
+          description: '`otima`, `boa`, `lenta` or `ruim`; `null` without a measurement.'
           nullable: true
       required:
       - plays
@@ -147,9 +192,33 @@ components:
       - your_geo_ok
       - your_latency_ms
       - your_latency_grade
-      description: Contadores da comunidade sobre um canal, incluindo o recorte do ambiente e do país de quem pediu.
+      description: Community counters about a channel, including the extract for the environment and the country of the requester.
   securitySchemes:
     bearerAuth:
       type: http
       scheme: bearer
-      description: ipt_… (guest) ou iptk_… (API key)
+      description: ipt_… (guest); the account is a cookie, never a bearer
+    globalAccount:
+      type: apiKey
+      in: cookie
+      name: __Host-mm-auth
+      description: Global session in the product's HttpOnly cookie; writes require exact Origin and X-CSRF-Token.
+    contaChaveApi:
+      type: http
+      scheme: bearer
+      bearerFormat: mmk_…
+      description: 'Account API key: `Authorization: Bearer mmk_…` or `X-Api-Key: mmk_…`. Created on the account page (API keys), valid only in the product where it was created; it acts as the account (or the organization that owns it).'
+    carteiraAgente:
+      type: http
+      scheme: bearer
+      bearerFormat: mmw_…
+      description: 'Wallet credential of an agent without an account (`Authorization: Bearer mmw_…`, 30 days, this product only): POST /api/auth/wallet/agent/start, sign the message with the wallet, POST /api/auth/wallet/agent/token. The owner is `x402:<address>`.'
+x-service-info:
+  categories:
+  - tv-guide
+  - media
+  - directory
+  docs:
+    homepage: https://gradetv.net/
+    apiReference: https://gradetv.net/developers
+    llms: https://gradetv.net/llms.txt

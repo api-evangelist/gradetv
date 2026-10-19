@@ -1,8 +1,8 @@
 openapi: 3.2.0
 info:
-  title: Grade Health API
-  version: dbad45cb
-  description: Catálogo IPTV, biblioteca pessoal com feeds e informações para produtores sobre transmissão autorizada sob consulta.
+  title: GradeTV Health API
+  version: 1d751aaf
+  description: Find TV and radio, check the schedule and organize personal lists. Present authorized broadcast projects for evaluation, without activation.
 servers:
 - url: https://gradetv.net
 tags:
@@ -11,8 +11,8 @@ paths:
   /api/health:
     get:
       operationId: health
-      summary: Liveness e o commit publicado agora — é como o smoke espera o próprio deploy
-      description: 'Devolve: { ok, app, build, ts, catalog{synced_at,age_hours,stale,limit_days}, sources }'
+      summary: 'Liveness and the commit published now: this is how the smoke test waits for its…'
+      description: 'Returns: { ok, app, build, ts, catalog{synced_at,age_hours,stale,limit_days}, sources }'
       security: []
       responses:
         '200':
@@ -25,51 +25,28 @@ paths:
       - Health
 components:
   schemas:
-    FrescorCatalogo:
-      type: object
-      properties:
-        synced_at:
-          type: string
-          description: Instante (ISO-8601) da última recarga que entrou no ar; `null` se nunca.
-          nullable: true
-        age_hours:
-          type: integer
-          description: Horas inteiras desde `synced_at`; `null` sem carimbo.
-          nullable: true
-        stale:
-          type: boolean
-          description: '`true` quando passou de `limit_days` — o cron avisa por e-mail e o smoke reprova.'
-        limit_days:
-          type: integer
-          description: O limite em dias (2).
-      required:
-      - synced_at
-      - age_hours
-      - stale
-      - limit_days
-      description: Idade do catálogo, como sai em `/api/health`.
     Saude:
       type: object
       properties:
         ok:
           type: boolean
-          description: Sempre `true` quando o Worker responde.
+          description: Always `true` when the Worker answers.
         app:
           type: string
-          description: Nome do produto.
+          description: Product name.
         build:
           type: string
           description: Commit publicado; o CI passa o SHA curto no deploy.
         ts:
           type: string
-          description: Momento da resposta (UTC, ISO-8601).
+          description: Time of the answer (UTC, ISO-8601).
         catalog:
           allOf:
           - $ref: '#/components/schemas/FrescorCatalogo'
-          description: 'Idade do catálogo: `synced_at` da última recarga e se passou do limite de 2 dias (o smoke reprova).'
+          description: 'Catalog age: `synced_at` of the last reload and whether it passed the limit of 2 days (the smoke test fails it).'
         sources:
           type: object
-          description: 'Uma entrada por fonte do catálogo, pelo nome (`iptv-org`, o tronco; as demais conforme entram): `fetched_at`, `sha256`, `itens`, `age_hours`, `limit_days`, `stale` (passou do limite ou a recarga usou o snapshot anterior), `ausente` (saiu sem a fonte). Só o tronco velho reprova o smoke.'
+          description: 'One entry per catalog reference: `fetched_at`, `sha256`, `itens`, `age_hours`, `limit_days`, `stale` (it passed the limit or the reload used the previous snapshot), `ausente` (it ran without the source). Only an old trunk fails the smoke test.'
       required:
       - ok
       - app
@@ -77,9 +54,56 @@ components:
       - ts
       - catalog
       - sources
-      description: 'A resposta de `/api/health`: liveness, o commit publicado e a idade do catálogo.'
+      description: 'The answer of `/api/health`: liveness, the published commit and the age of the catalog.'
+    FrescorCatalogo:
+      type: object
+      properties:
+        synced_at:
+          type: string
+          description: Instant (ISO-8601) of the last reload that went live; `null` if never.
+          nullable: true
+        age_hours:
+          type: integer
+          description: Whole hours since `synced_at`; `null` without a stamp.
+          nullable: true
+        stale:
+          type: boolean
+          description: '`true` when it passed `limit_days`: the cron warns by e-mail and the smoke test fails.'
+        limit_days:
+          type: integer
+          description: The limit in days (2).
+      required:
+      - synced_at
+      - age_hours
+      - stale
+      - limit_days
+      description: Catalog age, as shown in `/api/health`.
   securitySchemes:
     bearerAuth:
       type: http
       scheme: bearer
-      description: ipt_… (guest) ou iptk_… (API key)
+      description: ipt_… (guest); the account is a cookie, never a bearer
+    globalAccount:
+      type: apiKey
+      in: cookie
+      name: __Host-mm-auth
+      description: Global session in the product's HttpOnly cookie; writes require exact Origin and X-CSRF-Token.
+    contaChaveApi:
+      type: http
+      scheme: bearer
+      bearerFormat: mmk_…
+      description: 'Account API key: `Authorization: Bearer mmk_…` or `X-Api-Key: mmk_…`. Created on the account page (API keys), valid only in the product where it was created; it acts as the account (or the organization that owns it).'
+    carteiraAgente:
+      type: http
+      scheme: bearer
+      bearerFormat: mmw_…
+      description: 'Wallet credential of an agent without an account (`Authorization: Bearer mmw_…`, 30 days, this product only): POST /api/auth/wallet/agent/start, sign the message with the wallet, POST /api/auth/wallet/agent/token. The owner is `x402:<address>`.'
+x-service-info:
+  categories:
+  - tv-guide
+  - media
+  - directory
+  docs:
+    homepage: https://gradetv.net/
+    apiReference: https://gradetv.net/developers
+    llms: https://gradetv.net/llms.txt

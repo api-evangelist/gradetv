@@ -1,0 +1,33 @@
+openapi: 3.2.0
+info:
+  title: Grade MCP API
+  version: dbad45cb
+  description: Catálogo IPTV, biblioteca pessoal com feeds e informações para produtores sobre transmissão autorizada sob consulta.
+servers:
+- url: https://gradetv.net
+tags:
+- name: MCP
+paths:
+  /mcp:
+    post:
+      operationId: post_mcp
+      summary: Servidor MCP por HTTP (Streamable HTTP, JSON-RPC 2.0) — pluga no cliente sem…
+      description: 'As tools são as operações deste mesmo catálogo; o MCP não tem backend próprio. `GET /mcp` devolve o cartão do servidor.
+
+        Devolve: Resposta JSON-RPC 2.0 (`initialize`, `tools/list` ou `tools/call`).
+
+        Credencial vai nos headers de sempre (X-Guest-Token, Authorization, X-PAYMENT) e é repassada à API.
+
+        Cota estourada chega como 402 com accepts[] dentro do resultado da tool — pague e repita.'
+      security: []
+      responses:
+        '200':
+          description: Resposta JSON-RPC 2.0 (`initialize`, `tools/list` ou `tools/call`).
+      tags:
+      - MCP
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      description: ipt_… (guest) ou iptk_… (API key)

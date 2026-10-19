@@ -1,0 +1,58 @@
+openapi: 3.2.0
+info:
+  title: Grade Visit API
+  version: dbad45cb
+  description: Catálogo IPTV, biblioteca pessoal com feeds e informações para produtores sobre transmissão autorizada sob consulta.
+servers:
+- url: https://gradetv.net
+tags:
+- name: Visit
+paths:
+  /api/visit:
+    post:
+      operationId: post_api_visit
+      summary: Ping da interface que incrementa a visita do dia. Agente não precisa chamar
+      description: 'Smoke não conta: `X-MM-Smoke`, User-Agent `mm-smoke` ou `smoke: true` no corpo entram como `counted: false`.
+
+        Devolve: { ok, counted, reason? }'
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                smoke:
+                  type: boolean
+                  description: '`true` marca a chamada como teste e ela não entra na contagem.'
+            example:
+              smoke: false
+      responses:
+        '200':
+          description: '{ ok, counted, reason? }'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok:
+                    type: boolean
+                    description: Sempre `true`.
+                  counted:
+                    type: boolean
+                    description: Se a visita entrou na contagem do dia.
+                  reason:
+                    type: string
+                    description: Por que não contou, quando `counted` é `false`.
+                required:
+                - ok
+                - counted
+      tags:
+      - Visit
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      description: ipt_… (guest) ou iptk_… (API key)

@@ -1,8 +1,8 @@
 openapi: 3.2.0
 info:
-  title: Grade S API
-  version: dbad45cb
-  description: Catálogo IPTV, biblioteca pessoal com feeds e informações para produtores sobre transmissão autorizada sob consulta.
+  title: GradeTV S API
+  version: 1d751aaf
+  description: Find TV and radio, check the schedule and organize personal lists. Present authorized broadcast projects for evaluation, without activation.
 servers:
 - url: https://gradetv.net
 tags:
@@ -11,10 +11,10 @@ paths:
   /api/s/{id}:
     get:
       operationId: get_api_s_by_id
-      summary: 'Hop do stream: conta o play (uma vez por pessoa, canal e dia) e devolve a…'
-      description: 'É o endereço que aparece no M3U e na API — nunca a origem crua. O Grade NÃO retransmite vídeo: os segmentos vêm da origem, no browser e no VLC. Origem sem CORS, ou `http` numa página `https`, não toca no browser; a mesma URL toca no VLC.
+      summary: 'Stream hop: the public URL points to https://m3m8.gradetv.net; the apex still…'
+      description: 'It is the address that appears in the M3U and in the API: https://m3m8.gradetv.net/api/s/:id, with CORS * and no-store for the per-network policy. Live HLS has 120 free minutes per network per UTC day; after that, it shows our own video with a QR for the 30-, 90- or 365-day pass, from 0.10 USDC. Old links at gradetv.net/api/s/ still answer 302 no-store to the same path. The Grade does not retransmit third-party signals: the segments and keys come from the origin, in the browser and in VLC. Inner playlists use the same hop with a signed `p`; copy the full URL, without building the ticket. Each fetch has a cap of 512 KiB, 8 s and 3 revalidated redirects; up to 128 inner references per manifest and 4 levels. An inner refresh does not count another play. A playlist failure at o2 is a 422 JSON. No redirect to HTTP. Headers exposed by CORS: X-Grade-TV-Codigo (notice code), X-Grade-Upstream-Status (status observed at the origin), X-Grade-Source (original broadcast URL to copy), X-Grade-Website (official site of the channel, empty when missing), X-Grade-Legacy (public HTTP action) and X-Grade-Media-HTTP (1 if this manifest references HTTP media/key, 0 otherwise). HTTP media offers a standalone legacy player; a 401/403 from the origin offers to open the channel site and to copy the original playlist to another player. CORS can still prevent playback. Continuous audio/video and YouTube get a 302 to the origin. New IDs do not depend on the reload order. A missing old positional ID recovers a stream of the same channel, feed and source, keeping the blocks.
 
-        Devolve: `application/vnd.apple.mpegurl` (playlist com URI absoluta) ou 302 para a origem.'
+        Returns: The playlist is `application/vnd.apple.mpegurl` at m3m8.gradetv.net, with inner playlists through the hop and media with an absolute origin URI. A legacy request on the apex can 302 to this host. A continuous stream/YouTube gets a 302 to the provider.'
       security: []
       parameters:
       - name: id
@@ -22,19 +22,47 @@ paths:
         required: true
         schema:
           type: string
-      - name: t
+        description: Stream ID, which comes in `Stream.id`.
+        example: 1001Noites.br:SD:2168
+      - name: faixa
         in: query
         required: false
         schema:
           type: string
-        description: Ticket curto da ficha do canal; obrigatório quando o canal é adulto.
+          enum:
+          - audio
+          - video
+        description: Stable HLS track issued by the server; copy the full URI.
+      - name: lingua
+        in: query
+        required: false
+        schema:
+          type: string
+          enum:
+          - en
+          - pt
+          - es
+          - fr
+          - de
+          - hu
+        description: Language of the notice, before the cookie and Accept-Language.
+      - name: p
+        in: query
+        required: false
+        schema:
+          type: string
+        description: Inner playlist ticket issued by the hop, up to 6000 characters, bound to the stream and the origin. It stays valid while the origin/block allow it.
       responses:
         '200':
-          description: '`application/vnd.apple.mpegurl` (playlist com URI absoluta) ou 302 para a origem.'
-        '403':
-          description: Canal adulto sem ticket `t` válido.
+          description: The playlist is `application/vnd.apple.mpegurl` at m3m8.gradetv.net, with inner playlists through the hop and media with an absolute origin URI. A legacy request on the apex can 302 to this host. A continuous stream/YouTube gets a 302 to the provider.
         '404':
-          description: Stream não existe.
+          description: Stream blocked/missing, invalid/expired `p` ticket or changed origin.
+        '422':
+          description: '`playlist_acesso`/`playlist_origem`/`playlist_limite` at the o2 hop (the CDN does not rewrite 4xx).'
+        '502':
+          description: '`playlist_acesso` for 401/403 from the origin (`upstream_status` in the body); `playlist_origem` for other failures; `playlist_limite` for an exceeded limit.'
+        '503':
+          description: Playlist origin unavailable or operational limit reached; `playlist_config` shows that the signing key is unavailable.
       tags:
       - S
 components:
@@ -42,4 +70,28 @@ components:
     bearerAuth:
       type: http
       scheme: bearer
-      description: ipt_… (guest) ou iptk_… (API key)
+      description: ipt_… (guest); the account is a cookie, never a bearer
+    globalAccount:
+      type: apiKey
+      in: cookie
+      name: __Host-mm-auth
+      description: Global session in the product's HttpOnly cookie; writes require exact Origin and X-CSRF-Token.
+    contaChaveApi:
+      type: http
+      scheme: bearer
+      bearerFormat: mmk_…
+      description: 'Account API key: `Authorization: Bearer mmk_…` or `X-Api-Key: mmk_…`. Created on the account page (API keys), valid only in the product where it was created; it acts as the account (or the organization that owns it).'
+    carteiraAgente:
+      type: http
+      scheme: bearer
+      bearerFormat: mmw_…
+      description: 'Wallet credential of an agent without an account (`Authorization: Bearer mmw_…`, 30 days, this product only): POST /api/auth/wallet/agent/start, sign the message with the wallet, POST /api/auth/wallet/agent/token. The owner is `x402:<address>`.'
+x-service-info:
+  categories:
+  - tv-guide
+  - media
+  - directory
+  docs:
+    homepage: https://gradetv.net/
+    apiReference: https://gradetv.net/developers
+    llms: https://gradetv.net/llms.txt

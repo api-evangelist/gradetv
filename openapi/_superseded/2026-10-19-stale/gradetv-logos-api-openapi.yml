@@ -1,0 +1,37 @@
+openapi: 3.2.0
+info:
+  title: Grade Logos API
+  version: dbad45cb
+  description: Catálogo IPTV, biblioteca pessoal com feeds e informações para produtores sobre transmissão autorizada sob consulta.
+servers:
+- url: https://gradetv.net
+tags:
+- name: Logos
+paths:
+  /logos/{id}:
+    get:
+      operationId: get_logos_by_id
+      summary: Logo do canal servido por nós, na variante de card (≤256px)
+      description: 'Nunca faz proxy na hora: ou o arquivo está no R2, ou responde 404. É o que impede a página de card virar um proxy de imagem de terceiro.
+
+        Devolve: `image/webp` ou `image/png` — os bytes do logo.'
+      security: []
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: '`image/webp` ou `image/png` — os bytes do logo.'
+        '404':
+          description: Não há variante em cache para este canal.
+      tags:
+      - Logos
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      description: ipt_… (guest) ou iptk_… (API key)

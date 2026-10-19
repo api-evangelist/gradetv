@@ -1,0 +1,101 @@
+openapi: 3.2.0
+info:
+  title: Grade Credito API
+  version: dbad45cb
+  description: Catálogo IPTV, biblioteca pessoal com feeds e informações para produtores sobre transmissão autorizada sob consulta.
+servers:
+- url: https://gradetv.net
+tags:
+- name: Credito
+paths:
+  /api/credito:
+    post:
+      operationId: post_api_credito
+      summary: 'Recarrega crédito pré-pago: paga uma vez com x402 e recebe o token que desconta…'
+      description: 'Devolve: { token, saldo_usd, guarde, usar, saldo_em }'
+      security: []
+      parameters:
+      - name: usd
+        in: query
+        required: true
+        schema:
+          type: integer
+        description: 'Pacote: 1, 5, 10 ou 25 dólares.'
+      responses:
+        '200':
+          description: '{ token, saldo_usd, guarde, usar, saldo_em }'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  token:
+                    type: string
+                    description: Token portador do saldo (`cred_…`). Mostrado UMA vez — não há como recuperá-lo.
+                  saldo_usd:
+                    type: string
+                    description: Saldo creditado.
+                  guarde:
+                    type: string
+                    description: Aviso de que o token é o portador do crédito.
+                  usar:
+                    type: string
+                    description: Como apresentar o token nas rotas pagas.
+                  saldo_em:
+                    type: string
+                    description: Onde consultar saldo e extrato.
+                required:
+                - token
+                - saldo_usd
+                - guarde
+                - usar
+                - saldo_em
+        '400':
+          description: Pacote fora da lista (1, 5, 10 ou 25).
+        '402':
+          description: Sem pagamento — o corpo traz `accepts[]` do x402.
+      tags:
+      - Credito
+    get:
+      operationId: get_api_credito
+      summary: Saldo e extrato do crédito — as últimas movimentações, sem devolver o token
+      description: 'Devolve: { saldo_micros, saldo_usd, criado_em, movimentos }'
+      security:
+      - bearerAuth: []
+      responses:
+        '200':
+          description: '{ saldo_micros, saldo_usd, criado_em, movimentos }'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  saldo_micros:
+                    type: integer
+                    description: Saldo em micro-dólares (1e-6 USD).
+                  saldo_usd:
+                    type: string
+                    description: Saldo formatado.
+                  criado_em:
+                    type: string
+                    description: Quando o crédito foi aberto.
+                  movimentos:
+                    type: array
+                    items:
+                      type: object
+                    description: Entradas e saídas recentes, com produto e recurso.
+                required:
+                - saldo_micros
+                - saldo_usd
+                - criado_em
+                - movimentos
+        '401':
+          description: Sem token ou token desconhecido.
+      tags:
+      - Credito
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      description: ipt_… (guest) ou iptk_… (API key)

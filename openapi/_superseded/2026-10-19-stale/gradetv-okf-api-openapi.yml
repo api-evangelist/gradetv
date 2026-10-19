@@ -1,0 +1,35 @@
+openapi: 3.2.0
+info:
+  title: Grade Okf API
+  version: dbad45cb
+  description: Catálogo IPTV, biblioteca pessoal com feeds e informações para produtores sobre transmissão autorizada sob consulta.
+servers:
+- url: https://gradetv.net
+tags:
+- name: Okf
+paths:
+  /okf/{arquivo}:
+    get:
+      operationId: get_okf_by_arquivo
+      summary: 'Bundle OKF (Open Knowledge Format v0.1): markdown com frontmatter para o agente…'
+      description: 'Devolve: `text/markdown`. Comece por `/okf/index.md`, que lista o bundle.'
+      security: []
+      parameters:
+      - name: arquivo
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: '`text/markdown`. Comece por `/okf/index.md`, que lista o bundle.'
+        '404':
+          description: Arquivo fora do bundle.
+      tags:
+      - Okf
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      description: ipt_… (guest) ou iptk_… (API key)

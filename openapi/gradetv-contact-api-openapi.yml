@@ -1,8 +1,8 @@
 openapi: 3.2.0
 info:
-  title: Grade Contact API
-  version: dbad45cb
-  description: Catálogo IPTV, biblioteca pessoal com feeds e informações para produtores sobre transmissão autorizada sob consulta.
+  title: GradeTV Contact API
+  version: 1d751aaf
+  description: Find TV and radio, check the schedule and organize personal lists. Present authorized broadcast projects for evaluation, without activation.
 servers:
 - url: https://gradetv.net
 tags:
@@ -11,10 +11,10 @@ paths:
   /api/contact:
     post:
       operationId: contact
-      summary: 'Contato e projetos de produtores: humano usa Turnstile; agente paga $0.10 por…'
-      description: 'Projetos de produtores: consulte GET /api/producers e use contact.message_template na mensagem. O primeiro envio de agente sai sem espera, após pagamento; depois o backoff é 60s dobrando até 1 hora (`Retry-After`). O valor paga somente o envio do contato, não o serviço de transmissão.
+      summary: Talk to the people who make the product, free of charge, for people and agents
+      description: 'One route for questions and for sponsorship, partnership or ad proposals (`tipo`, with the slots of `GET /api/partners`). No captcha, no account, no payment. One message every 10 seconds per network: a message that arrives early waits its turn and goes out, with no error. The message reaches the team by e-mail, with the `email` as the reply address. For voice, send multipart/form-data: `dados` contains this JSON (up to 32 KiB) and `audio` contains a WebM, Ogg or M4A audio file (up to 2 MB). The audio can replace message. The browser records up to two minutes. The audio goes as an attachment to the owner''s e-mail.
 
-        Devolve: { ok }'
+        Returns: { ok }'
       security: []
       requestBody:
         required: true
@@ -25,63 +25,116 @@ paths:
               properties:
                 name:
                   type: string
-                  description: Como chamar quem escreveu.
+                  description: How to address the sender (alias `nome`).
                 email:
                   type: string
-                  description: Para onde responder.
+                  description: Where to reply.
                 message:
                   type: string
-                  description: O que você quer dizer.
-                form_ts:
-                  type: integer
-                  description: 'Início da composição, em milissegundos Unix: entre 2 segundos e 12 horas atrás, obrigatório também para agentes.'
-                cf_turnstile_response:
+                  description: What you want to say (alias `mensagem`).
+                whatsapp:
                   type: string
-                  description: Token Turnstile do formulário humano; ausente segue pelo pagamento de agente.
+                  description: 'Optional number for the reply, with the country code. E.g.: +5561999999999.'
+                prefer_whatsapp:
+                  type: boolean
+                  description: Pede resposta por WhatsApp. Exige whatsapp.
+                tipo:
+                  type: string
+                  description: 'Proposal: `patrocinio`, `parceria`, `anuncio` or `consultoria`. It turns on the fields below.'
+                empresa:
+                  type: string
+                  description: Who proposes, when it is a company.
+                site:
+                  type: string
+                  description: Website of the proposer.
+                orcamento:
+                  type: string
+                  description: 'Ad: `ate_100`, `100_500`, `500_2000`, `2000_mais` or `a_combinar`. Consulting, in dollars: `ate_2000`, `2000_5000`, `5000_10000`, `10000_mais` or `nao_sei`.'
+                espaco:
+                  type: array
+                  items:
+                    type: string
+                  description: Placement IDs from `GET /api/partners`, up to 6.
+                duracao:
+                  type: string
+                  description: 'Days of exposure: `30`, `90` or `365`.'
+                pagamento:
+                  type: string
+                  description: '`usdc`, `deposito` or `a_combinar`.'
+                projeto:
+                  type: string
+                  description: 'Consulting: the project type (`llm_privado`, `voz`, `dados_sensiveis`, `gpu`, `integracao` or `outro`).'
+                prazo:
+                  type: string
+                  description: 'Consulting: when to start (`agora`, `1_mes`, `1_3_meses` or `explorando`).'
+                formato:
+                  type: string
+                  description: 'Consulting: `projeto` (per scope), `mensal` or `assessoria`.'
+                pais:
+                  type: string
+                  description: 'Consulting: the country of the requester.'
+                fuso:
+                  type: string
+                  description: 'Consulting: the IANA time zone, such as `America/New_York`.'
+                horarios:
+                  type: array
+                  items:
+                    type: string
+                  description: 'Consulting: up to 3 time slots for the call, `YYYY-MM-DDTHH:MM` in the local time of the time zone.'
               required:
               - name
               - email
               - message
-              - form_ts
             example:
-              name: …
-              email: a@example.com
-              message: …
-              form_ts: 0
+              name: Agente
+              email: agent@example.com
+              message: olá, sou um agente
       responses:
         '200':
           description: '{ ok }'
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Ok'
+                type: object
+                properties:
+                  ok:
+                    type: boolean
+                    description: Always `true` when the message was accepted.
+                required:
+                - ok
         '400':
-          description: Campo obrigatório faltando.
-        '402':
-          description: 'Cota estourada. A resposta traz `accepts[]` (x402, USDC na Base): pague e repita a mesma chamada com `X-PAYMENT`.'
-        '403':
-          description: Verificação Turnstile inválida.
-        '429':
-          description: 'Backoff de agente: espere o `Retry-After`.'
-        '502':
-          description: O provedor não aceitou o envio do e-mail; tente novamente mais tarde.
+          description: 'Validation: the `code` tells the field.'
         '503':
-          description: Envio indisponível por configuração de e-mail incompleta.
+          description: Contact is not configured on this server.
       tags:
       - Contact
 components:
-  schemas:
-    Ok:
-      type: object
-      properties:
-        ok:
-          type: boolean
-          description: Sempre `true` — a falha vem como status 4xx/5xx, não como `ok:false`.
-      required:
-      - ok
-      description: Confirmação de escrita que não tem corpo próprio a devolver.
   securitySchemes:
     bearerAuth:
       type: http
       scheme: bearer
-      description: ipt_… (guest) ou iptk_… (API key)
+      description: ipt_… (guest); the account is a cookie, never a bearer
+    globalAccount:
+      type: apiKey
+      in: cookie
+      name: __Host-mm-auth
+      description: Global session in the product's HttpOnly cookie; writes require exact Origin and X-CSRF-Token.
+    contaChaveApi:
+      type: http
+      scheme: bearer
+      bearerFormat: mmk_…
+      description: 'Account API key: `Authorization: Bearer mmk_…` or `X-Api-Key: mmk_…`. Created on the account page (API keys), valid only in the product where it was created; it acts as the account (or the organization that owns it).'
+    carteiraAgente:
+      type: http
+      scheme: bearer
+      bearerFormat: mmw_…
+      description: 'Wallet credential of an agent without an account (`Authorization: Bearer mmw_…`, 30 days, this product only): POST /api/auth/wallet/agent/start, sign the message with the wallet, POST /api/auth/wallet/agent/token. The owner is `x402:<address>`.'
+x-service-info:
+  categories:
+  - tv-guide
+  - media
+  - directory
+  docs:
+    homepage: https://gradetv.net/
+    apiReference: https://gradetv.net/developers
+    llms: https://gradetv.net/llms.txt

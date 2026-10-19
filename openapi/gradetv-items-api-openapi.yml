@@ -1,8 +1,8 @@
 openapi: 3.2.0
 info:
-  title: Grade Items API
-  version: dbad45cb
-  description: Catálogo IPTV, biblioteca pessoal com feeds e informações para produtores sobre transmissão autorizada sob consulta.
+  title: GradeTV Items API
+  version: 1d751aaf
+  description: Find TV and radio, check the schedule and organize personal lists. Present authorized broadcast projects for evaluation, without activation.
 servers:
 - url: https://gradetv.net
 tags:
@@ -11,10 +11,10 @@ paths:
   /api/items:
     post:
       operationId: add_item
-      summary: Põe um canal do catálogo numa sub-aba da galeria
-      description: 'Teto de 40 canais por sub-aba. A resposta diz em que pasta e sub-aba o canal caiu, para a tela abrir no lugar certo. A resposta traz a biblioteca inteira já atualizada — não precisa recarregar `GET /api/library` depois.
+      summary: Puts a catalog channel in a sub-tab of the gallery
+      description: 'Cap of 40 channels per sub-tab. The answer tells in which folder and sub-tab the channel landed, so that the screen opens in the correct place. The answer has the whole updated library, so you do not need to reload `GET /api/library` after.
 
-        Devolve: { owner, feeds{m3u,m3u8,json,xspf}, categories[{id,name,slug,sort,last_group_id,api,feeds,groups}], id, group_id, category_id }'
+        Returns: { owner, feeds{m3u,m3u8,json,xspf}, categories[{id,name,slug,sort,last_group_id,api,feeds,groups}], id, group_id, category_id }'
       security:
       - bearerAuth: []
       requestBody:
@@ -26,19 +26,19 @@ paths:
               properties:
                 group_id:
                   type: string
-                  description: Sub-aba que recebe o canal, `grp_…`.
+                  description: Sub-tab that receives the channel, `grp_…`.
                 channel_id:
                   type: string
-                  description: ID do canal no catálogo, ex. `Globo.br`.
+                  description: Channel ID in the catalog, e.g. `GloboNews.br`.
                 stream_id:
                   type: string
-                  description: Stream específico; sem ele o servidor escolhe o melhor.
+                  description: Specific stream; without it the server chooses the best one.
               required:
               - group_id
               - channel_id
             example:
               group_id: grp_…
-              channel_id: Globo.br
+              channel_id: GloboNews.br
       responses:
         '200':
           description: '{ owner, feeds{m3u,m3u8,json,xspf}, categories[{id,name,slug,sort,last_group_id,api,feeds,groups}], id, group_id, category_id }'
@@ -47,18 +47,18 @@ paths:
               schema:
                 $ref: '#/components/schemas/BibliotecaComItem'
         '400':
-          description: Teto de 40 canais na sub-aba atingido.
+          description: Cap of 40 channels in the sub-tab reached.
         '401':
-          description: Sem credencial ou credencial inválida. Veja a auth deste endpoint.
+          description: No credential or invalid credential. See the auth of this endpoint.
         '404':
-          description: Sub-aba ou canal não encontrados.
+          description: Sub-tab or channel not found.
       tags:
       - Items
   /api/items/{id}:
     delete:
       operationId: delete_api_items_by_id
-      summary: Tira um canal da sub-aba. O canal continua no catálogo público, claro
-      description: 'Devolve: { owner, feeds{m3u,m3u8,json,xspf}, categories[{id,name,slug,sort,last_group_id,api,feeds,groups}] }'
+      summary: Removes a channel from the sub-tab.
+      description: 'Returns: { owner, feeds{m3u,m3u8,json,xspf}, categories[{id,name,slug,sort,last_group_id,api,feeds,groups}] }'
       security:
       - bearerAuth: []
       parameters:
@@ -67,6 +67,8 @@ paths:
         required: true
         schema:
           type: string
+        description: Item ID in the gallery, `itm_…`.
+        example: itm_123
       responses:
         '200':
           description: '{ owner, feeds{m3u,m3u8,json,xspf}, categories[{id,name,slug,sort,last_group_id,api,feeds,groups}] }'
@@ -75,18 +77,18 @@ paths:
               schema:
                 $ref: '#/components/schemas/Biblioteca'
         '401':
-          description: Sem credencial ou credencial inválida. Veja a auth deste endpoint.
+          description: No credential or invalid credential. See the auth of this endpoint.
         '404':
-          description: Recurso não existe (ou não é seu — a API não distingue os dois de propósito).
+          description: 'The resource does not exist (or it is not yours: the API does not tell the two apart, on purpose).'
       tags:
       - Items
   /api/items/{id}/play:
     post:
       operationId: post_api_items_by_id_play
-      summary: Marca este canal como o último tocado da sub-aba — é o que devolve a pessoa…
-      description: 'Não conta play público nem entra no histórico; para isso são `POST /api/history` e `POST /api/play-report`.
+      summary: Marks this channel as the last one played in the sub-tab; this is what returns…
+      description: 'It does not count a public play and does not enter the history; for that, use `POST /api/history` and `POST /api/play-report`.
 
-        Devolve: { owner, feeds{m3u,m3u8,json,xspf}, categories[{id,name,slug,sort,last_group_id,api,feeds,groups}] }'
+        Returns: { owner, feeds{m3u,m3u8,json,xspf}, categories[{id,name,slug,sort,last_group_id,api,feeds,groups}] }'
       security:
       - bearerAuth: []
       parameters:
@@ -95,6 +97,8 @@ paths:
         required: true
         schema:
           type: string
+        description: Item ID in the gallery, `itm_…`.
+        example: itm_123
       responses:
         '200':
           description: '{ owner, feeds{m3u,m3u8,json,xspf}, categories[{id,name,slug,sort,last_group_id,api,feeds,groups}] }'
@@ -103,146 +107,53 @@ paths:
               schema:
                 $ref: '#/components/schemas/Biblioteca'
         '401':
-          description: Sem credencial ou credencial inválida. Veja a auth deste endpoint.
+          description: No credential or invalid credential. See the auth of this endpoint.
         '404':
-          description: Recurso não existe (ou não é seu — a API não distingue os dois de propósito).
+          description: 'The resource does not exist (or it is not yours: the API does not tell the two apart, on purpose).'
       tags:
       - Items
 components:
   schemas:
-    SubAba:
-      type: object
-      properties:
-        id:
-          type: string
-          description: ID da sub-aba, `grp_…`.
-        name:
-          type: string
-          description: Nome que o dono deu.
-        slug:
-          type: string
-          description: Versão do nome usada na URL do feed.
-        sort:
-          type: integer
-          description: Posição na ordenação dentro da pasta.
-        last_item_id:
-          type: string
-          description: Último canal tocado nesta sub-aba.
-          nullable: true
-        api:
-          type: string
-          description: URL absoluta desta sub-aba.
-        feeds:
-          allOf:
-          - $ref: '#/components/schemas/Feeds'
-          description: Feeds só desta sub-aba.
-        items:
-          type: array
-          items:
-            $ref: '#/components/schemas/ItemBiblioteca'
-          description: Canais colocados aqui, na ordem do dono.
-      required:
-      - id
-      - name
-      - slug
-      - sort
-      - last_item_id
-      - api
-      - feeds
-      - items
-      description: Sub-aba dentro de uma pasta; é o nível que agrupa os canais.
-    Biblioteca:
-      type: object
-      properties:
-        owner:
-          type: string
-          description: 'Rótulo derivado do dono desta árvore — estável enquanto o feed for o mesmo, e não reversível. NÃO é o token de convidado: publicá-lo aqui faria uma API key delegada escalar para a credencial mestra, que não tem revogação.'
-        feeds:
-          allOf:
-          - $ref: '#/components/schemas/Feeds'
-          description: Feeds da biblioteca inteira, em quatro formatos.
-        categories:
-          type: array
-          items:
-            $ref: '#/components/schemas/PastaBiblioteca'
-          description: As pastas do dono, na ordem que ele arrumou.
-      required:
-      - owner
-      - feeds
-      - categories
-      description: 'A galeria inteira do dono: pastas, sub-abas, canais e as URLs de feed de cada nível.'
-    BibliotecaComItem:
-      type: object
-      properties:
-        owner:
-          type: string
-          description: 'Rótulo derivado do dono desta árvore — estável enquanto o feed for o mesmo, e não reversível. NÃO é o token de convidado: publicá-lo aqui faria uma API key delegada escalar para a credencial mestra, que não tem revogação.'
-        feeds:
-          allOf:
-          - $ref: '#/components/schemas/Feeds'
-          description: Feeds da biblioteca inteira, em quatro formatos.
-        categories:
-          type: array
-          items:
-            $ref: '#/components/schemas/PastaBiblioteca'
-          description: As pastas do dono, na ordem que ele arrumou.
-        id:
-          type: string
-          description: ID do item criado, `itm_…`.
-        group_id:
-          type: string
-          description: Sub-aba que recebeu o canal.
-        category_id:
-          type: string
-          description: Pasta a que essa sub-aba pertence.
-      required:
-      - owner
-      - feeds
-      - categories
-      - id
-      - group_id
-      - category_id
-      description: A biblioteca inteira mais onde o canal caiu — para a tela abrir na sub-aba certa.
     ItemBiblioteca:
       type: object
       properties:
         id:
           type: string
-          description: ID do item na biblioteca, `itm_…`.
+          description: Item ID in the library, `itm_…`.
         channel_id:
           type: string
-          description: ID do canal no catálogo, ex. `Globo.br`.
+          description: Channel ID in the catalog, e.g. `GloboNews.br`.
         stream_id:
           type: string
-          description: Stream escolhido para este item.
+          description: Stream chosen for this item.
           nullable: true
         name:
           type: string
-          description: Nome do canal; cai no `channel_id` se o canal sumiu do catálogo.
+          description: Channel name; it falls back to the `channel_id` if the channel left the catalog.
         logo_url:
           type: string
-          description: Logo servido por nós.
+          description: Logo served by us.
           nullable: true
         url:
           type: string
-          description: URL de reprodução no hop; `null` quando o stream sumiu.
+          description: Playback URL at the hop; `null` when the stream disappeared.
           nullable: true
         quality:
           type: string
-          description: Qualidade do stream escolhido.
+          description: Quality of the chosen stream.
           nullable: true
         kind:
           type: string
-          description: 'Tipo de mídia: `hls`, `mpd`, `mp4`…'
+          description: 'Media type: `hls`, `mpd`, `mp4`…'
         playable_hint:
           type: boolean
-          description: Se a última verificação achou o stream utilizável.
+          description: Whether the last check found the stream usable.
         stale:
           type: boolean
-          description: '`true` quando o canal ou o stream sumiu da fonte — o item fica, sem tocar.'
+          description: '`true` when the channel or the stream disappeared from the source: the item stays, without playing.'
         sort:
           type: integer
-          description: Posição dentro da sub-aba.
+          description: Position within the sub-tab.
       required:
       - id
       - channel_id
@@ -255,46 +166,57 @@ components:
       - playable_hint
       - stale
       - sort
-      description: Um canal dentro de uma sub-aba, com o stream já escolhido.
-    Feeds:
+      description: A channel inside a sub-tab, with the stream already chosen.
+    BibliotecaComItem:
       type: object
       properties:
-        m3u:
+        owner:
           type: string
-          description: Playlist M3U — é o que se cola no VLC.
-        m3u8:
+          description: 'Label derived from the owner of this tree: stable while the feed is the same, and not reversible. It is NOT the guest token or the account ID: the token is the master credential, without revocation, and the label is derived from it with the feed token.'
+        feeds:
+          allOf:
+          - $ref: '#/components/schemas/Feeds'
+          description: Feeds of the whole library, in four formats.
+        categories:
+          type: array
+          items:
+            $ref: '#/components/schemas/PastaBiblioteca'
+          description: The owner's folders, in the order the owner set.
+        id:
           type: string
-          description: Mesma playlist, extensão `.m3u8` para players que só aceitam ela.
-        json:
+          description: ID of the created item, `itm_…`.
+        group_id:
           type: string
-          description: Mesma lista em JSON, para quem programa em cima.
-        xspf:
+          description: Sub-tab that received the channel.
+        category_id:
           type: string
-          description: Mesma lista em XSPF, para players que preferem XML.
+          description: Folder that this sub-tab belongs to.
       required:
-      - m3u
-      - m3u8
-      - json
-      - xspf
-      description: O mesmo conteúdo em quatro formatos. São URLs públicas, com o token do feed no caminho — quem tem o link tem o conteúdo.
+      - owner
+      - feeds
+      - categories
+      - id
+      - group_id
+      - category_id
+      description: The whole library plus where the channel landed, so that the screen opens on the correct sub-tab.
     PastaBiblioteca:
       type: object
       properties:
         id:
           type: string
-          description: ID da pasta, `cat_…`.
+          description: Folder ID, `cat_…`.
         name:
           type: string
-          description: Nome que o dono deu.
+          description: Name that the owner gave.
         slug:
           type: string
-          description: Versão do nome usada na URL do feed.
+          description: Version of the name used in the feed URL.
         sort:
           type: integer
-          description: Posição na ordenação do dono.
+          description: Position in the owner's sort order.
         last_group_id:
           type: string
-          description: Sub-aba aberta por último — é o que devolve a pessoa ao lugar onde parou.
+          description: 'Last opened sub-tab: this is what returns the person to where they stopped.'
           nullable: true
         api:
           type: string
@@ -302,12 +224,12 @@ components:
         feeds:
           allOf:
           - $ref: '#/components/schemas/Feeds'
-          description: Feeds só desta pasta.
+          description: Feeds of this folder only.
         groups:
           type: array
           items:
             $ref: '#/components/schemas/SubAba'
-          description: Sub-abas dentro da pasta.
+          description: Sub-tabs inside the folder.
       required:
       - id
       - name
@@ -317,9 +239,115 @@ components:
       - api
       - feeds
       - groups
-      description: Pasta (aba principal) da galeria do dono.
+      description: Folder (main tab) of the owner's gallery.
+    Biblioteca:
+      type: object
+      properties:
+        owner:
+          type: string
+          description: 'Label derived from the owner of this tree: stable while the feed is the same, and not reversible. It is NOT the guest token or the account ID: the token is the master credential, without revocation, and the label is derived from it with the feed token.'
+        feeds:
+          allOf:
+          - $ref: '#/components/schemas/Feeds'
+          description: Feeds of the whole library, in four formats.
+        categories:
+          type: array
+          items:
+            $ref: '#/components/schemas/PastaBiblioteca'
+          description: The owner's folders, in the order the owner set.
+      required:
+      - owner
+      - feeds
+      - categories
+      description: 'The owner''s whole gallery: folders, sub-tabs, channels and the feed URLs of each level.'
+    Feeds:
+      type: object
+      properties:
+        m3u:
+          type: string
+          description: 'M3U playlist: this is what you paste in VLC.'
+        m3u8:
+          type: string
+          description: The same playlist, with the `.m3u8` extension for players that accept only it.
+        json:
+          type: string
+          description: The same list in JSON, for those who build on it.
+        xspf:
+          type: string
+          description: The same list in XSPF, for players that prefer XML.
+      required:
+      - m3u
+      - m3u8
+      - json
+      - xspf
+      description: 'The same content in four formats. They are public URLs, with the feed token in the path: whoever has the link has the content.'
+    SubAba:
+      type: object
+      properties:
+        id:
+          type: string
+          description: Sub-tab ID, `grp_…`.
+        name:
+          type: string
+          description: Name that the owner gave.
+        slug:
+          type: string
+          description: Version of the name used in the feed URL.
+        sort:
+          type: integer
+          description: Sort position within the folder.
+        last_item_id:
+          type: string
+          description: Last channel played in this sub-tab.
+          nullable: true
+        api:
+          type: string
+          description: URL absoluta desta sub-aba.
+        feeds:
+          allOf:
+          - $ref: '#/components/schemas/Feeds'
+          description: Feeds of this sub-tab only.
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/ItemBiblioteca'
+          description: Channels placed here, in the owner's order.
+      required:
+      - id
+      - name
+      - slug
+      - sort
+      - last_item_id
+      - api
+      - feeds
+      - items
+      description: Sub-tab inside a folder; it is the level that groups the channels.
   securitySchemes:
     bearerAuth:
       type: http
       scheme: bearer
-      description: ipt_… (guest) ou iptk_… (API key)
+      description: ipt_… (guest); the account is a cookie, never a bearer
+    globalAccount:
+      type: apiKey
+      in: cookie
+      name: __Host-mm-auth
+      description: Global session in the product's HttpOnly cookie; writes require exact Origin and X-CSRF-Token.
+    contaChaveApi:
+      type: http
+      scheme: bearer
+      bearerFormat: mmk_…
+      description: 'Account API key: `Authorization: Bearer mmk_…` or `X-Api-Key: mmk_…`. Created on the account page (API keys), valid only in the product where it was created; it acts as the account (or the organization that owns it).'
+    carteiraAgente:
+      type: http
+      scheme: bearer
+      bearerFormat: mmw_…
+      description: 'Wallet credential of an agent without an account (`Authorization: Bearer mmw_…`, 30 days, this product only): POST /api/auth/wallet/agent/start, sign the message with the wallet, POST /api/auth/wallet/agent/token. The owner is `x402:<address>`.'
+x-service-info:
+  categories:
+  - tv-guide
+  - media
+  - directory
+  docs:
+    homepage: https://gradetv.net/
+    apiReference: https://gradetv.net/developers
+    llms: https://gradetv.net/llms.txt

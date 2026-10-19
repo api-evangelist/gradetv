@@ -1,8 +1,8 @@
 openapi: 3.2.0
 info:
-  title: Grade M API
-  version: dbad45cb
-  description: Catálogo IPTV, biblioteca pessoal com feeds e informações para produtores sobre transmissão autorizada sob consulta.
+  title: GradeTV M API
+  version: 1d751aaf
+  description: Find TV and radio, check the schedule and organize personal lists. Present authorized broadcast projects for evaluation, without activation.
 servers:
 - url: https://gradetv.net
 tags:
@@ -11,10 +11,10 @@ paths:
   /api/m/{ticket}:
     get:
       operationId: get_api_m_by_ticket
-      summary: 'Desligado: era o pass-through de vídeo. Responde 410 sempre'
-      description: 'Até 05/09/2026 encaminhava os bytes da origem com CORS nosso. Relay de stream de terceiro não é serviço do Grade; a rota fica documentada para quem ainda tiver o endereço numa playlist antiga.
+      summary: 'Turned off: it was the video pass-through. It always answers 410'
+      description: 'Until 05/09/2026 it forwarded the origin bytes with our CORS. Relaying a third-party stream is not a Grade service; the route stays documented for anyone who still has the address in an old playlist.
 
-        Devolve: 410 `relay_desligado`, sempre.'
+        Returns: 410 `relay_desligado`, always.'
       security: []
       parameters:
       - name: ticket
@@ -22,13 +22,15 @@ paths:
         required: true
         schema:
           type: string
+        description: Legacy ticket ignored; no value reactivates the retransmission.
+        example: tk_legado
       responses:
         '200':
-          description: 410 `relay_desligado`, sempre.
+          description: 410 `relay_desligado`, always.
         '404':
-          description: Caminho inexistente fora da família retirada.
+          description: Nonexistent path outside the retired family.
         '410':
-          description: 'Sempre: o Grade não retransmite vídeo.'
+          description: 'Always: the Grade does not retransmit video.'
       tags:
       - M
 components:
@@ -36,4 +38,28 @@ components:
     bearerAuth:
       type: http
       scheme: bearer
-      description: ipt_… (guest) ou iptk_… (API key)
+      description: ipt_… (guest); the account is a cookie, never a bearer
+    globalAccount:
+      type: apiKey
+      in: cookie
+      name: __Host-mm-auth
+      description: Global session in the product's HttpOnly cookie; writes require exact Origin and X-CSRF-Token.
+    contaChaveApi:
+      type: http
+      scheme: bearer
+      bearerFormat: mmk_…
+      description: 'Account API key: `Authorization: Bearer mmk_…` or `X-Api-Key: mmk_…`. Created on the account page (API keys), valid only in the product where it was created; it acts as the account (or the organization that owns it).'
+    carteiraAgente:
+      type: http
+      scheme: bearer
+      bearerFormat: mmw_…
+      description: 'Wallet credential of an agent without an account (`Authorization: Bearer mmw_…`, 30 days, this product only): POST /api/auth/wallet/agent/start, sign the message with the wallet, POST /api/auth/wallet/agent/token. The owner is `x402:<address>`.'
+x-service-info:
+  categories:
+  - tv-guide
+  - media
+  - directory
+  docs:
+    homepage: https://gradetv.net/
+    apiReference: https://gradetv.net/developers
+    llms: https://gradetv.net/llms.txt

@@ -1,8 +1,8 @@
 openapi: 3.2.0
 info:
-  title: Grade Keys API
-  version: dbad45cb
-  description: Catálogo IPTV, biblioteca pessoal com feeds e informações para produtores sobre transmissão autorizada sob consulta.
+  title: GradeTV Keys API
+  version: 1d751aaf
+  description: Find TV and radio, check the schedule and organize personal lists. Present authorized broadcast projects for evaluation, without activation.
 servers:
 - url: https://gradetv.net
 tags:
@@ -10,149 +10,85 @@ tags:
 paths:
   /api/keys:
     post:
-      operationId: mint_key
-      summary: Cria uma API key `iptk_…` para o agente — o texto completo aparece uma vez só
-      description: 'A key é a conta do agente: vale como o convidado que a criou e não expira até ser revogada.
+      operationId: post_api_keys
+      summary: 'Retirada: criava chave `iptk_…`. Responde 410'
+      description: 'Account and payment are global since 21/09/2026, and the SDK has no API key per account. Identify yourself with `X-Guest-Token: ipt_…` (`POST /api/guest`) or with the account session; a paid call uses the global credit (`Authorization: Bearer cred_…`) or x402.
 
-        Devolve: { id, token, masked, label, note }'
-      security:
-      - bearerAuth: []
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                label:
-                  type: string
-                  description: Rótulo para lembrar onde a chave foi usada.
-            example:
-              label: meu-agente
+        Returns: 410 `api_keys_retired`, always.'
+      security: []
       responses:
         '200':
-          description: '{ id, token, masked, label, note }'
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  id:
-                    type: string
-                    description: ID da chave, para revogar depois.
-                  token:
-                    type: string
-                    description: A chave em texto. Não é mostrada de novo — guarde agora.
-                  masked:
-                    type: string
-                    description: A mesma chave mascarada, como ela aparecerá na listagem.
-                  label:
-                    type: string
-                    description: O rótulo que você mandou.
-                    nullable: true
-                  note:
-                    type: string
-                    description: Lembrete de que o token não será mostrado outra vez.
-                required:
-                - id
-                - token
-                - masked
-                - label
-                - note
-        '401':
-          description: Sem credencial ou credencial inválida. Veja a auth deste endpoint.
+          description: 410 `api_keys_retired`, always.
+        '410':
+          description: 'Always: the own API keys were retired.'
       tags:
       - Keys
     get:
       operationId: get_api_keys
-      summary: Lista as chaves do dono, sempre mascaradas, inclusive as já revogadas
-      description: 'Devolve: { keys[{id,masked,label,revoked,created_at}] }'
-      security:
-      - bearerAuth: []
+      summary: 'Retirada: listava as chaves `iptk_…`. Responde 410'
+      description: 'Account and payment are global since 21/09/2026, and the SDK has no API key per account. Identify yourself with `X-Guest-Token: ipt_…` (`POST /api/guest`) or with the account session; a paid call uses the global credit (`Authorization: Bearer cred_…`) or x402.
+
+        Returns: 410 `api_keys_retired`, always.'
+      security: []
       responses:
         '200':
-          description: '{ keys[{id,masked,label,revoked,created_at}] }'
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  keys:
-                    type: array
-                    items:
-                      $ref: '#/components/schemas/Chave'
-                    description: As chaves do dono, da mais recente para a mais antiga.
-                required:
-                - keys
-        '401':
-          description: Sem credencial ou credencial inválida. Veja a auth deste endpoint.
+          description: 410 `api_keys_retired`, always.
+        '410':
+          description: 'Always: the own API keys were retired.'
       tags:
       - Keys
   /api/keys/{id}:
     delete:
       operationId: delete_api_keys_by_id
-      summary: Revoga uma chave. A linha continua na listagem, marcada como revogada
-      description: 'Devolve: { ok }'
-      security:
-      - bearerAuth: []
+      summary: 'Retired: it revoked an `iptk_…` key. It answers 410'
+      description: 'Account and payment are global since 21/09/2026, and the SDK has no API key per account. Identify yourself with `X-Guest-Token: ipt_…` (`POST /api/guest`) or with the account session; a paid call uses the global credit (`Authorization: Bearer cred_…`) or x402.
+
+        Returns: 410 `api_keys_retired`, always.'
+      security: []
       parameters:
       - name: id
         in: path
         required: true
         schema:
           type: string
+        description: ID of an old key; ignored.
+        example: key_9f3c2b1d7a
       responses:
         '200':
-          description: '{ ok }'
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Ok'
-        '401':
-          description: Sem credencial ou credencial inválida. Veja a auth deste endpoint.
+          description: 410 `api_keys_retired`, always.
         '404':
-          description: Recurso não existe (ou não é seu — a API não distingue os dois de propósito).
+          description: 'Path outside the retired family: every `/api/keys/…` answers 410.'
+        '410':
+          description: 'Always: the own API keys were retired.'
       tags:
       - Keys
 components:
-  schemas:
-    Ok:
-      type: object
-      properties:
-        ok:
-          type: boolean
-          description: Sempre `true` — a falha vem como status 4xx/5xx, não como `ok:false`.
-      required:
-      - ok
-      description: Confirmação de escrita que não tem corpo próprio a devolver.
-    Chave:
-      type: object
-      properties:
-        id:
-          type: string
-          description: ID da chave, para revogar.
-        masked:
-          type: string
-          description: Prefixo e últimos 4 dígitos, ex. `iptk_…a1b2`.
-        label:
-          type: string
-          description: Rótulo que o dono deu para lembrar onde usou.
-          nullable: true
-        revoked:
-          type: boolean
-          description: Se já foi revogada — a linha fica, para o histórico.
-        created_at:
-          type: string
-          description: Quando foi criada (UTC).
-      required:
-      - id
-      - masked
-      - label
-      - revoked
-      - created_at
-      description: API key do dono, sempre mascarada. O texto completo só aparece na criação.
   securitySchemes:
     bearerAuth:
       type: http
       scheme: bearer
-      description: ipt_… (guest) ou iptk_… (API key)
+      description: ipt_… (guest); the account is a cookie, never a bearer
+    globalAccount:
+      type: apiKey
+      in: cookie
+      name: __Host-mm-auth
+      description: Global session in the product's HttpOnly cookie; writes require exact Origin and X-CSRF-Token.
+    contaChaveApi:
+      type: http
+      scheme: bearer
+      bearerFormat: mmk_…
+      description: 'Account API key: `Authorization: Bearer mmk_…` or `X-Api-Key: mmk_…`. Created on the account page (API keys), valid only in the product where it was created; it acts as the account (or the organization that owns it).'
+    carteiraAgente:
+      type: http
+      scheme: bearer
+      bearerFormat: mmw_…
+      description: 'Wallet credential of an agent without an account (`Authorization: Bearer mmw_…`, 30 days, this product only): POST /api/auth/wallet/agent/start, sign the message with the wallet, POST /api/auth/wallet/agent/token. The owner is `x402:<address>`.'
+x-service-info:
+  categories:
+  - tv-guide
+  - media
+  - directory
+  docs:
+    homepage: https://gradetv.net/
+    apiReference: https://gradetv.net/developers
+    llms: https://gradetv.net/llms.txt

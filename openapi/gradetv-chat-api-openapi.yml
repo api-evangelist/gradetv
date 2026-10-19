@@ -1,8 +1,8 @@
 openapi: 3.2.0
 info:
-  title: Grade Chat API
-  version: dbad45cb
-  description: Catálogo IPTV, biblioteca pessoal com feeds e informações para produtores sobre transmissão autorizada sob consulta.
+  title: GradeTV Chat API
+  version: 1d751aaf
+  description: Find TV and radio, check the schedule and organize personal lists. Present authorized broadcast projects for evaluation, without activation.
 servers:
 - url: https://gradetv.net
 tags:
@@ -11,8 +11,8 @@ paths:
   /api/chat/{channel_id}/mensagens:
     get:
       operationId: chat_history
-      summary: Últimas mensagens da sala do canal, mais o endereço do WebSocket para…
-      description: 'Devolve: { channel_id, items[{id,autor,body,at}], watching, max_length, _links{self,websocket,channel} }'
+      summary: Latest messages of the channel room, plus the WebSocket address to follow live
+      description: 'Returns: { channel_id, items[{id,autor,body,at}], watching, max_length, _links{self,websocket,channel} }'
       security: []
       parameters:
       - name: channel_id
@@ -20,6 +20,8 @@ paths:
         required: true
         schema:
           type: string
+        description: Channel ID in the catalog.
+        example: GloboNews.br
       responses:
         '200':
           description: '{ channel_id, items[{id,autor,body,at}], watching, max_length, _links{self,websocket,channel} }'
@@ -30,22 +32,22 @@ paths:
                 properties:
                   channel_id:
                     type: string
-                    description: Canal a que a sala pertence.
+                    description: Channel that the room belongs to.
                   items:
                     type: array
                     items:
                       $ref: '#/components/schemas/MensagemChat'
-                    description: As últimas mensagens, da mais antiga para a mais nova.
+                    description: The latest messages, from the oldest to the newest.
                   watching:
                     type: integer
-                    description: Quantas pessoas estão com a sala aberta agora.
+                    description: How many people have the room open now.
                   max_length:
                     type: integer
-                    description: Tamanho máximo de uma mensagem.
+                    description: Maximum size of a message.
                   _links:
                     allOf:
                     - $ref: '#/components/schemas/LinksChat'
-                    description: Esta listagem, o WebSocket e a ficha do canal.
+                    description: This listing, the WebSocket and the channel record.
                 required:
                 - channel_id
                 - items
@@ -53,15 +55,15 @@ paths:
                 - max_length
                 - _links
         '404':
-          description: Canal não existe no catálogo.
+          description: The channel does not exist in the catalog.
       tags:
       - Chat
     post:
       operationId: chat_send
-      summary: Manda mensagem na sala sem abrir WebSocket. Exige o passe mensal do chat
-      description: 'Ler é grátis; escrever custa $0.10 por 30 dias. Sem passe válido a resposta é 402 com `accepts[]` — pague e repita a mesma chamada.
+      summary: Sends a message to the room without opening a WebSocket.
+      description: 'Reading is free; writing costs $0.10 per 30 days. Without a valid pass the answer is 402 with `accepts[]`: pay and repeat the same call. The speaker is the guest (`X-Guest-Token`), the same one the WebSocket recognizes; without a guest, the account session.
 
-        Devolve: { ok, message{id,autor,body,at} }'
+        Returns: { ok, message{id,autor,body,at} }'
       security:
       - bearerAuth: []
       parameters:
@@ -70,6 +72,8 @@ paths:
         required: true
         schema:
           type: string
+        description: Channel ID in the catalog.
+        example: GloboNews.br
       requestBody:
         required: true
         content:
@@ -79,10 +83,10 @@ paths:
               properties:
                 body:
                   type: string
-                  description: O texto da mensagem, dentro de `max_length`.
+                  description: The message text, within `max_length`.
                 author:
                   type: string
-                  description: Apelido a usar; sem ele o servidor gera um estável.
+                  description: Nickname to use; without it the server creates a stable one.
               required:
               - body
             example:
@@ -98,31 +102,32 @@ paths:
                 properties:
                   ok:
                     type: boolean
-                    description: Sempre `true` quando a mensagem entrou.
+                    description: Always `true` when the message entered.
                   message:
                     allOf:
                     - $ref: '#/components/schemas/MensagemChat'
-                    description: A mensagem publicada na sala.
+                    description: The message published in the room.
                 required:
                 - ok
                 - message
         '400':
-          description: Texto vazio ou longo demais.
+          description: Text empty or too long.
         '401':
-          description: Sem credencial ou credencial inválida. Veja a auth deste endpoint.
+          description: No credential or invalid credential. See the auth of this endpoint.
         '402':
-          description: 'Cota estourada. A resposta traz `accepts[]` (x402, USDC na Base): pague e repita a mesma chamada com `X-PAYMENT`.'
+          description: 'Payment required. The x402 terms (USDC on Base) come in the `PAYMENT-REQUIRED` header and in `accepts[]`: pay and repeat the same call with `PAYMENT-SIGNATURE` (x402 v2) or `X-PAYMENT` (v1). A standard x402 client such as `@x402/fetch` does this for you.'
         '404':
-          description: Canal não existe.
+          description: The channel does not exist.
       tags:
       - Chat
   /api/chat/pass:
     post:
       operationId: chat_pass
-      summary: 'Compra ou confirma o passe mensal do chat: $0.10 por 30 dias, via x402'
-      description: 'Passe já válido devolve 200 sem cobrar de novo — dá para chamar antes de escrever, sem risco de pagar duas vezes.
+      summary: 'Buys or confirms the monthly chat pass: $0.10 per 30 days, through x402 or…'
+      description: 'A pass that is already valid returns 200 without charging again: you can call it before writing, with no risk of paying twice. The pass belongs to the person who speaks in the chat: the `X-Guest-Token` guest (the one the WebSocket recognizes in `hello`); without a guest, the account session, which speaks only over HTTP. It stays in the global purchase record (`direito`).
 
-        Devolve: { ok, charged, until }'
+        Returns: { ok, charged, until }'
+      x-price-usd: 0.1
       security:
       - bearerAuth: []
       responses:
@@ -135,30 +140,37 @@ paths:
                 properties:
                   ok:
                     type: boolean
-                    description: Sempre `true` quando o passe está valendo ao fim da chamada.
+                    description: Always `true` when the pass is valid at the end of the call.
                   charged:
                     type: boolean
-                    description: '`true` se esta chamada cobrou; `false` se o passe já valia.'
+                    description: '`true` if this call charged; `false` if the pass was already valid.'
                   until:
                     type: string
-                    description: Até quando o passe vale (UTC).
+                    description: Until when the pass is valid (UTC); `null` with the chat open for free (`X402_GRATIS`).
+                    nullable: true
                 required:
                 - ok
                 - charged
                 - until
         '401':
-          description: Sem credencial ou credencial inválida. Veja a auth deste endpoint.
+          description: No credential or invalid credential. See the auth of this endpoint.
         '402':
-          description: 'Cota estourada. A resposta traz `accepts[]` (x402, USDC na Base): pague e repita a mesma chamada com `X-PAYMENT`.'
+          description: 'Payment required. The x402 terms (USDC on Base) come in the `PAYMENT-REQUIRED` header and in `accepts[]`: pay and repeat the same call with `PAYMENT-SIGNATURE` (x402 v2) or `X-PAYMENT` (v1). A standard x402 client such as `@x402/fetch` does this for you.'
+        '410':
+          description: 'Chave `iptk_…` (retirada): use o convidado.'
+        '502':
+          description: '`pago_nao_registrado`: paid and not recorded; it brings the `recibo`. Repeat with the same `Idempotency-Key`, without a new charge.'
+        '503':
+          description: '`pass_unavailable`: no purchase record, nothing charged.'
       tags:
       - Chat
   /api/chat/{channel_id}/ws:
     get:
       operationId: get_api_chat_by_channel_id_ws
-      summary: WebSocket da sala do canal — o caminho ao vivo, com presença
-      description: 'Exige `Upgrade: websocket`; sem isso responde 426. O socket entra MUDO: mande `{t:''hello'',token:''ipt_…''}` e depois `{t:''msg'',body:''…''}`. Você recebe `{t:''pronto'',autor,items[],watching}` na entrada e `{t:''msg''|''presenca'',…}` durante a sessão; erro chega como `{t:''erro'',code:''auth''|''vazio''|''pago''}`.
+      summary: 'WebSocket of the channel room: the live path, with presence'
+      description: 'Requires `Upgrade: websocket`; without it, it answers 426. The socket starts MUTED: send `{t:''hello'',token:''ipt_…''}` and then `{t:''msg'',body:''…''}`. You get `{t:''pronto'',autor,items[],watching}` on entry and `{t:''msg''|''presenca'',…}` during the session; an error comes as `{t:''erro'',code:''auth''|''vazio''|''pago''}`.
 
-        Devolve: `101 Switching Protocols` e a conexão WebSocket; `426` sem o header de upgrade.'
+        Returns: `101 Switching Protocols` and the WebSocket connection; `426` without the upgrade header.'
       security: []
       parameters:
       - name: channel_id
@@ -166,11 +178,13 @@ paths:
         required: true
         schema:
           type: string
+        description: Channel ID in the catalog.
+        example: GloboNews.br
       responses:
         '200':
-          description: '`101 Switching Protocols` e a conexão WebSocket; `426` sem o header de upgrade.'
+          description: '`101 Switching Protocols` and the WebSocket connection; `426` without the upgrade header.'
         '404':
-          description: Canal não existe no catálogo.
+          description: The channel does not exist in the catalog.
       tags:
       - Chat
 components:
@@ -180,41 +194,65 @@ components:
       properties:
         id:
           type: string
-          description: ID da mensagem dentro da sala.
+          description: Message ID within the room.
         autor:
           type: string
-          description: Apelido de quem mandou — estável por dono, gerado se não informado.
+          description: 'Nickname of the sender: stable per owner, created if not given.'
         body:
           type: string
-          description: O texto da mensagem.
+          description: The message text.
         at:
           type: string
-          description: Quando foi mandada (UTC).
+          description: When it was sent (UTC).
       required:
       - id
       - autor
       - body
       - at
-      description: Mensagem da sala de chat de um canal.
+      description: Message of a channel's chat room.
     LinksChat:
       type: object
       properties:
         self:
           type: string
-          description: Esta mesma listagem por HTTP.
+          description: This same listing over HTTP.
         websocket:
           type: string
-          description: URL `wss://` da sala; mande `{t:'hello',token}` antes de falar.
+          description: '`wss://` URL of the room; send `{t:''hello'',token}` before speaking.'
         channel:
           type: string
-          description: Ficha do canal a que a sala pertence.
+          description: Record of the channel that the room belongs to.
       required:
       - self
       - websocket
       - channel
-      description: Endereços da sala — incluindo o WebSocket, que é o caminho ao vivo.
+      description: Room addresses, including the WebSocket, which is the live path.
   securitySchemes:
     bearerAuth:
       type: http
       scheme: bearer
-      description: ipt_… (guest) ou iptk_… (API key)
+      description: ipt_… (guest); the account is a cookie, never a bearer
+    globalAccount:
+      type: apiKey
+      in: cookie
+      name: __Host-mm-auth
+      description: Global session in the product's HttpOnly cookie; writes require exact Origin and X-CSRF-Token.
+    contaChaveApi:
+      type: http
+      scheme: bearer
+      bearerFormat: mmk_…
+      description: 'Account API key: `Authorization: Bearer mmk_…` or `X-Api-Key: mmk_…`. Created on the account page (API keys), valid only in the product where it was created; it acts as the account (or the organization that owns it).'
+    carteiraAgente:
+      type: http
+      scheme: bearer
+      bearerFormat: mmw_…
+      description: 'Wallet credential of an agent without an account (`Authorization: Bearer mmw_…`, 30 days, this product only): POST /api/auth/wallet/agent/start, sign the message with the wallet, POST /api/auth/wallet/agent/token. The owner is `x402:<address>`.'
+x-service-info:
+  categories:
+  - tv-guide
+  - media
+  - directory
+  docs:
+    homepage: https://gradetv.net/
+    apiReference: https://gradetv.net/developers
+    llms: https://gradetv.net/llms.txt

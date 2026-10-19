@@ -1,8 +1,8 @@
 openapi: 3.2.0
 info:
-  title: Grade Visit API
-  version: dbad45cb
-  description: Catálogo IPTV, biblioteca pessoal com feeds e informações para produtores sobre transmissão autorizada sob consulta.
+  title: GradeTV Visit API
+  version: 1d751aaf
+  description: Find TV and radio, check the schedule and organize personal lists. Present authorized broadcast projects for evaluation, without activation.
 servers:
 - url: https://gradetv.net
 tags:
@@ -11,10 +11,10 @@ paths:
   /api/visit:
     post:
       operationId: post_api_visit
-      summary: Ping da interface que incrementa a visita do dia. Agente não precisa chamar
-      description: 'Smoke não conta: `X-MM-Smoke`, User-Agent `mm-smoke` ou `smoke: true` no corpo entram como `counted: false`.
+      summary: The screen notice that adds a visit to the day. Agents do not need to call it
+      description: 'The screen sends the notice at the user''s first gesture (tap, key or click), once per page. Tests do not count: `X-MM-Smoke`, User-Agent `mm-smoke` or `smoke: true` in the body come back with `counted: false`. Only the page''s own notice counts: a call from outside a page of the same site (robot User-Agent, or without `Sec-Fetch-Site: same-origin`) comes back with `counted: false` and `reason: "robo"`.
 
-        Devolve: { ok, counted, reason? }'
+        Returns: { ok, counted, reason? }'
       security: []
       requestBody:
         required: true
@@ -23,11 +23,14 @@ paths:
             schema:
               type: object
               properties:
+                p:
+                  type: string
+                  description: The path of the visited page.
                 smoke:
                   type: boolean
-                  description: '`true` marca a chamada como teste e ela não entra na contagem.'
+                  description: '`true` marks the request as a test, and it is not counted.'
             example:
-              smoke: false
+              p: /
       responses:
         '200':
           description: '{ ok, counted, reason? }'
@@ -38,13 +41,13 @@ paths:
                 properties:
                   ok:
                     type: boolean
-                    description: Sempre `true`.
+                    description: Always `true`.
                   counted:
                     type: boolean
-                    description: Se a visita entrou na contagem do dia.
+                    description: Whether the visit entered the day's count.
                   reason:
                     type: string
-                    description: Por que não contou, quando `counted` é `false`.
+                    description: Why it did not count, when `counted` is `false`.
                 required:
                 - ok
                 - counted
@@ -55,4 +58,28 @@ components:
     bearerAuth:
       type: http
       scheme: bearer
-      description: ipt_… (guest) ou iptk_… (API key)
+      description: ipt_… (guest); the account is a cookie, never a bearer
+    globalAccount:
+      type: apiKey
+      in: cookie
+      name: __Host-mm-auth
+      description: Global session in the product's HttpOnly cookie; writes require exact Origin and X-CSRF-Token.
+    contaChaveApi:
+      type: http
+      scheme: bearer
+      bearerFormat: mmk_…
+      description: 'Account API key: `Authorization: Bearer mmk_…` or `X-Api-Key: mmk_…`. Created on the account page (API keys), valid only in the product where it was created; it acts as the account (or the organization that owns it).'
+    carteiraAgente:
+      type: http
+      scheme: bearer
+      bearerFormat: mmw_…
+      description: 'Wallet credential of an agent without an account (`Authorization: Bearer mmw_…`, 30 days, this product only): POST /api/auth/wallet/agent/start, sign the message with the wallet, POST /api/auth/wallet/agent/token. The owner is `x402:<address>`.'
+x-service-info:
+  categories:
+  - tv-guide
+  - media
+  - directory
+  docs:
+    homepage: https://gradetv.net/
+    apiReference: https://gradetv.net/developers
+    llms: https://gradetv.net/llms.txt

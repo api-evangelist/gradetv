@@ -1,0 +1,58 @@
+openapi: 3.2.0
+info:
+  title: Grade Comments API
+  version: dbad45cb
+  description: Catálogo IPTV, biblioteca pessoal com feeds e informações para produtores sobre transmissão autorizada sob consulta.
+servers:
+- url: https://gradetv.net
+tags:
+- name: Comments
+paths:
+  /api/comments/{id}:
+    delete:
+      operationId: delete_comment
+      summary: Apaga um comentário seu. Comentário alheio responde 404, não 403
+      description: 'O 404 é de propósito: a API não confirma que existe um comentário com aquele id se ele não é seu.
+
+        Devolve: { ok, removed, channel_id }'
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: '{ ok, removed, channel_id }'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok:
+                    type: boolean
+                    description: Sempre `true`.
+                  removed:
+                    type: string
+                    description: O id que saiu.
+                  channel_id:
+                    type: string
+                    description: Canal de onde o comentário saiu.
+                required:
+                - ok
+                - removed
+                - channel_id
+        '401':
+          description: Sem credencial ou credencial inválida. Veja a auth deste endpoint.
+        '404':
+          description: Recurso não existe (ou não é seu — a API não distingue os dois de propósito).
+      tags:
+      - Comments
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      description: ipt_… (guest) ou iptk_… (API key)

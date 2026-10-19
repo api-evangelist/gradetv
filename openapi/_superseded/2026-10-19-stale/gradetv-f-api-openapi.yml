@@ -1,0 +1,111 @@
+openapi: 3.2.0
+info:
+  title: Grade F API
+  version: dbad45cb
+  description: Catálogo IPTV, biblioteca pessoal com feeds e informações para produtores sobre transmissão autorizada sob consulta.
+servers:
+- url: https://gradetv.net
+tags:
+- name: F
+paths:
+  /f/{token}/library.{formato}:
+    get:
+      operationId: get_f_by_token_library_formato
+      summary: Feed da biblioteca inteira do dono, no formato pedido pela extensão
+      description: 'É a URL que a pessoa cola no VLC. Não pede credencial: o token no caminho É a credencial, e quem tem o link tem o conteúdo — trate como segredo. As URLs saem prontas em `Biblioteca.feeds`, e cada pasta e sub-aba tem a sua.
+
+        Devolve: `audio/x-mpegurl` (m3u/m3u8), `application/json` ou `application/xspf+xml`.
+
+        Item do YouTube fica fora do M3U e do XSPF (o VLC não toca) e vem no JSON com `kind: "youtube"`.'
+      security: []
+      parameters:
+      - name: token
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: formato
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: '`audio/x-mpegurl` (m3u/m3u8), `application/json` ou `application/xspf+xml`.'
+        '404':
+          description: Token de feed desconhecido.
+      tags:
+      - F
+  /f/{token}/c/{categoria}.{formato}:
+    get:
+      operationId: get_f_by_token_c_by_categoria_formato
+      summary: Feed de uma pasta da biblioteca, para assinar só aquele recorte
+      description: 'Devolve: `audio/x-mpegurl` (m3u/m3u8), `application/json` ou `application/xspf+xml`.
+
+        Item do YouTube fica fora do M3U e do XSPF (o VLC não toca) e vem no JSON com `kind: "youtube"`.'
+      security: []
+      parameters:
+      - name: token
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: categoria
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: formato
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: '`audio/x-mpegurl` (m3u/m3u8), `application/json` ou `application/xspf+xml`.'
+        '404':
+          description: Token de feed ou pasta desconhecidos.
+      tags:
+      - F
+  /f/{token}/c/{categoria}/g/{grupo}.{formato}:
+    get:
+      operationId: get_f_by_token_c_by_categoria_g_by_grupo_formato
+      summary: Feed de uma sub-aba — o recorte mais fino que a galeria oferece
+      description: 'Devolve: `audio/x-mpegurl` (m3u/m3u8), `application/json` ou `application/xspf+xml`.
+
+        Item do YouTube fica fora do M3U e do XSPF (o VLC não toca) e vem no JSON com `kind: "youtube"`.'
+      security: []
+      parameters:
+      - name: token
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: categoria
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: grupo
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: formato
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: '`audio/x-mpegurl` (m3u/m3u8), `application/json` ou `application/xspf+xml`.'
+        '404':
+          description: Token de feed, pasta ou sub-aba desconhecidos.
+      tags:
+      - F
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      description: ipt_… (guest) ou iptk_… (API key)

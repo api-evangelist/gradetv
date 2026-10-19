@@ -1,0 +1,102 @@
+openapi: 3.2.0
+info:
+  title: GradeTV Legacy API
+  version: 1d751aaf
+  description: Find TV and radio, check the schedule and organize personal lists. Present authorized broadcast projects for evaluation, without activation.
+servers:
+- url: https://gradetv.net
+tags:
+- name: Legacy
+paths:
+  /api/legacy/{id}:
+    get:
+      operationId: legacy_stream
+      summary: Public metadata for the legacy HTTP player, without a session
+      description: 'The legacy_url button opens http://legacy.gradetv.net/legacy?stream=ID, without a port in the address. The standalone page accepts lang=pt/en/es/fr/de/hu and theme=light/dark. Playlists continue through the HTTPS hop and media directly from the origin. It does not remove an access refusal or a CORS requirement. One indexed read; it does not fetch the origin or write to the database.
+
+        Returns: { id, name, kind, radio, url, provider_url, website, legacy_url }'
+      security: []
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+        description: Public stream ID, including compatibility with old IDs.
+        example: 1001Noites.br:SD:2168
+      responses:
+        '200':
+          description: '{ id, name, kind, radio, url, provider_url, website, legacy_url }'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                    description: Resolved stream ID.
+                  name:
+                    type: string
+                    description: Channel name.
+                  kind:
+                    type: string
+                    description: Stream type for the player.
+                  radio:
+                    type: boolean
+                    description: Whether the channel is radio.
+                  url:
+                    type: string
+                    description: Public URL of the HTTPS playlist hop.
+                  provider_url:
+                    type: string
+                    description: Direct broadcast URL at the provider.
+                  website:
+                    type: string
+                    description: Official site of the channel; null when missing or invalid. Destination of the open-site button, separate from the broadcast URL.
+                    nullable: true
+                  legacy_url:
+                    type: string
+                    description: Standalone HTTP player, without a credential.
+                required:
+                - id
+                - name
+                - kind
+                - radio
+                - url
+                - provider_url
+                - website
+                - legacy_url
+        '404':
+          description: Stream unavailable or incompatible origin.
+      tags:
+      - Legacy
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      description: ipt_… (guest); the account is a cookie, never a bearer
+    globalAccount:
+      type: apiKey
+      in: cookie
+      name: __Host-mm-auth
+      description: Global session in the product's HttpOnly cookie; writes require exact Origin and X-CSRF-Token.
+    contaChaveApi:
+      type: http
+      scheme: bearer
+      bearerFormat: mmk_…
+      description: 'Account API key: `Authorization: Bearer mmk_…` or `X-Api-Key: mmk_…`. Created on the account page (API keys), valid only in the product where it was created; it acts as the account (or the organization that owns it).'
+    carteiraAgente:
+      type: http
+      scheme: bearer
+      bearerFormat: mmw_…
+      description: 'Wallet credential of an agent without an account (`Authorization: Bearer mmw_…`, 30 days, this product only): POST /api/auth/wallet/agent/start, sign the message with the wallet, POST /api/auth/wallet/agent/token. The owner is `x402:<address>`.'
+x-service-info:
+  categories:
+  - tv-guide
+  - media
+  - directory
+  docs:
+    homepage: https://gradetv.net/
+    apiReference: https://gradetv.net/developers
+    llms: https://gradetv.net/llms.txt

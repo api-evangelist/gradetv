@@ -1,0 +1,76 @@
+openapi: 3.2.0
+info:
+  title: GradeTV Pay API
+  version: 1d751aaf
+  description: Find TV and radio, check the schedule and organize personal lists. Present authorized broadcast projects for evaluation, without activation.
+servers:
+- url: https://gradetv.net
+tags:
+- name: Pay
+paths:
+  /pay:
+    get:
+      operationId: get_pay
+      summary: Opens the pass payment with the code shown on the TV
+      description: 'Returns: HTML: code, price and global Paywall; confirmation after paying.'
+      security: []
+      parameters:
+      - name: codigo
+        in: query
+        required: false
+        schema:
+          type: string
+        description: Six digits shown in the TV notice; valid for ten minutes.
+        example: '123456'
+      - name: lingua
+        in: query
+        required: false
+        schema:
+          type: string
+          enum:
+          - en
+          - pt
+          - es
+          - fr
+          - de
+          - hu
+        description: Language of the page; without it, the detected preference.
+      responses:
+        '200':
+          description: 'HTML: code, price and global Paywall; confirmation after paying.'
+        '429':
+          description: Limit of distinct codes; repeat after Retry-After.
+        '503':
+          description: Activation unavailable.
+      tags:
+      - Pay
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      description: ipt_… (guest); the account is a cookie, never a bearer
+    globalAccount:
+      type: apiKey
+      in: cookie
+      name: __Host-mm-auth
+      description: Global session in the product's HttpOnly cookie; writes require exact Origin and X-CSRF-Token.
+    contaChaveApi:
+      type: http
+      scheme: bearer
+      bearerFormat: mmk_…
+      description: 'Account API key: `Authorization: Bearer mmk_…` or `X-Api-Key: mmk_…`. Created on the account page (API keys), valid only in the product where it was created; it acts as the account (or the organization that owns it).'
+    carteiraAgente:
+      type: http
+      scheme: bearer
+      bearerFormat: mmw_…
+      description: 'Wallet credential of an agent without an account (`Authorization: Bearer mmw_…`, 30 days, this product only): POST /api/auth/wallet/agent/start, sign the message with the wallet, POST /api/auth/wallet/agent/token. The owner is `x402:<address>`.'
+x-service-info:
+  categories:
+  - tv-guide
+  - media
+  - directory
+  docs:
+    homepage: https://gradetv.net/
+    apiReference: https://gradetv.net/developers
+    llms: https://gradetv.net/llms.txt

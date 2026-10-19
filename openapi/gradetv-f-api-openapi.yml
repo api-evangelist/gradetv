@@ -1,8 +1,8 @@
 openapi: 3.2.0
 info:
-  title: Grade F API
-  version: dbad45cb
-  description: Catálogo IPTV, biblioteca pessoal com feeds e informações para produtores sobre transmissão autorizada sob consulta.
+  title: GradeTV F API
+  version: 1d751aaf
+  description: Find TV and radio, check the schedule and organize personal lists. Present authorized broadcast projects for evaluation, without activation.
 servers:
 - url: https://gradetv.net
 tags:
@@ -11,12 +11,12 @@ paths:
   /f/{token}/library.{formato}:
     get:
       operationId: get_f_by_token_library_formato
-      summary: Feed da biblioteca inteira do dono, no formato pedido pela extensão
-      description: 'É a URL que a pessoa cola no VLC. Não pede credencial: o token no caminho É a credencial, e quem tem o link tem o conteúdo — trate como segredo. As URLs saem prontas em `Biblioteca.feeds`, e cada pasta e sub-aba tem a sua.
+      summary: Feed of the owner's whole library, in the format that the extension requests
+      description: 'It is the URL that the person pastes in VLC. It asks for no credential: the token in the path IS the credential, and whoever has the link has the content; treat it as a secret. The URLs come ready in `Biblioteca.feeds`, and each folder and sub-tab has its own. Items with old positional IDs are recovered on read, while the same channel, feed and source stay available; there is no need to save again.
 
-        Devolve: `audio/x-mpegurl` (m3u/m3u8), `application/json` ou `application/xspf+xml`.
+        Returns: `audio/x-mpegurl` (m3u/m3u8), `application/json` or `application/xspf+xml`.
 
-        Item do YouTube fica fora do M3U e do XSPF (o VLC não toca) e vem no JSON com `kind: "youtube"`.'
+        A YouTube item stays out of the M3U and the XSPF (VLC does not play it) and comes in the JSON with `kind: "youtube"`.'
       security: []
       parameters:
       - name: token
@@ -24,25 +24,34 @@ paths:
         required: true
         schema:
           type: string
+        description: Feed token of the owner; it comes in `Biblioteca.feeds` and it is not the guest token.
+        example: k7m2p9r4t6v8w1y3z5b7c9d1
       - name: formato
         in: path
         required: true
         schema:
           type: string
+          enum:
+          - m3u
+          - m3u8
+          - json
+          - xspf
+        description: Extension that selects the output format.
+        example: m3u
       responses:
         '200':
-          description: '`audio/x-mpegurl` (m3u/m3u8), `application/json` ou `application/xspf+xml`.'
+          description: '`audio/x-mpegurl` (m3u/m3u8), `application/json` or `application/xspf+xml`.'
         '404':
-          description: Token de feed desconhecido.
+          description: Unknown feed token.
       tags:
       - F
   /f/{token}/c/{categoria}.{formato}:
     get:
       operationId: get_f_by_token_c_by_categoria_formato
-      summary: Feed de uma pasta da biblioteca, para assinar só aquele recorte
-      description: 'Devolve: `audio/x-mpegurl` (m3u/m3u8), `application/json` ou `application/xspf+xml`.
+      summary: Feed of one folder of the library, to subscribe only to that segment
+      description: 'Returns: `audio/x-mpegurl` (m3u/m3u8), `application/json` or `application/xspf+xml`.
 
-        Item do YouTube fica fora do M3U e do XSPF (o VLC não toca) e vem no JSON com `kind: "youtube"`.'
+        A YouTube item stays out of the M3U and the XSPF (VLC does not play it) and comes in the JSON with `kind: "youtube"`.'
       security: []
       parameters:
       - name: token
@@ -50,30 +59,41 @@ paths:
         required: true
         schema:
           type: string
+        description: Feed token of the owner, from `Biblioteca.feeds`.
+        example: k7m2p9r4t6v8w1y3z5b7c9d1
       - name: categoria
         in: path
         required: true
         schema:
           type: string
+        description: Folder slug, which comes in `PastaBiblioteca.slug`.
+        example: jornalismo
       - name: formato
         in: path
         required: true
         schema:
           type: string
+          enum:
+          - m3u
+          - m3u8
+          - json
+          - xspf
+        description: Extension that selects the output format.
+        example: m3u
       responses:
         '200':
-          description: '`audio/x-mpegurl` (m3u/m3u8), `application/json` ou `application/xspf+xml`.'
+          description: '`audio/x-mpegurl` (m3u/m3u8), `application/json` or `application/xspf+xml`.'
         '404':
-          description: Token de feed ou pasta desconhecidos.
+          description: Unknown feed token or folder.
       tags:
       - F
   /f/{token}/c/{categoria}/g/{grupo}.{formato}:
     get:
       operationId: get_f_by_token_c_by_categoria_g_by_grupo_formato
-      summary: Feed de uma sub-aba — o recorte mais fino que a galeria oferece
-      description: 'Devolve: `audio/x-mpegurl` (m3u/m3u8), `application/json` ou `application/xspf+xml`.
+      summary: 'Feed of a sub-tab: the finest segment that the gallery offers'
+      description: 'Returns: `audio/x-mpegurl` (m3u/m3u8), `application/json` or `application/xspf+xml`.
 
-        Item do YouTube fica fora do M3U e do XSPF (o VLC não toca) e vem no JSON com `kind: "youtube"`.'
+        A YouTube item stays out of the M3U and the XSPF (VLC does not play it) and comes in the JSON with `kind: "youtube"`.'
       security: []
       parameters:
       - name: token
@@ -81,26 +101,39 @@ paths:
         required: true
         schema:
           type: string
+        description: Feed token of the owner, from `Biblioteca.feeds`.
+        example: k7m2p9r4t6v8w1y3z5b7c9d1
       - name: categoria
         in: path
         required: true
         schema:
           type: string
+        description: Slug of the folder that contains the sub-tab.
+        example: noticias
       - name: grupo
         in: path
         required: true
         schema:
           type: string
+        description: Sub-tab slug, which comes in `SubAba.slug`.
+        example: manchete
       - name: formato
         in: path
         required: true
         schema:
           type: string
+          enum:
+          - m3u
+          - m3u8
+          - json
+          - xspf
+        description: Extension that selects the output format.
+        example: m3u
       responses:
         '200':
-          description: '`audio/x-mpegurl` (m3u/m3u8), `application/json` ou `application/xspf+xml`.'
+          description: '`audio/x-mpegurl` (m3u/m3u8), `application/json` or `application/xspf+xml`.'
         '404':
-          description: Token de feed, pasta ou sub-aba desconhecidos.
+          description: Unknown feed token, folder or sub-tab.
       tags:
       - F
 components:
@@ -108,4 +141,28 @@ components:
     bearerAuth:
       type: http
       scheme: bearer
-      description: ipt_… (guest) ou iptk_… (API key)
+      description: ipt_… (guest); the account is a cookie, never a bearer
+    globalAccount:
+      type: apiKey
+      in: cookie
+      name: __Host-mm-auth
+      description: Global session in the product's HttpOnly cookie; writes require exact Origin and X-CSRF-Token.
+    contaChaveApi:
+      type: http
+      scheme: bearer
+      bearerFormat: mmk_…
+      description: 'Account API key: `Authorization: Bearer mmk_…` or `X-Api-Key: mmk_…`. Created on the account page (API keys), valid only in the product where it was created; it acts as the account (or the organization that owns it).'
+    carteiraAgente:
+      type: http
+      scheme: bearer
+      bearerFormat: mmw_…
+      description: 'Wallet credential of an agent without an account (`Authorization: Bearer mmw_…`, 30 days, this product only): POST /api/auth/wallet/agent/start, sign the message with the wallet, POST /api/auth/wallet/agent/token. The owner is `x402:<address>`.'
+x-service-info:
+  categories:
+  - tv-guide
+  - media
+  - directory
+  docs:
+    homepage: https://gradetv.net/
+    apiReference: https://gradetv.net/developers
+    llms: https://gradetv.net/llms.txt

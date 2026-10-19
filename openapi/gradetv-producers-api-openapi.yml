@@ -1,8 +1,8 @@
 openapi: 3.2.0
 info:
-  title: Grade Producers API
-  version: dbad45cb
-  description: Catálogo IPTV, biblioteca pessoal com feeds e informações para produtores sobre transmissão autorizada sob consulta.
+  title: GradeTV Producers API
+  version: 1d751aaf
+  description: Find TV and radio, check the schedule and organize personal lists. Present authorized broadcast projects for evaluation, without activation.
 servers:
 - url: https://gradetv.net
 tags:
@@ -11,10 +11,10 @@ paths:
   /api/producers:
     get:
       operationId: producer_services
-      summary: Oferta sob consulta para produtores com conteúdo autorizado e canais de contato
-      description: 'Somente informações e captação de interesse. Não provisiona, não cobra e não ativa transmissão. Use contact.form_url no browser, contact.email por e-mail ou POST /api/contact para apresentar o projeto. O envio por API mantém o gate x402 ou crédito pré-pago; o formulário humano usa Turnstile.
+      summary: Offer on request for producers with authorized content, and contact channels
+      description: 'Information and interest capture only. It does not provision, charge or activate a broadcast. Use contact.form_url in the browser, contact.email by e-mail or POST /api/contact to present the project. Sending is open, with no captcha or payment, one message every 10 s per network.
 
-        Devolve: { status, activation_available, title, description, audience, services, requirements, availability, pricing, contact, _links }'
+        Returns: { status, activation_available, title, description, audience, services, requirements, availability, pricing, contact, _links }'
       security: []
       parameters:
       - name: lang
@@ -29,7 +29,8 @@ paths:
           - es
           - fr
           - de
-        description: 'Idioma da oferta: pt, en, es, fr ou de; ausente ou desconhecido volta a pt.'
+          - hu
+        description: 'Language of the offer: pt, en, es, fr, de or hu; missing or unknown falls back to pt.'
       responses:
         '200':
           description: '{ status, activation_available, title, description, audience, services, requirements, availability, pricing, contact, _links }'
@@ -40,39 +41,39 @@ paths:
                 properties:
                   status:
                     type: string
-                    description: '`sob_consulta`: proposta sujeita a avaliação individual.'
+                    description: '`sob_consulta`: a proposal subject to individual evaluation.'
                   activation_available:
                     type: boolean
-                    description: 'Sempre false: não há ativação de transmissão nesta superfície.'
+                    description: 'Always false: there is no broadcast activation on this surface.'
                   title:
                     type: string
-                    description: Nome da oferta no idioma solicitado.
+                    description: Offer name in the requested language.
                   description:
                     type: string
-                    description: Apresentação do serviço sob consulta.
+                    description: Presentation of the service on request.
                   audience:
                     type: string
-                    description: Perfil de produtores e organizações atendidos pela proposta.
+                    description: Profile of the producers and organizations that the proposal serves.
                   services:
                     type: array
                     items:
                       type: string
-                    description: Capacidades a avaliar no projeto, sem compromisso de disponibilidade.
+                    description: Capabilities to evaluate in the project, with no availability commitment.
                   requirements:
                     type: string
-                    description: Necessidade de autorização para sinal e obras, território e prazo.
+                    description: Need of authorization for the signal and the works, territory and term.
                   availability:
                     type: string
-                    description: Condição de avaliação antes de confirmar início e escopo.
+                    description: Evaluation condition before confirming the start and the scope.
                   pricing:
                     type: string
-                    description: Orçamento sob consulta; enviar interesse não contrata o serviço.
+                    description: Quote on request; sending interest does not hire the service.
                   contact:
                     type: object
-                    description: email, form_url e api_url absolutos, message_template e instructions para apresentar canal/evento, direitos, audiência, duração e data.
+                    description: Absolute email, form_url and api_url, message_template and instructions to present the channel/event, rights, audience, duration and date.
                   _links:
                     type: object
-                    description: 'self (esta API com idioma) e page (página da oferta): URLs absolutas.'
+                    description: 'self (this API with the language) and page (offer page): absolute URLs.'
                 required:
                 - status
                 - activation_available
@@ -86,7 +87,7 @@ paths:
                 - contact
                 - _links
         '405':
-          description: A oferta só aceita GET; não existe provisionamento por POST.
+          description: The offer accepts only GET; there is no provisioning by POST.
       tags:
       - Producers
 components:
@@ -94,4 +95,28 @@ components:
     bearerAuth:
       type: http
       scheme: bearer
-      description: ipt_… (guest) ou iptk_… (API key)
+      description: ipt_… (guest); the account is a cookie, never a bearer
+    globalAccount:
+      type: apiKey
+      in: cookie
+      name: __Host-mm-auth
+      description: Global session in the product's HttpOnly cookie; writes require exact Origin and X-CSRF-Token.
+    contaChaveApi:
+      type: http
+      scheme: bearer
+      bearerFormat: mmk_…
+      description: 'Account API key: `Authorization: Bearer mmk_…` or `X-Api-Key: mmk_…`. Created on the account page (API keys), valid only in the product where it was created; it acts as the account (or the organization that owns it).'
+    carteiraAgente:
+      type: http
+      scheme: bearer
+      bearerFormat: mmw_…
+      description: 'Wallet credential of an agent without an account (`Authorization: Bearer mmw_…`, 30 days, this product only): POST /api/auth/wallet/agent/start, sign the message with the wallet, POST /api/auth/wallet/agent/token. The owner is `x402:<address>`.'
+x-service-info:
+  categories:
+  - tv-guide
+  - media
+  - directory
+  docs:
+    homepage: https://gradetv.net/
+    apiReference: https://gradetv.net/developers
+    llms: https://gradetv.net/llms.txt

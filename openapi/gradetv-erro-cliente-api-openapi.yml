@@ -1,0 +1,98 @@
+openapi: 3.2.0
+info:
+  title: GradeTV Erro Cliente API
+  version: 1d751aaf
+  description: Find TV and radio, check the schedule and organize personal lists. Present authorized broadcast projects for evaluation, without activation.
+servers:
+- url: https://gradetv.net
+tags:
+- name: Erro Cliente
+paths:
+  /api/erro-cliente:
+    post:
+      operationId: post_api_erro_cliente
+      summary: Browser error report, sent by the interface itself.
+      description: 'The interface reports by itself JS errors, rejected promises, scripts or CSS that did not load and CSP blocks (once per session), and the app reports handled failures through `window.mmErro.relata`. The server validates the envelope, redacts credentials, e-mail and phone, groups repetitions of the same failure per minute and records an operational event; nothing is written to a database. It does not keep the IP, cookies, query or the full User-Agent. It always answers 204, also for an invalid report.
+
+        Returns: 204 with no body, always: an invalid, repeated or over-limit report also gets 204.'
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                code:
+                  type: string
+                  description: Failure code, `UI-` + letters/digits (`UI-JS-001` global error, `UI-PROMESSA-001`, `UI-RECURSO-001`, `UI-CSP-001`, `UI-APP-001` app report).
+                phase:
+                  type: string
+                  description: 'Phase where it broke, in lowercase: `global`, `promessa`, `script`, `carregar_lista`…'
+                path:
+                  type: string
+                  description: Path of the open page, without query; numbers, hashes and tokens in the path are stored as `:id`.
+                message:
+                  type: string
+                  description: Error message, up to 2000 characters.
+                stack:
+                  type: string
+                  description: Stack trace, up to 12000 characters.
+                source:
+                  type: string
+                  description: Source script; only the path is stored.
+                line:
+                  type: integer
+                  description: Line in the source script.
+                column:
+                  type: integer
+                  description: Column in the source script.
+                visivel:
+                  type: boolean
+                  description: Whether the tab was visible when it broke.
+                build:
+                  type: string
+                  description: Build of the page that reported (the `<meta name="build">`), up to 64 letters, digits, `.`, `_` or `-`; it dates the failure.
+              required:
+              - code
+              - phase
+            example:
+              code: UI-APP-001
+              phase: carregar_lista
+              path: /
+              message: lista 500
+      responses:
+        '200':
+          description: '204 with no body, always: an invalid, repeated or over-limit report also gets 204.'
+      tags:
+      - Erro Cliente
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      description: ipt_… (guest); the account is a cookie, never a bearer
+    globalAccount:
+      type: apiKey
+      in: cookie
+      name: __Host-mm-auth
+      description: Global session in the product's HttpOnly cookie; writes require exact Origin and X-CSRF-Token.
+    contaChaveApi:
+      type: http
+      scheme: bearer
+      bearerFormat: mmk_…
+      description: 'Account API key: `Authorization: Bearer mmk_…` or `X-Api-Key: mmk_…`. Created on the account page (API keys), valid only in the product where it was created; it acts as the account (or the organization that owns it).'
+    carteiraAgente:
+      type: http
+      scheme: bearer
+      bearerFormat: mmw_…
+      description: 'Wallet credential of an agent without an account (`Authorization: Bearer mmw_…`, 30 days, this product only): POST /api/auth/wallet/agent/start, sign the message with the wallet, POST /api/auth/wallet/agent/token. The owner is `x402:<address>`.'
+x-service-info:
+  categories:
+  - tv-guide
+  - media
+  - directory
+  docs:
+    homepage: https://gradetv.net/
+    apiReference: https://gradetv.net/developers
+    llms: https://gradetv.net/llms.txt

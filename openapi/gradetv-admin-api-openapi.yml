@@ -1,8 +1,8 @@
 openapi: 3.2.0
 info:
-  title: Grade Admin API
-  version: dbad45cb
-  description: Catálogo IPTV, biblioteca pessoal com feeds e informações para produtores sobre transmissão autorizada sob consulta.
+  title: GradeTV Admin API
+  version: 1d751aaf
+  description: Find TV and radio, check the schedule and organize personal lists. Present authorized broadcast projects for evaluation, without activation.
 servers:
 - url: https://gradetv.net
 tags:
@@ -11,10 +11,10 @@ paths:
   /api/admin/catalogo/estado:
     get:
       operationId: get_api_admin_catalogo_estado
-      summary: Contagens do catálogo no ar e do staging, mais o carimbo da última recarga
-      description: 'Credencial `CATALOGO_TOKEN`. É o que o serviço de recarga lê antes de começar e depois de trocar, para provar que o catálogo inteiro entrou.
+      summary: Counts of the live catalog and of the staging, plus the stamp of the last reload
+      description: '`CATALOGO_TOKEN` credential. Diagnosis of the published state.
 
-        Devolve: { live{channels,channels_fts,channels_fts_ids,streams,blocklist,facet_countries,facet_categories,facet_languages,facet_subdivisions,facet_cities}, staging{channels,channels_fts,channels_fts_ids,streams,blocklist,facet_countries,facet_categories,facet_languages,facet_subdivisions,facet_cities}, meta{synced_at,applied_at,dump_sha256,staging_run} }'
+        Returns: { live{channels,channels_fts,channels_fts_ids,streams,blocklist,facet_countries,facet_categories,facet_languages,facet_subdivisions,facet_cities}, staging{channels,channels_fts,channels_fts_ids,streams,blocklist,facet_countries,facet_categories,facet_languages,facet_subdivisions,facet_cities}, meta{synced_at,applied_at,dump_sha256,staging_run} }'
       security:
       - bearerAuth: []
       responses:
@@ -25,18 +25,18 @@ paths:
               schema:
                 $ref: '#/components/schemas/EstadoCatalogo'
         '401':
-          description: Sem credencial ou credencial inválida. Veja a auth deste endpoint.
+          description: No credential or invalid credential. See the auth of this endpoint.
         '503':
-          description: '`CATALOGO_TOKEN` não configurado no Worker: a recarga está desligada.'
+          description: '`CATALOGO_TOKEN` is not configured in the Worker: the reload is off.'
       tags:
       - Admin
   /api/admin/catalogo/slugs:
     get:
       operationId: get_api_admin_catalogo_slugs
-      summary: Slug publicado de cada canal, paginado por id — a recarga herda para não trocar…
-      description: 'Keyset por `id`: repita com `apos` = `next_after` até vir `null`. Sem herdar estes pares, o mesmo canal trocaria de slug a cada recarga.
+      summary: 'Published slug of each channel, paginated by ID: the reload inherits it so that…'
+      description: 'Keyset by `id`: repeat with `apos` = `next_after` until it comes as `null`.
 
-        Devolve: { items[{id,slug}], next_after }'
+        Returns: { items[{id,slug}], next_after }'
       security:
       - bearerAuth: []
       parameters:
@@ -45,14 +45,14 @@ paths:
         required: false
         schema:
           type: string
-        description: 'Cursor: devolve só ids maiores que este (o `next_after` da página anterior).'
+        description: 'Cursor: it returns only IDs greater than this one (the `next_after` of the previous page).'
         example: GloboRJ.br
       - name: limit
         in: query
         required: false
         schema:
           type: integer
-        description: Tamanho da página; teto de 5000.
+        description: Page size; cap of 5000.
         example: 5000
       responses:
         '200':
@@ -62,108 +62,54 @@ paths:
               schema:
                 $ref: '#/components/schemas/SlugsPublicados'
         '401':
-          description: Sem credencial ou credencial inválida. Veja a auth deste endpoint.
+          description: No credential or invalid credential. See the auth of this endpoint.
         '503':
-          description: Recarga desligada (sem `CATALOGO_TOKEN`).
+          description: Reload off (without `CATALOGO_TOKEN`).
       tags:
       - Admin
   /api/admin/catalogo/inicio:
     post:
       operationId: post_api_admin_catalogo_inicio
-      summary: 'Abre o staging da recarga: as tabelas `*_novo` nascem vazias e o que sobrou de…'
-      description: 'Não toca no catálogo que está servindo. Grava `recarga_id` em `catalog_meta.staging_run`; é ele que os lotes e a troca têm que repetir.
+      summary: Opening staging was retired and answers 410
+      description: 'No body reactivates staging, deletes data or recreates indexes. The load accepts only a difference with a budget; a lost state requires an explicit restore.
 
-        Devolve: { ok, recarga_id, staging{channels,channels_fts,channels_fts_ids,streams,blocklist,facet_countries,facet_categories,facet_languages,facet_subdivisions,facet_cities} }'
+        Returns: 410 `recarga_completa_bloqueada`, after authentication.'
       security:
       - bearerAuth: []
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                recarga_id:
-                  type: string
-                  description: Identificador desta execução (4–64 de `[A-Za-z0-9._-]`); lote e troca só valem para a recarga que abriu o staging.
-              required:
-              - recarga_id
-            example:
-              recarga_id: 2026-09-02T09-20-00Z
       responses:
         '200':
-          description: '{ ok, recarga_id, staging{channels,channels_fts,channels_fts_ids,streams,blocklist,facet_countries,facet_categories,facet_languages,facet_subdivisions,facet_cities} }'
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/InicioRecarga'
-        '400':
-          description: '`recarga_id` ausente ou fora do formato.'
+          description: 410 `recarga_completa_bloqueada`, after authentication.
         '401':
-          description: Sem credencial ou credencial inválida. Veja a auth deste endpoint.
+          description: No credential or invalid credential. See the auth of this endpoint.
+        '410':
+          description: 'Always: protocol retired.'
       tags:
       - Admin
   /api/admin/catalogo/lote:
     post:
       operationId: post_api_admin_catalogo_lote
-      summary: Grava até 1000 linhas de UMA tabela no staging, num batch com no máximo 100…
-      description: 'Idempotente nas tabelas com chave (`INSERT OR IGNORE`): reenviar um lote que o cliente não sabe se chegou não vira erro. As colunas são as do `schema.sql`; chave ausente numa linha reprova o lote inteiro.
+      summary: Sending a batch to staging was retired and answers 410
+      description: 'No body reactivates staging, deletes data or recreates indexes. The load accepts only a difference with a budget; a lost state requires an explicit restore.
 
-        Devolve: { ok, tabela, recebidas, gravadas }'
+        Returns: 410 `recarga_completa_bloqueada`, after authentication.'
       security:
       - bearerAuth: []
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                recarga_id:
-                  type: string
-                  description: Identificador desta execução (4–64 de `[A-Za-z0-9._-]`); lote e troca só valem para a recarga que abriu o staging.
-                tabela:
-                  type: string
-                  description: Uma de `channels`, `channels_fts`, `streams`, `blocklist`, `facet_countries`, `facet_categories`, `facet_languages`, `facet_subdivisions`, `facet_cities`.
-                linhas:
-                  type: array
-                  items:
-                    type: object
-                  description: Objetos com as colunas da tabela; coluna faltando entra com o DEFAULT do schema (ou `NULL` se for nula). Teto de 1000 por pedido.
-              required:
-              - recarga_id
-              - tabela
-              - linhas
-            example:
-              recarga_id: 2026-09-02T09-20-00Z
-              tabela: facet_countries
-              linhas:
-              - code: BR
-                name: Brazil
       responses:
         '200':
-          description: '{ ok, tabela, recebidas, gravadas }'
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/LoteGravado'
-        '400':
-          description: Tabela desconhecida, `linhas` vazia ou linha sem coluna obrigatória (o índice vem na mensagem).
+          description: 410 `recarga_completa_bloqueada`, after authentication.
         '401':
-          description: Sem credencial ou credencial inválida. Veja a auth deste endpoint.
-        '409':
-          description: O staging aberto pertence a outra `recarga_id`.
-        '413':
-          description: Mais de 1000 linhas num pedido.
+          description: No credential or invalid credential. See the auth of this endpoint.
+        '410':
+          description: 'Always: protocol retired.'
       tags:
       - Admin
   /api/admin/guia/lote:
     post:
       operationId: post_api_admin_guia_lote
-      summary: Grava o dia de programação de até 500 canais em `guia_dia` (INSERT OR REPLACE)
-      description: 'É o que o grabber do c3 (`services/grade-guia`, iptv-org/epg) manda depois de ler os sites de programação. Mesma credencial da recarga. Um canal por linha; programas fora de ordem são ordenados, sem título ou invertidos caem fora; JSON do canal acima de 64 KB recusa o pedido com o índice.
+      summary: Records the schedule day of up to 500 channels in `guia_dia` (INSERT OR REPLACE)
+      description: 'Publishing is restricted to the operations credential. One channel per line; programs out of order are sorted, and programs without a title or with inverted times are dropped; a channel JSON above 128 KiB refuses the request with the index.
 
-        Devolve: { ok, day, gravados }'
+        Returns: { ok, day, gravados }'
       security:
       - bearerAuth: []
       requestBody:
@@ -180,7 +126,7 @@ paths:
                   type: array
                   items:
                     type: object
-                  description: '`{ channel_id, site, programas: [{ inicio, fim, titulo, desc?, categoria? }] }`, instantes ISO 8601. Teto de 500 por pedido.'
+                  description: '`{ channel_id, site, programas: [{ inicio, fim, titulo, desc?, categoria? }] }`, ISO 8601 instants. Cap of 500 per request.'
               required:
               - day
               - canais
@@ -188,7 +134,7 @@ paths:
               day: '2026-09-04'
               canais:
               - channel_id: RecordNews.br
-                site: mi.tv
+                site: programacao.example
                 programas:
                 - inicio: '2026-09-04T09:00:00Z'
                   fim: '2026-09-04T10:00:00Z'
@@ -201,20 +147,20 @@ paths:
               schema:
                 $ref: '#/components/schemas/GuiaLoteGravado'
         '400':
-          description: '`day` torto, `canais` vazia ou canal inválido (o índice e o motivo vêm na mensagem).'
+          description: Malformed `day`, empty `canais` or an invalid channel (the index and the reason come in the message).
         '401':
-          description: Sem credencial ou credencial inválida. Veja a auth deste endpoint.
+          description: No credential or invalid credential. See the auth of this endpoint.
         '413':
-          description: Mais de 500 canais num pedido.
+          description: More than 500 channels in one request.
       tags:
       - Admin
   /api/admin/guia/fim:
     post:
       operationId: post_api_admin_guia_fim
-      summary: Registra a fonte `guia` em `catalog_meta.fontes`, ao lado das fontes do catálogo
-      description: 'Fecha a rodada do grabber: `fetched_at`, `itens` (canais, sites, programas…), `stale`, `ausente`. É o que `GET /api/health` mostra em `sources.guia` (limite de 2 dias) e o que o smoke cobra quando a fonte está fresca.
+      summary: Records the `guia` source in `catalog_meta.fontes`, next to the catalog sources
+      description: 'Closes the grabber round: `fetched_at`, `itens` (channels, sites, programs…), `stale`, `ausente`. It is what `GET /api/health` shows in `sources.guia` (limit of 2 days) and what the smoke test requires when the source is fresh.
 
-        Devolve: { ok, guia }'
+        Returns: { ok, guia }'
       security:
       - bearerAuth: []
       requestBody:
@@ -226,7 +172,7 @@ paths:
               properties:
                 registro:
                   type: object
-                  description: 'O mesmo formato de `fontes` da troca: `fetched_at`, `sha256` (pode ser nulo), `itens`, `stale`, `ausente`, `motivo`.'
+                  description: 'The same `fontes` format as the swap: `fetched_at`, `sha256` (can be null), `itens`, `stale`, `ausente`, `motivo`.'
               required:
               - registro
             example:
@@ -246,18 +192,18 @@ paths:
               schema:
                 $ref: '#/components/schemas/GuiaRegistrada'
         '400':
-          description: Registro com campo de tipo errado.
+          description: Record with a field of the wrong type.
         '401':
-          description: Sem credencial ou credencial inválida. Veja a auth deste endpoint.
+          description: No credential or invalid credential. See the auth of this endpoint.
       tags:
       - Admin
   /api/admin/logos/mortas:
     get:
       operationId: get_api_admin_logos_mortas
-      summary: Canais de TV cuja origem de logo morreu (o cron já falhou ao buscá-la) e ainda…
-      description: 'É a lista que `npm run logos:tvlogos` casa com o tv-logos, só por slug exato `[nome]-[cc].png`. Logo de terceiro nunca vai por cima de origem boa.
+      summary: TV channels whose logo origin died (the cron already failed to fetch it) and…
+      description: 'Lookup restricted to operations, to identify unavailable logos.
 
-        Devolve: { items, limit }'
+        Returns: { items, limit }'
       security:
       - bearerAuth: []
       parameters:
@@ -267,7 +213,7 @@ paths:
         schema:
           type: integer
           default: 2000
-        description: Quantos canais devolver (teto 5000).
+        description: How many channels to return (limit 5000).
       responses:
         '200':
           description: '{ items, limit }'
@@ -276,16 +222,16 @@ paths:
               schema:
                 $ref: '#/components/schemas/LogosMortas'
         '401':
-          description: Sem credencial ou credencial inválida. Veja a auth deste endpoint.
+          description: No credential or invalid credential. See the auth of this endpoint.
       tags:
       - Admin
   /api/admin/logos/overrides:
     post:
       operationId: post_api_admin_logos_overrides
-      summary: 'Grava overrides de logo (`logo_overrides`, INSERT OR REPLACE): a ficha passa a…'
-      description: 'Só https. Sobrevive à recarga (a tabela fica fora da troca). O crédito da fonte sai em `/sobre`.
+      summary: Updates the logo shown in the channel record
+      description: 'Only https. It survives the reload (the table stays out of the swap). The source attribution appears at `/sobre`.
 
-        Devolve: { ok, fonte, gravados }'
+        Returns: { ok, fonte, gravados }'
       security:
       - bearerAuth: []
       requestBody:
@@ -297,20 +243,20 @@ paths:
               properties:
                 fonte:
                   type: string
-                  description: Nome da fonte, ex. `tv-logos`.
+                  description: Identifier for attribution.
                 itens:
                   type: array
                   items:
                     type: object
-                  description: '`{ channel_id, url }`; teto de 500 por pedido.'
+                  description: '`{ channel_id, url }`; cap of 500 per request.'
               required:
               - fonte
               - itens
             example:
-              fonte: tv-logos
+              fonte: licenciante
               itens:
               - channel_id: BandNews.br
-                url: https://raw.githubusercontent.com/tv-logo/tv-logos/main/countries/brazil/band-news-br.png
+                url: https://logos.example/canal.png
       responses:
         '200':
           description: '{ ok, fonte, gravados }'
@@ -319,74 +265,38 @@ paths:
               schema:
                 $ref: '#/components/schemas/OverridesGravados'
         '400':
-          description: '`fonte` torta, lista vazia ou item sem `channel_id`/https (o índice vem na mensagem).'
+          description: Malformed `fonte`, empty list or an item without `channel_id`/https (the index comes in the message).
         '401':
-          description: Sem credencial ou credencial inválida. Veja a auth deste endpoint.
+          description: No credential or invalid credential. See the auth of this endpoint.
         '413':
-          description: Mais de 500 itens.
+          description: More than 500 items.
       tags:
       - Admin
   /api/admin/catalogo/troca:
     post:
       operationId: post_api_admin_catalogo_troca
-      summary: 'Confere o staging e troca o catálogo inteiro num único batch: ou tudo entra, ou…'
-      description: 'Antes de trocar: contagem por tabela igual a `esperado`, coleira (zero canal, zero stream, zero tocável ou menos da metade do que está no ar recusa), nenhum slug publicado trocado, nenhum stream órfão. A troca derruba as tabelas velhas, renomeia as novas, recria os índices e grava `synced_at` — no mesmo batch.
+      summary: The full catalog swap was retired and answers 410
+      description: 'No body reactivates staging, deletes data or recreates indexes. The load accepts only a difference with a budget; a lost state requires an explicit restore.
 
-        Devolve: { ok, recarga_id, antes{channels,channels_fts,channels_fts_ids,streams,blocklist,facet_countries,facet_categories,facet_languages,facet_subdivisions,facet_cities}, depois{channels,channels_fts,channels_fts_ids,streams,blocklist,facet_countries,facet_categories,facet_languages,facet_subdivisions,facet_cities}, synced_at }'
+        Returns: 410 `recarga_completa_bloqueada`, after authentication.'
       security:
       - bearerAuth: []
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                recarga_id:
-                  type: string
-                  description: Identificador desta execução (4–64 de `[A-Za-z0-9._-]`); lote e troca só valem para a recarga que abriu o staging.
-                esperado:
-                  type: object
-                  description: Tabela → quantas linhas o cliente mandou (`channels_fts` conta ids distintos). Diferença é lote perdido.
-                dump_sha256:
-                  type: string
-                  description: SHA-256 do dump da iptv-org que gerou este catálogo; fica em `catalog_meta`.
-                origem:
-                  type: string
-                  description: 'Quem recarregou (ex.: `c3/grade-catalogo`), para o relatório guardado.'
-              required:
-              - recarga_id
-              - esperado
-            example:
-              recarga_id: 2026-09-02T09-20-00Z
-              esperado:
-                channels: 31000
-                channels_fts: 31000
-                streams: 17000
-              dump_sha256: …
-              origem: c3/grade-catalogo
       responses:
         '200':
-          description: '{ ok, recarga_id, antes{channels,channels_fts,channels_fts_ids,streams,blocklist,facet_countries,facet_categories,facet_languages,facet_subdivisions,facet_cities}, depois{channels,channels_fts,channels_fts_ids,streams,blocklist,facet_countries,facet_categories,facet_languages,facet_subdivisions,facet_cities}, synced_at }'
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/RelatorioTroca'
-        '400':
-          description: '`recarga_id` ou `esperado` ausente.'
+          description: 410 `recarga_completa_bloqueada`, after authentication.
         '401':
-          description: Sem credencial ou credencial inválida. Veja a auth deste endpoint.
-        '409':
-          description: '`recarga_divergente` (staging de outra execução) ou `staging_invalido` — a resposta lista `problemas[]` e o catálogo no ar não mudou.'
+          description: No credential or invalid credential. See the auth of this endpoint.
+        '410':
+          description: 'Always: protocol retired.'
       tags:
       - Admin
   /api/admin/catalogo/delta/inicio:
     post:
       operationId: post_api_admin_catalogo_delta_inicio
-      summary: 'Abre a recarga por diferença: coleira contra o catálogo no ar e a marca da…'
-      description: 'A mesma coleira da troca, antes de tocar em qualquer linha: zero canal, zero stream, zero tocável ou menos da metade do que está no ar recusa (409, `delta_recusado`). Passou, `recarga_id` fica em `catalog_meta.staging_run` e a sobra de staging de execução interrompida cai.
+      summary: 'Opens the differential reload: guard against the live catalog and the run mark'
+      description: 'The same guard as the swap, before touching any row: zero channels, zero streams, zero playable or less than half of what is live is refused (409, `delta_recusado`). Leftover staging is refused and the data is kept. `recarga_id` stays in `catalog_meta.staging_run`. Start, batches and end share a cap of 100 thousand rows written per UTC day, including indexes and control; an atomic CHECK refuses before the effect.
 
-        Devolve: { ok, recarga_id, live{channels,channels_fts,channels_fts_ids,streams,blocklist,facet_countries,facet_categories,facet_languages,facet_subdivisions,facet_cities} }'
+        Returns: { ok, recarga_id, live{channels,channels_fts,channels_fts_ids,streams,blocklist,facet_countries,facet_categories,facet_languages,facet_subdivisions,facet_cities} }'
       security:
       - bearerAuth: []
       requestBody:
@@ -398,10 +308,10 @@ paths:
               properties:
                 recarga_id:
                   type: string
-                  description: Identificador desta execução (4–64 de `[A-Za-z0-9._-]`); os pedidos seguintes só valem para a recarga que abriu.
+                  description: Identifier of this run (4–64 of `[A-Za-z0-9._-]`); the next requests apply only to the reload that it opened.
                 esperado:
                   type: object
-                  description: Tabela → quantas linhas o catálogo INTEIRO terá depois da diferença (`channels_fts` conta ids distintos), mais `playable` (canais de TV tocáveis). É o que o fim confere contra o ar.
+                  description: Table → how many rows the WHOLE catalog will have after the difference (`channels_fts` counts distinct IDs), plus `playable` (playable TV channels). It is what the end checks against the live catalog.
               required:
               - recarga_id
               - esperado
@@ -420,20 +330,22 @@ paths:
               schema:
                 $ref: '#/components/schemas/DeltaAberto'
         '400':
-          description: '`recarga_id` fora do formato ou `esperado` ausente.'
+          description: '`recarga_id` out of format or missing `esperado`.'
         '401':
-          description: Sem credencial ou credencial inválida. Veja a auth deste endpoint.
+          description: No credential or invalid credential. See the auth of this endpoint.
         '409':
-          description: '`delta_recusado`: a resposta lista `problemas[]` e o catálogo no ar não mudou.'
+          description: '`delta_recusado`: the answer lists `problemas[]` and the live catalog did not change.'
+        '429':
+          description: '`orcamento`: insufficient daily budget; keep the pending difference and resume in another round.'
       tags:
       - Admin
   /api/admin/catalogo/delta:
     post:
       operationId: post_api_admin_catalogo_delta
-      summary: 'Aplica no catálogo vivo, num batch, até 1000 linhas de UMA tabela: `upsert`…'
-      description: '`INSERT … ON CONFLICT DO UPDATE` coluna a coluna — menos a chave e o `slug`, que é do produto (URL indexada não muda). Na FTS os ids são apagados e reinseridos. Reenviar é seguro. Ordem é do cliente: `channels` antes de `streams` nas entradas, o inverso nas remoções (FK).
+      summary: 'Applies up to 50 rows of ONE table: `upsert` for entries, `alterar` for…'
+      description: '`INSERT … ON CONFLICT DO UPDATE` column by column, except the key and the `slug`, which belongs to the product (an indexed URL does not change). `alterar` carries only modified columns, without key/slug or FTS. Equal values are not written again; FTS deletes/reinserts only changed text. Keep the full receipt to follow the progress. The reservation includes indexes, and D1 `rows_written` returns only the measured excess. The order is the client''s: `channels` before `streams` for entries, the reverse for removals (FK).
 
-        Devolve: { ok, tabela, recebidas, gravadas, removidas }'
+        Returns: { ok, tabela, recebidas, removidas_pedidas, gravadas, removidas }'
       security:
       - bearerAuth: []
       requestBody:
@@ -445,20 +357,25 @@ paths:
               properties:
                 recarga_id:
                   type: string
-                  description: Identificador desta execução (4–64 de `[A-Za-z0-9._-]`); os pedidos seguintes só valem para a recarga que abriu.
+                  description: Identifier of this run (4–64 of `[A-Za-z0-9._-]`); the next requests apply only to the reload that it opened.
                 tabela:
                   type: string
-                  description: Uma de `channels`, `channels_fts`, `streams`, `blocklist`, `facet_countries`, `facet_categories`, `facet_languages`, `facet_subdivisions`, `facet_cities`.
+                  description: One of `channels`, `channels_fts`, `streams`, `blocklist`, `facet_countries`, `facet_categories`, `facet_languages`, `facet_subdivisions`, `facet_cities`.
                 upsert:
                   type: array
                   items:
                     type: object
-                  description: Linhas com as colunas da tabela; coluna faltando entra com o DEFAULT do schema. Pode ser vazia.
+                  description: Rows with the table columns; a missing column enters with the schema DEFAULT. It can be empty.
+                alterar:
+                  type: array
+                  items:
+                    type: object
+                  description: '`{ chave, valores: { coluna: valor } }`: only changed columns, with null, a string or a finite number. It does not accept key, slug or FTS.'
                 remover:
                   type: array
                   items:
                     type: string
-                  description: Chaves (`id`, `code` ou `channel_id`, conforme a tabela) a apagar. Pode ser vazia.
+                  description: Keys (`id`, `code` or `channel_id`, according to the table) to delete. It can be empty.
               required:
               - recarga_id
               - tabela
@@ -472,28 +389,30 @@ paths:
               - XX
       responses:
         '200':
-          description: '{ ok, tabela, recebidas, gravadas, removidas }'
+          description: '{ ok, tabela, recebidas, removidas_pedidas, gravadas, removidas }'
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/DeltaAplicado'
         '400':
-          description: Tabela desconhecida, listas ausentes ou as duas vazias, linha sem chave, chave inválida.
+          description: Unknown table, missing lists or both empty, a row without a key, or an invalid key.
         '401':
-          description: Sem credencial ou credencial inválida. Veja a auth deste endpoint.
+          description: No credential or invalid credential. See the auth of this endpoint.
         '409':
-          description: '`recarga_divergente`: a execução aberta é outra; chame `/delta/inicio`.'
+          description: '`recarga_divergente`: the open run is another one; call `/delta/inicio`.'
         '413':
-          description: Mais de 1000 linhas (`upsert` + `remover`).
+          description: More than 50 rows (`upsert` + `alterar` + `remover`) or an FTS text field above 4 KiB.
+        '429':
+          description: '`orcamento`: insufficient daily budget; keep the pending difference and resume in another round.'
       tags:
       - Admin
   /api/admin/catalogo/delta/fim:
     post:
       operationId: post_api_admin_catalogo_delta_fim
-      summary: Confere o catálogo inteiro contra `esperado` e grava o carimbo (`synced_at`)…
-      description: 'Contagem por tabela igual a `esperado`, um id na FTS por canal, nenhum stream órfão, nenhum canal sem slug. Diferente disso é 409 (`delta_invalido`) sem carimbo: o serviço apaga o último envio e a próxima recarga é completa. O registro por fonte (`fontes`) e o `dump_sha256` ficam em `catalog_meta`, como na troca.
+      summary: Checks the whole catalog against `esperado` and records the stamp…
+      description: 'Count per table equal to `esperado`, one ID in the FTS per channel, no orphan stream, no channel without a slug. Anything else is 409 (`delta_invalido`) without a stamp: the accepted batches stay confirmed and the full reload stays blocked. The record per source (`fontes`) and the `dump_sha256` stay in `catalog_meta`, as in the swap.
 
-        Devolve: { ok, recarga_id, depois{channels,channels_fts,channels_fts_ids,streams,blocklist,facet_countries,facet_categories,facet_languages,facet_subdivisions,facet_cities}, synced_at }'
+        Returns: { ok, recarga_id, depois{channels,channels_fts,channels_fts_ids,streams,blocklist,facet_countries,facet_categories,facet_languages,facet_subdivisions,facet_cities}, synced_at }'
       security:
       - bearerAuth: []
       requestBody:
@@ -505,19 +424,19 @@ paths:
               properties:
                 recarga_id:
                   type: string
-                  description: Identificador desta execução (4–64 de `[A-Za-z0-9._-]`); os pedidos seguintes só valem para a recarga que abriu.
+                  description: Identifier of this run (4–64 of `[A-Za-z0-9._-]`); the next requests apply only to the reload that it opened.
                 esperado:
                   type: object
-                  description: Tabela → quantas linhas o catálogo INTEIRO terá depois da diferença (`channels_fts` conta ids distintos), mais `playable` (canais de TV tocáveis). É o que o fim confere contra o ar.
+                  description: Table → how many rows the WHOLE catalog will have after the difference (`channels_fts` counts distinct IDs), plus `playable` (playable TV channels). It is what the end checks against the live catalog.
                 dump_sha256:
                   type: string
-                  description: SHA-256 do dump da iptv-org que gerou este catálogo.
+                  description: SHA-256 of the dataset that generated this catalog.
                 origem:
                   type: string
-                  description: 'Quem recarregou (ex.: `c3/grade-catalogo`), para o relatório guardado.'
+                  description: 'Who reloaded (e.g.: `operacao`), for the stored report.'
                 resumo:
                   type: object
-                  description: Contagens da diferença (`upsert`, `remover`, `refresh`, `iguais`), só para o relatório.
+                  description: Counts of the difference (`upsert`, `remover`, `refresh`, `iguais`), only for the report.
               required:
               - recarga_id
               - esperado
@@ -529,7 +448,7 @@ paths:
                 streams: 80734
                 playable: 9400
               dump_sha256: …
-              origem: c3/grade-catalogo
+              origem: operacao
               resumo:
                 upsert: 41200
                 remover: 310
@@ -543,11 +462,13 @@ paths:
               schema:
                 $ref: '#/components/schemas/RelatorioDelta'
         '400':
-          description: '`recarga_id`, `esperado` ou `fontes` inválidos.'
+          description: Invalid `recarga_id`, `esperado` or `fontes`.
         '401':
-          description: Sem credencial ou credencial inválida. Veja a auth deste endpoint.
+          description: No credential or invalid credential. See the auth of this endpoint.
         '409':
-          description: '`recarga_divergente` (outra execução) ou `delta_invalido` — a resposta lista `problemas[]` e o carimbo não foi gravado.'
+          description: '`recarga_divergente` (another run) or `delta_invalido`: the answer lists `problemas[]` and the stamp was not recorded.'
+        '429':
+          description: '`orcamento`: insufficient daily budget; keep the pending difference and resume in another round.'
       tags:
       - Admin
 components:
@@ -557,127 +478,121 @@ components:
       properties:
         id:
           type: string
-          description: 'Id do canal na iptv-org (ex.: `GloboRJ.br`).'
+          description: 'Channel ID in the catalog (e.g.: `GloboRJ.br`).'
         slug:
           type: string
-          description: Slug publicado; a troca recusa staging em que este id venha com outro.
+          description: Published slug; the swap refuses a staging where this ID comes with another one.
       required:
       - id
       - slug
-      description: 'O par que a recarga herda: id estável da iptv-org → slug já publicado.'
-    DeltaAberto:
+      description: 'The pair that the reload inherits: stable channel ID → slug already published.'
+    ContagemCatalogo:
       type: object
       properties:
-        ok:
-          type: boolean
-          description: Sempre `true`; recusa vem como 409 com `problemas[]`.
-        recarga_id:
-          type: string
-          description: A execução aberta — os pedidos seguintes repetem.
-        live:
-          allOf:
-          - $ref: '#/components/schemas/ContagemCatalogo'
-          description: O catálogo no ar, antes da diferença.
+        channels:
+          type: integer
+          description: Channels (rows of `channels`).
+        channels_fts:
+          type: integer
+          description: Rows of the search index (`channels_fts`).
+        channels_fts_ids:
+          type: integer
+          description: Distinct IDs in the search index; the swap requires it to equal `channels`.
+        streams:
+          type: integer
+          description: Streams (rows of `streams`).
+        blocklist:
+          type: integer
+          description: Blocked channels (DMCA), which stay out of the catalog.
+        facet_countries:
+          type: integer
+          description: Countries in the facet.
+        facet_categories:
+          type: integer
+          description: Categories in the facet.
+        facet_languages:
+          type: integer
+          description: Languages in the facet (full ISO 639-3).
+        facet_subdivisions:
+          type: integer
+          description: States and subdivisions in the facet.
+        facet_cities:
+          type: integer
+          description: Cities in the facet.
       required:
-      - ok
-      - recarga_id
-      - live
-      description: A recarga por diferença passou pela coleira e está marcada; nada mudou no ar ainda.
+      - channels
+      - channels_fts
+      - channels_fts_ids
+      - streams
+      - blocklist
+      - facet_countries
+      - facet_categories
+      - facet_languages
+      - facet_subdivisions
+      - facet_cities
+      description: How many rows each catalog table has, live or in staging.
     GuiaLoteGravado:
       type: object
       properties:
         ok:
           type: boolean
-          description: Sempre `true`; lote recusado vem como 4xx.
+          description: Always `true`; a refused batch comes back as 4xx.
         day:
           type: string
           description: O dia gravado.
         gravados:
           type: integer
-          description: 'Canais que entraram (INSERT OR REPLACE: reenviar não duplica).'
+          description: 'Channels that entered (INSERT OR REPLACE: resending does not duplicate).'
       required:
       - ok
       - day
       - gravados
-      description: Resultado de um lote da guia.
-    RelatorioDelta:
+      description: Result of a guide batch.
+    DeltaAplicado:
       type: object
       properties:
         ok:
           type: boolean
-          description: Sempre `true`; conferência que falha vem como 409 com `problemas[]`.
-        recarga_id:
+          description: Always `true`; a refused request comes back as 4xx.
+        tabela:
           type: string
-          description: A recarga que entrou no ar.
-        depois:
-          allOf:
-          - $ref: '#/components/schemas/ContagemCatalogo'
-          description: O catálogo que está servindo agora.
-        synced_at:
-          type: string
-          description: O `synced_at` gravado no mesmo batch do fechamento.
+          description: A tabela tocada.
+        recebidas:
+          type: integer
+          description: Sum of the accepted `upsert` and `alterar` rows.
+        removidas_pedidas:
+          type: integer
+          description: Accepted removal keys, including the ones already missing.
+        gravadas:
+          type: integer
+          description: Rows that went in or were updated (in the FTS, counting the deleted ids).
+        removidas:
+          type: integer
+          description: Linhas apagadas por `remover`.
       required:
       - ok
-      - recarga_id
-      - depois
-      - synced_at
-      description: 'A diferença fechou: o catálogo inteiro bateu com `esperado` e o carimbo foi gravado.'
-    GuiaRegistrada:
+      - tabela
+      - recebidas
+      - removidas_pedidas
+      - gravadas
+      - removidas
+      description: A difference request entered the live catalog, in one batch.
+    SlugsPublicados:
       type: object
       properties:
-        ok:
-          type: boolean
-          description: Sempre `true`.
-        guia:
-          type: object
-          description: 'O registro normalizado: `fetched_at`, `itens`, `stale`, `ausente`…'
-      required:
-      - ok
-      - guia
-      description: A fonte `guia` como ficou em `catalog_meta.fontes`.
-    MetaCatalogo:
-      type: object
-      properties:
-        synced_at:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/SlugPublicado'
+          description: The pairs of this page.
+        next_after:
           type: string
-          description: Instante (ISO-8601) da última troca bem-sucedida; é o que `/api/health` compara com o limite de 2 dias.
-          nullable: true
-        applied_at:
-          type: string
-          description: Instante em que o catálogo novo entrou no ar.
-          nullable: true
-        dump_sha256:
-          type: string
-          description: SHA-256 do dump da iptv-org que gerou o catálogo no ar.
-          nullable: true
-        staging_run:
-          type: string
-          description: '`recarga_id` da execução com staging aberto agora; `null` sem staging.'
+          description: Pass it in `apos` for the next page; `null` when it ended.
           nullable: true
       required:
-      - synced_at
-      - applied_at
-      - dump_sha256
-      - staging_run
-      description: Os carimbos da recarga, lidos de `catalog_meta`.
-    InicioRecarga:
-      type: object
-      properties:
-        ok:
-          type: boolean
-          description: Sempre `true`; falha vem como 4xx/5xx.
-        recarga_id:
-          type: string
-          description: O identificador que os lotes e a troca têm que repetir.
-        staging:
-          allOf:
-          - $ref: '#/components/schemas/ContagemCatalogo'
-          description: As contagens do staging recém-criado (todas zero).
-      required:
-      - ok
-      - recarga_id
-      - staging
-      description: Staging aberto e vazio.
+      - items
+      - next_after
+      description: Page of published slugs, in ID order.
     LogosMortas:
       type: object
       properties:
@@ -692,182 +607,149 @@ components:
       required:
       - items
       - limit
-      description: Canais com origem de logo morta, para o script de overrides casar.
-    ContagemCatalogo:
-      type: object
-      properties:
-        channels:
-          type: integer
-          description: Canais (linhas de `channels`).
-        channels_fts:
-          type: integer
-          description: Linhas do índice de busca (`channels_fts`).
-        channels_fts_ids:
-          type: integer
-          description: Ids distintos no índice de busca; a troca exige que seja igual a `channels`.
-        streams:
-          type: integer
-          description: Streams (linhas de `streams`).
-        blocklist:
-          type: integer
-          description: Canais bloqueados (DMCA), que ficam fora do catálogo.
-        facet_countries:
-          type: integer
-          description: Países na faceta.
-        facet_categories:
-          type: integer
-          description: Categorias na faceta.
-        facet_languages:
-          type: integer
-          description: Idiomas na faceta (ISO 639-3 inteiro).
-        facet_subdivisions:
-          type: integer
-          description: Estados e subdivisões na faceta.
-        facet_cities:
-          type: integer
-          description: Cidades na faceta.
-      required:
-      - channels
-      - channels_fts
-      - channels_fts_ids
-      - streams
-      - blocklist
-      - facet_countries
-      - facet_categories
-      - facet_languages
-      - facet_subdivisions
-      - facet_cities
-      description: Quantas linhas cada tabela do catálogo tem — no ar ou no staging.
-    SlugsPublicados:
-      type: object
-      properties:
-        items:
-          type: array
-          items:
-            $ref: '#/components/schemas/SlugPublicado'
-          description: Os pares desta página.
-        next_after:
-          type: string
-          description: Passe em `apos` para a próxima página; `null` quando acabou.
-          nullable: true
-      required:
-      - items
-      - next_after
-      description: Página de slugs publicados, em ordem de id.
-    DeltaAplicado:
-      type: object
-      properties:
-        ok:
-          type: boolean
-          description: Sempre `true`; pedido recusado vem como 4xx.
-        tabela:
-          type: string
-          description: A tabela tocada.
-        recebidas:
-          type: integer
-          description: Linhas de `upsert` no pedido.
-        gravadas:
-          type: integer
-          description: Linhas que entraram ou foram atualizadas (na FTS, contando os ids apagados).
-        removidas:
-          type: integer
-          description: Linhas apagadas por `remover`.
-      required:
-      - ok
-      - tabela
-      - recebidas
-      - gravadas
-      - removidas
-      description: Um pedido da diferença entrou no catálogo vivo, num batch.
+      description: Channels with a dead logo origin, for the overrides script to match.
     EstadoCatalogo:
       type: object
       properties:
         live:
           allOf:
           - $ref: '#/components/schemas/ContagemCatalogo'
-          description: O catálogo que está servindo agora.
+          description: The catalog that is serving now.
         staging:
           allOf:
           - $ref: '#/components/schemas/ContagemCatalogo'
-          description: As tabelas `*_novo` da recarga em curso; `null` quando não há staging.
+          description: The `*_novo` tables of the reload in progress; `null` when there is no staging.
           nullable: true
         meta:
           allOf:
           - $ref: '#/components/schemas/MetaCatalogo'
-          description: Carimbos da última recarga e do staging aberto.
+          description: Stamps of the last reload and of the open staging.
       required:
       - live
       - staging
       - meta
-      description: O retrato que o serviço de recarga lê antes de começar e depois de trocar.
+      description: The snapshot that the reload service reads before it starts and after it swaps.
     OverridesGravados:
       type: object
       properties:
         ok:
           type: boolean
-          description: Sempre `true`; pedido recusado vem como 4xx.
+          description: Always `true`; a refused request comes back as 4xx.
         fonte:
           type: string
-          description: A fonte gravada em cada linha.
+          description: The source saved in each row.
         gravados:
           type: integer
-          description: Overrides que entraram (INSERT OR REPLACE).
+          description: Overrides that went in (INSERT OR REPLACE).
       required:
       - ok
       - fonte
       - gravados
-      description: Resultado da gravação de overrides de logo.
-    LoteGravado:
+      description: Result of writing logo overrides.
+    MetaCatalogo:
       type: object
       properties:
-        ok:
-          type: boolean
-          description: Sempre `true`; lote recusado vem como 4xx.
-        tabela:
-          type: string
-          description: A tabela em que o lote entrou.
-        recebidas:
-          type: integer
-          description: Linhas recebidas no pedido.
-        gravadas:
-          type: integer
-          description: Linhas efetivamente inseridas; menor que `recebidas` quando um reenvio repetiu chave.
-      required:
-      - ok
-      - tabela
-      - recebidas
-      - gravadas
-      description: Resultado de um lote.
-    RelatorioTroca:
-      type: object
-      properties:
-        ok:
-          type: boolean
-          description: Sempre `true`; recusa vem como 409 com `problemas[]`.
-        recarga_id:
-          type: string
-          description: A recarga que entrou no ar.
-        antes:
-          allOf:
-          - $ref: '#/components/schemas/ContagemCatalogo'
-          description: O catálogo que saiu do ar.
-          nullable: true
-        depois:
-          allOf:
-          - $ref: '#/components/schemas/ContagemCatalogo'
-          description: O catálogo que está servindo agora.
         synced_at:
           type: string
-          description: O `synced_at` gravado no mesmo batch da troca.
+          description: Instant (ISO-8601) of the last successful swap; it is what `/api/health` compares with the limit of 2 days.
+          nullable: true
+        applied_at:
+          type: string
+          description: Instant when the new catalog went live.
+          nullable: true
+        dump_sha256:
+          type: string
+          description: SHA-256 of the dataset that generated the live catalog.
+          nullable: true
+        staging_run:
+          type: string
+          description: '`recarga_id` of the run with staging open now; `null` without staging.'
+          nullable: true
+      required:
+      - synced_at
+      - applied_at
+      - dump_sha256
+      - staging_run
+      description: The reload stamps, read from `catalog_meta`.
+    GuiaRegistrada:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          description: Always `true`.
+        guia:
+          type: object
+          description: 'O registro normalizado: `fetched_at`, `itens`, `stale`, `ausente`…'
+      required:
+      - ok
+      - guia
+      description: The `guia` source as it was saved in `catalog_meta.fontes`.
+    DeltaAberto:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          description: Always `true`; a refusal comes as 409 with `problemas[]`.
+        recarga_id:
+          type: string
+          description: The open run; the next requests repeat it.
+        live:
+          allOf:
+          - $ref: '#/components/schemas/ContagemCatalogo'
+          description: The live catalog, before the difference.
       required:
       - ok
       - recarga_id
-      - antes
+      - live
+      description: The differential reload passed the guard and is marked; nothing changed live yet.
+    RelatorioDelta:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          description: Always `true`; a check that fails comes as 409 with `problemas[]`.
+        recarga_id:
+          type: string
+          description: The reload that went live.
+        depois:
+          allOf:
+          - $ref: '#/components/schemas/ContagemCatalogo'
+          description: The catalog that is serving now.
+        synced_at:
+          type: string
+          description: The `synced_at` recorded in the same batch as the closing.
+      required:
+      - ok
+      - recarga_id
       - depois
       - synced_at
-      description: 'A troca aconteceu: contagens de antes e de depois, e o carimbo novo.'
+      description: 'The difference closed: the whole catalog matched `esperado` and the stamp was recorded.'
   securitySchemes:
     bearerAuth:
       type: http
       scheme: bearer
-      description: ipt_… (guest) ou iptk_… (API key)
+      description: ipt_… (guest); the account is a cookie, never a bearer
+    globalAccount:
+      type: apiKey
+      in: cookie
+      name: __Host-mm-auth
+      description: Global session in the product's HttpOnly cookie; writes require exact Origin and X-CSRF-Token.
+    contaChaveApi:
+      type: http
+      scheme: bearer
+      bearerFormat: mmk_…
+      description: 'Account API key: `Authorization: Bearer mmk_…` or `X-Api-Key: mmk_…`. Created on the account page (API keys), valid only in the product where it was created; it acts as the account (or the organization that owns it).'
+    carteiraAgente:
+      type: http
+      scheme: bearer
+      bearerFormat: mmw_…
+      description: 'Wallet credential of an agent without an account (`Authorization: Bearer mmw_…`, 30 days, this product only): POST /api/auth/wallet/agent/start, sign the message with the wallet, POST /api/auth/wallet/agent/token. The owner is `x402:<address>`.'
+x-service-info:
+  categories:
+  - tv-guide
+  - media
+  - directory
+  docs:
+    homepage: https://gradetv.net/
+    apiReference: https://gradetv.net/developers
+    llms: https://gradetv.net/llms.txt

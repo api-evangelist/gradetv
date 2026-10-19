@@ -1,8 +1,8 @@
 openapi: 3.2.0
 info:
-  title: Grade Metrics API
-  version: dbad45cb
-  description: Catálogo IPTV, biblioteca pessoal com feeds e informações para produtores sobre transmissão autorizada sob consulta.
+  title: GradeTV Metrics API
+  version: 1d751aaf
+  description: Find TV and radio, check the schedule and organize personal lists. Present authorized broadcast projects for evaluation, without activation.
 servers:
 - url: https://gradetv.net
 tags:
@@ -11,10 +11,10 @@ paths:
   /api/metrics:
     get:
       operationId: get_api_metrics
-      summary: Métricas dos últimos 7 dias. Com o token do operador, inclui os pagamentos
-      description: 'Sem credencial devolve visitas, uso e contas. Com `METRICS_TOKEN` em Bearer acrescenta `payments` — e só em Base mainnet, porque número de homologação em painel financeiro engana.
+      summary: Metrics of the last 7 days. With the operator token, they include the payments
+      description: 'Without a credential it returns visits and usage (`accounts` comes empty: guest and account belong to the SDK, without a count per product). With `METRICS_TOKEN` as Bearer it adds `payments`, and only on Base mainnet, because staging numbers in a financial dashboard mislead.
 
-        Devolve: { app, today, today_visits, today_contacts?, today_plays, today_feeds, days, usage, accounts, top_plays, financeiro?, payments? }'
+        Returns: { app, today, today_visits, today_contacts?, today_plays, today_feeds, days, usage, accounts, top_plays, financeiro?, payments? }'
       security: []
       parameters:
       - name: Authorization
@@ -22,7 +22,7 @@ paths:
         required: false
         schema:
           type: string
-        description: '`Bearer <METRICS_TOKEN>` para incluir o bloco financeiro.'
+        description: '`Bearer <METRICS_TOKEN>` to include the financial block.'
       responses:
         '200':
           description: '{ app, today, today_visits, today_contacts?, today_plays, today_feeds, days, usage, accounts, top_plays, financeiro?, payments? }'
@@ -39,44 +39,44 @@ components:
       properties:
         app:
           type: string
-          description: Nome do produto.
+          description: Product name.
         today:
           type: string
-          description: Dia de referência (UTC, AAAA-MM-DD).
+          description: Reference day (UTC, YYYY-MM-DD).
         today_visits:
           type: integer
-          description: Visitas contadas hoje.
+          description: Visits counted today.
         today_contacts:
           type: integer
-          description: Contatos de hoje; só com `METRICS_TOKEN`.
+          description: Today's contacts; only with `METRICS_TOKEN`.
         today_plays:
           type: integer
-          description: Plays contados hoje.
+          description: Plays counted today.
         today_feeds:
           type: integer
-          description: Feeds servidos hoje.
+          description: Feeds served today.
         days:
           type: array
           items:
             type: object
-          description: Um registro por dia da janela, com as contagens de cada métrica.
+          description: One record per day of the window, with the counts of each metric.
         usage:
           type: object
-          description: Uso por recurso do produto — aqui, itens na galeria.
+          description: 'Usage per product resource: here, items in the gallery.'
         accounts:
           type: object
-          description: Total de convidados cadastrados.
+          description: 'Empty: guest and account belong to the SDK, with no table or count per product here.'
         top_plays:
           type: array
           items:
             type: object
-          description: 'Canais mais tocados hoje: `channel_id`, `name` e `count`.'
+          description: 'Most played channels today: `channel_id`, `name` and `count`.'
         financeiro:
           type: object
-          description: '`hoje_usd`, `hoje_count`, `rede`; só com `METRICS_TOKEN`.'
+          description: '`hoje_usd`, `hoje_count`, `rede`; only with `METRICS_TOKEN`.'
         payments:
           type: object
-          description: Resumo financeiro; só com METRICS_TOKEN.
+          description: Financial summary; only with METRICS_TOKEN.
       required:
       - app
       - today
@@ -87,9 +87,33 @@ components:
       - usage
       - accounts
       - top_plays
-      description: Painel de 7 dias. O bloco `payments` só aparece com o token do operador e só em Base mainnet.
+      description: 7-day dashboard. The `payments` block appears only with the operator token and only on Base mainnet.
   securitySchemes:
     bearerAuth:
       type: http
       scheme: bearer
-      description: ipt_… (guest) ou iptk_… (API key)
+      description: ipt_… (guest); the account is a cookie, never a bearer
+    globalAccount:
+      type: apiKey
+      in: cookie
+      name: __Host-mm-auth
+      description: Global session in the product's HttpOnly cookie; writes require exact Origin and X-CSRF-Token.
+    contaChaveApi:
+      type: http
+      scheme: bearer
+      bearerFormat: mmk_…
+      description: 'Account API key: `Authorization: Bearer mmk_…` or `X-Api-Key: mmk_…`. Created on the account page (API keys), valid only in the product where it was created; it acts as the account (or the organization that owns it).'
+    carteiraAgente:
+      type: http
+      scheme: bearer
+      bearerFormat: mmw_…
+      description: 'Wallet credential of an agent without an account (`Authorization: Bearer mmw_…`, 30 days, this product only): POST /api/auth/wallet/agent/start, sign the message with the wallet, POST /api/auth/wallet/agent/token. The owner is `x402:<address>`.'
+x-service-info:
+  categories:
+  - tv-guide
+  - media
+  - directory
+  docs:
+    homepage: https://gradetv.net/
+    apiReference: https://gradetv.net/developers
+    llms: https://gradetv.net/llms.txt

@@ -1,0 +1,258 @@
+openapi: 3.2.0
+info:
+  title: Grade History API
+  version: dbad45cb
+  description: Catálogo IPTV, biblioteca pessoal com feeds e informações para produtores sobre transmissão autorizada sob consulta.
+servers:
+- url: https://gradetv.net
+tags:
+- name: History
+paths:
+  /api/history:
+    get:
+      operationId: get_history
+      summary: Canais que o dono assistiu, do mais recente para o mais antigo
+      description: 'Canal adulto só aparece com consentimento 18+ válido; sem ele a linha é filtrada na consulta, não escondida na tela.
+
+        Devolve: { items[{channel_id,name,country,logo_url,is_nsfw,playable_hint,plays,first_at,last_at,stale,api}], total, limit, offset, next_offset, api, max }'
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: limit
+        in: query
+        required: false
+        schema:
+          type: integer
+          default: 20
+        description: Itens por página. Acima de 50 é silenciosamente reduzido a 50.
+      - name: offset
+        in: query
+        required: false
+        schema:
+          type: integer
+          default: 0
+        description: Quantos itens pular. Use `next_offset` da resposta anterior.
+      responses:
+        '200':
+          description: '{ items[{channel_id,name,country,logo_url,is_nsfw,playable_hint,plays,first_at,last_at,stale,api}], total, limit, offset, next_offset, api, max }'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginaDeHistorico'
+        '401':
+          description: Sem credencial ou credencial inválida. Veja a auth deste endpoint.
+      tags:
+      - History
+    post:
+      operationId: record_watch
+      summary: Registra que o dono assistiu um canal. Repetir soma em `plays` e sobe a linha
+      description: 'Devolve: { channel_id, plays, last_at, api }'
+      security:
+      - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                channel_id:
+                  type: string
+                  description: Canal assistido, ex. `Globo.br`.
+              required:
+              - channel_id
+            example:
+              channel_id: Globo.br
+      responses:
+        '200':
+          description: '{ channel_id, plays, last_at, api }'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  channel_id:
+                    type: string
+                    description: O canal registrado.
+                  plays:
+                    type: integer
+                    description: Quantas vezes o dono já assistiu este canal.
+                  last_at:
+                    type: string
+                    description: Momento deste registro (UTC).
+                    nullable: true
+                  api:
+                    type: string
+                    description: URL absoluta do histórico.
+                required:
+                - channel_id
+                - plays
+                - last_at
+                - api
+        '400':
+          description: '`channel_id` ausente ou JSON inválido.'
+        '401':
+          description: Sem credencial ou credencial inválida. Veja a auth deste endpoint.
+      tags:
+      - History
+    delete:
+      operationId: clear_history
+      summary: Limpa o histórico inteiro do dono, de uma vez
+      description: 'Devolve: { ok, cleared, total }'
+      security:
+      - bearerAuth: []
+      responses:
+        '200':
+          description: '{ ok, cleared, total }'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok:
+                    type: boolean
+                    description: Sempre `true`.
+                  cleared:
+                    type: boolean
+                    description: Sempre `true` — o histórico foi zerado.
+                  total:
+                    type: integer
+                    description: 'Quantos restaram: zero.'
+                required:
+                - ok
+                - cleared
+                - total
+        '401':
+          description: Sem credencial ou credencial inválida. Veja a auth deste endpoint.
+      tags:
+      - History
+  /api/history/{channel_id}:
+    delete:
+      operationId: forget_watch
+      summary: Tira um canal do histórico do dono
+      description: 'Devolve: { ok, removed }'
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: channel_id
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: '{ ok, removed }'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok:
+                    type: boolean
+                    description: Sempre `true` quando removeu.
+                  removed:
+                    type: string
+                    description: O `channel_id` que saiu.
+                required:
+                - ok
+                - removed
+        '401':
+          description: Sem credencial ou credencial inválida. Veja a auth deste endpoint.
+        '404':
+          description: Recurso não existe (ou não é seu — a API não distingue os dois de propósito).
+      tags:
+      - History
+components:
+  schemas:
+    Visita:
+      type: object
+      properties:
+        channel_id:
+          type: string
+          description: ID do canal assistido.
+        name:
+          type: string
+          description: Nome do canal; cai no ID se ele saiu do catálogo.
+        country:
+          type: string
+          description: País do canal.
+          nullable: true
+        logo_url:
+          type: string
+          description: Logo servido por nós.
+          nullable: true
+        is_nsfw:
+          type: boolean
+          description: Conteúdo adulto — some da lista sem consentimento 18+.
+        playable_hint:
+          type: boolean
+          description: Se a última verificação achou stream utilizável.
+        plays:
+          type: integer
+          description: Quantas vezes o dono assistiu este canal.
+        first_at:
+          type: string
+          description: Primeira vez que assistiu (UTC).
+        last_at:
+          type: string
+          description: Última vez que assistiu (UTC).
+        stale:
+          type: boolean
+          description: '`true` quando o canal não existe mais no catálogo.'
+        api:
+          type: string
+          description: URL absoluta da ficha do canal.
+      required:
+      - channel_id
+      - name
+      - country
+      - logo_url
+      - is_nsfw
+      - playable_hint
+      - plays
+      - first_at
+      - last_at
+      - stale
+      - api
+      description: Um canal no histórico do dono, com quantas vezes ele assistiu.
+    PaginaDeHistorico:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/Visita'
+          description: Os itens desta página, na ordem que a rota define.
+        total:
+          type: integer
+          description: Quantos itens casam com o filtro, ignorando a paginação.
+        limit:
+          type: integer
+          description: Tamanho de página efetivamente aplicado (pode ser menor que o pedido).
+        offset:
+          type: integer
+          description: Deslocamento aplicado nesta página.
+        next_offset:
+          type: integer
+          description: Offset da próxima página; `null` quando esta é a última.
+          nullable: true
+        api:
+          type: string
+          description: URL absoluta desta própria listagem.
+        max:
+          type: integer
+          description: Quantos canais o histórico guarda no máximo.
+      required:
+      - items
+      - total
+      - limit
+      - offset
+      - next_offset
+      - api
+      - max
+      description: Página do histórico do dono. `max` é o teto de linhas guardadas — passou disso, a mais antiga sai.
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      description: ipt_… (guest) ou iptk_… (API key)

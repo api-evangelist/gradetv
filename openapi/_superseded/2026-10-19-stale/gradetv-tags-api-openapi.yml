@@ -1,0 +1,75 @@
+openapi: 3.2.0
+info:
+  title: Grade Tags API
+  version: dbad45cb
+  description: Catálogo IPTV, biblioteca pessoal com feeds e informações para produtores sobre transmissão autorizada sob consulta.
+servers:
+- url: https://gradetv.net
+tags:
+- name: Tags
+paths:
+  /api/tags:
+    get:
+      operationId: list_tags
+      summary: Tags das estações de rádio tocáveis (vocabulário livre do Radio Browser), com a…
+      description: 'Devolve: { items[{id,name,count}] }'
+      security: []
+      parameters:
+      - name: country
+        in: query
+        required: false
+        schema:
+          type: string
+        description: Restringe às estações de um país, ISO 3166-1 alpha-2.
+        example: BR
+      - name: limit
+        in: query
+        required: false
+        schema:
+          type: integer
+          default: 40
+        description: Quantas tags devolver (teto 100).
+      responses:
+        '200':
+          description: '{ items[{id,name,count}] }'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ListaTag'
+      tags:
+      - Tags
+components:
+  schemas:
+    Tag:
+      type: object
+      properties:
+        id:
+          type: string
+          description: A tag como está na fonte, em minúsculas (ex. `mpb`).
+        name:
+          type: string
+          description: O mesmo texto, para exibir.
+        count:
+          type: integer
+          description: Estações tocáveis com esta tag no recorte pedido.
+      required:
+      - id
+      - name
+      - count
+      description: Tag de estação de rádio, vocabulário livre do Radio Browser, com a contagem no recorte.
+    ListaTag:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/Tag'
+          description: Todos os itens; estas rotas não paginam.
+      required:
+      - items
+      description: Coleção pequena e completa — faceta de catálogo, que cabe inteira numa resposta.
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      description: ipt_… (guest) ou iptk_… (API key)

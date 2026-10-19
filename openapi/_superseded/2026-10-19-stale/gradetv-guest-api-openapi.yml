@@ -1,0 +1,39 @@
+openapi: 3.2.0
+info:
+  title: Grade Guest API
+  version: dbad45cb
+  description: Catálogo IPTV, biblioteca pessoal com feeds e informações para produtores sobre transmissão autorizada sob consulta.
+servers:
+- url: https://gradetv.net
+tags:
+- name: Guest
+paths:
+  /api/guest:
+    post:
+      operationId: create_guest
+      summary: Cria um convidado `ipt_…` — é a identidade que guarda galeria, histórico e…
+      description: 'Não pede e-mail nem nada. Guarde o token: perdeu o token, perdeu a biblioteca (a não ser que você já tenha amarrado a um e-mail com `POST /api/auth/start`).
+
+        Devolve: { token }'
+      security: []
+      responses:
+        '200':
+          description: '{ token }'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  token:
+                    type: string
+                    description: O convidado, prefixo `ipt_`. Mande em `X-Guest-Token` ou como Bearer.
+                required:
+                - token
+      tags:
+      - Guest
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      description: ipt_… (guest) ou iptk_… (API key)

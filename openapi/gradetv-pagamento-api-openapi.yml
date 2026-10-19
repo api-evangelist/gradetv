@@ -1,0 +1,72 @@
+openapi: 3.2.0
+info:
+  title: GradeTV Pagamento API
+  version: 1d751aaf
+  description: Find TV and radio, check the schedule and organize personal lists. Present authorized broadcast projects for evaluation, without activation.
+servers:
+- url: https://gradetv.net
+tags:
+- name: Pagamento
+paths:
+  /api/pagamento/aberto:
+    post:
+      operationId: post_api_pagamento_aberto
+      summary: The interface reports that it showed a charge. Agents must not call it
+      description: 'A same-origin report with no body, sent automatically when a charge becomes visible. It does not start a payment, does not grant access and does not receive an identity or credential. It does not write to a database per report. It counts events, not unique people. The private operator dashboard separates API payment requests and interface openings per UTC day; the two numbers can overlap.
+
+        Returns: 202 with no body if accepted; 204 if ignored. Always no-store.'
+      security: []
+      parameters:
+      - name: Origin
+        in: header
+        required: true
+        schema:
+          type: string
+        description: The page origin, identical to the origin of this route.
+      - name: Sec-Fetch-Site
+        in: header
+        required: true
+        schema:
+          type: string
+        description: '`same-origin`, set by the browser.'
+      - name: X-MM-Payment-View
+        in: header
+        required: true
+        schema:
+          type: string
+        description: '`1`, set by the common component.'
+      responses:
+        '202':
+          description: 202 with no body if accepted; 204 if ignored. Always no-store.
+      tags:
+      - Pagamento
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      description: ipt_… (guest); the account is a cookie, never a bearer
+    globalAccount:
+      type: apiKey
+      in: cookie
+      name: __Host-mm-auth
+      description: Global session in the product's HttpOnly cookie; writes require exact Origin and X-CSRF-Token.
+    contaChaveApi:
+      type: http
+      scheme: bearer
+      bearerFormat: mmk_…
+      description: 'Account API key: `Authorization: Bearer mmk_…` or `X-Api-Key: mmk_…`. Created on the account page (API keys), valid only in the product where it was created; it acts as the account (or the organization that owns it).'
+    carteiraAgente:
+      type: http
+      scheme: bearer
+      bearerFormat: mmw_…
+      description: 'Wallet credential of an agent without an account (`Authorization: Bearer mmw_…`, 30 days, this product only): POST /api/auth/wallet/agent/start, sign the message with the wallet, POST /api/auth/wallet/agent/token. The owner is `x402:<address>`.'
+x-service-info:
+  categories:
+  - tv-guide
+  - media
+  - directory
+  docs:
+    homepage: https://gradetv.net/
+    apiReference: https://gradetv.net/developers
+    llms: https://gradetv.net/llms.txt

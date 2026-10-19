@@ -1,278 +1,299 @@
 openapi: 3.2.0
 info:
-  title: Grade Auth API
-  version: dbad45cb
-  description: Catálogo IPTV, biblioteca pessoal com feeds e informações para produtores sobre transmissão autorizada sob consulta.
+  title: GradeTV Auth API
+  version: 1d751aaf
+  description: Find TV and radio, check the schedule and organize personal lists. Present authorized broadcast projects for evaluation, without activation.
 servers:
 - url: https://gradetv.net
 tags:
 - name: Auth
 paths:
-  /api/auth/start:
-    post:
-      operationId: auth_start
-      summary: Manda um código de 6 dígitos por e-mail para criar a conta ou entrar nela
-      description: 'Devolve: { ok, sent, expires_in }'
-      security: []
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                email:
-                  type: string
-                  description: E-mail que vai receber o código.
-              required:
-              - email
-            example:
-              email: voce@exemplo.com
-      responses:
-        '200':
-          description: '{ ok, sent, expires_in }'
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  ok:
-                    type: boolean
-                    description: Sempre `true` quando o envio foi aceito.
-                  sent:
-                    type: boolean
-                    description: Se o e-mail saiu de fato.
-                  expires_in:
-                    type: integer
-                    description: Segundos até o código expirar.
-                required:
-                - ok
-                - sent
-                - expires_in
-        '400':
-          description: E-mail ausente ou malformado.
-        '429':
-          description: Pedidos demais para o mesmo e-mail.
-      tags:
-      - Auth
-  /api/auth/verify:
-    post:
-      operationId: auth_verify
-      summary: Troca o código por uma sessão e devolve o convidado que a conta já tinha
-      description: 'O campo que importa é `claimed.product`: de outro aparelho, ele traz o convidado ANTIGO com `adopt: true`. É ESSE token que tem a biblioteca — o convidado local do aparelho novo está vazio. Ignorar isso é o jeito clássico de a pessoa ''perder'' a galeria ao entrar.
+  /api/auth/bootstrap:
+    get:
+      operationId: get_api_auth_bootstrap
+      summary: Prepares the browser to sign in to the global account
+      description: 'Sets an HttpOnly cookie restricted to the host. CSRF is bound to the current session. No CORS.
 
-        Devolve: { ok, user{id,email}, session_token, claimed{ok,product} }'
+        Returns: { csrf, context }'
       security: []
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                email:
-                  type: string
-                  description: O mesmo e-mail do `/api/auth/start`.
-                code:
-                  type: string
-                  description: Os 6 dígitos que chegaram por e-mail.
-                guest_token:
-                  type: string
-                  description: Convidado deste aparelho, para ser reivindicado pela conta.
-              required:
-              - email
-              - code
-            example:
-              email: voce@exemplo.com
-              code: '123456'
-              guest_token: ipt_…
       responses:
         '200':
-          description: '{ ok, user{id,email}, session_token, claimed{ok,product} }'
+          description: '{ csrf, context }'
           content:
             application/json:
               schema:
                 type: object
                 properties:
-                  ok:
-                    type: boolean
-                    description: Sempre `true` quando o código conferiu.
-                  user:
-                    allOf:
-                    - $ref: '#/components/schemas/Conta'
-                    description: A pessoa que acabou de entrar.
-                  session_token:
+                  csrf:
                     type: string
-                    description: 'Sessão `sess_…` para usar em `Authorization: Bearer`.'
-                  claimed:
-                    allOf:
-                    - $ref: '#/components/schemas/Reivindicacao'
-                    description: O convidado que a conta já tinha — leia `adopt` antes de continuar.
+                    description: X-CSRF-Token
+                  context:
+                    type: string
+                    description: Opaque view context, also in X-MM-Context; not a credential.
                 required:
-                - ok
-                - user
-                - session_token
-                - claimed
+                - csrf
+                - context
         '400':
-          description: Código errado ou expirado.
-        '429':
-          description: Tentativas demais.
-      tags:
-      - Auth
-  /api/auth/claim:
-    post:
-      operationId: post_api_auth_claim
-      summary: Liga um convidado a uma sessão já aberta, sem passar pelo código de novo
-      description: 'Use quando a pessoa já está logada e aparece um convidado novo (outro aparelho, outro navegador).
-
-        Devolve: { ok, claimed, user{id,email} }'
-      security: []
-      parameters:
-      - name: Authorization
-        in: header
-        required: true
-        schema:
-          type: string
-        description: '`Bearer sess_…`, a sessão que vai adotar o convidado.'
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                guest_token:
-                  type: string
-                  description: Convidado `ipt_…` a ligar na conta.
-              required:
-              - guest_token
-            example:
-              guest_token: ipt_…
-      responses:
-        '200':
-          description: '{ ok, claimed, user{id,email} }'
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  ok:
-                    type: boolean
-                    description: Sempre `true` quando ligou.
-                  claimed:
-                    type: boolean
-                    description: Se havia algo novo para ligar.
-                  user:
-                    allOf:
-                    - $ref: '#/components/schemas/Conta'
-                    description: A pessoa dona da sessão.
-                required:
-                - ok
-                - claimed
-                - user
-        '400':
-          description: '`guest_token` ausente.'
-        '401':
-          description: Sessão ausente ou inválida.
+          description: invalid_request
+        '403':
+          description: invalid_origin / invalid_csrf
+        '503':
+          description: 'auth_unavailable: the previous session is preserved'
       tags:
       - Auth
   /api/auth/logout:
     post:
       operationId: post_api_auth_logout
-      summary: Encerra a sessão. A linha some do banco, não fica marcada como inativa
-      description: 'Devolve: { ok }'
-      security: []
-      parameters:
-      - name: Authorization
-        in: header
-        required: true
-        schema:
-          type: string
-        description: '`Bearer sess_…`, a sessão a encerrar.'
+      summary: Revokes this product session
+      description: 'Requires the bootstrap/CSRF of this browser and session. The sessions of other products stay active.
+
+        Returns: { ok }'
+      security:
+      - globalAccount: []
       responses:
         '200':
           description: '{ ok }'
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Ok'
+                type: object
+                properties:
+                  ok:
+                    type: boolean
+                    description: 'true'
+                required:
+                - ok
+        '400':
+          description: invalid_request
+        '403':
+          description: invalid_origin / invalid_csrf
+        '503':
+          description: 'auth_unavailable: the previous session is preserved'
+      tags:
+      - Auth
+  /api/auth/wallet/agent/start:
+    post:
+      operationId: post_api_auth_wallet_agent_start
+      summary: Starts the wallet credential of an agent without an account
+      description: 'Without an account: the wallet proves ownership by signing the message (EIP-4361). Signing does not pay or transfer anything. The message names this product and is valid for 5 minutes. Sign with personal_sign and send it to /api/auth/wallet/agent/token.
+
+        Returns: { message, issuedAt, expiresIn }'
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                address:
+                  type: string
+                  description: 0x…, the wallet (an EOA or a contract on Base)
+              required:
+              - address
+            example:
+              address: '0x2c7536E3605D9C16a7a3D7b1898e529396a65c23'
+      responses:
+        '200':
+          description: '{ message, issuedAt, expiresIn }'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    description: EIP-4361
+                  issuedAt:
+                    type: number
+                    description: segundos / seconds
+                  expiresIn:
+                    type: number
+                    description: '300'
+                required:
+                - message
+                - issuedAt
+                - expiresIn
+        '400':
+          description: invalid_wallet_address
+        '503':
+          description: auth_unavailable
+      tags:
+      - Auth
+  /api/auth/wallet/agent/token:
+    post:
+      operationId: post_api_auth_wallet_agent_token
+      summary: Gets the wallet credential (mmw_…) of this product
+      description: 'The wallet signature of the start message, checked here (own key) or on Base (contract, EIP-1271/6492). The credential is valid for 30 days: send `Authorization: Bearer mmw_…` to the routes that accept the wallet as owner (owner `x402:`). When the wallet is linked to an account, what it did here moves to the account when the person signs in.
+
+        Returns: { token, owner, expiresAt }'
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                address:
+                  type: string
+                  description: 0x…, the same wallet as in start
+                issuedAt:
+                  type: number
+                  description: the issuedAt of start
+                signature:
+                  type: string
+                  description: personal_sign (0x…)
+              required:
+              - address
+              - issuedAt
+              - signature
+            example:
+              address: '0x2c7536E3605D9C16a7a3D7b1898e529396a65c23'
+              issuedAt: 1791400000
+              signature: 0x…
+      responses:
+        '200':
+          description: '{ token, owner, expiresAt }'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  token:
+                    type: string
+                    description: mmw_…
+                  owner:
+                    type: string
+                    description: x402:0x…
+                  expiresAt:
+                    type: number
+                    description: segundos / seconds
+                required:
+                - token
+                - owner
+                - expiresAt
+        '400':
+          description: invalid_body
+        '401':
+          description: invalid_wallet
+        '429':
+          description: wallet_limited
+        '503':
+          description: wallet_unavailable / auth_unavailable
+      tags:
+      - Auth
+  /api/auth/claim/wallets:
+    post:
+      operationId: post_api_auth_claim_wallets
+      summary: Moves to the account what its wallets did without an account
+      description: 'The sign-in window calls this after every sign-in. For each wallet linked to the account: the rights bought here through x402 (owner x402:) and what this product keeps for that owner. Repeating moves nothing.
+
+        Returns: { carteiras, direitos }'
+      security:
+      - globalAccount: []
+      responses:
+        '200':
+          description: '{ carteiras, direitos }'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  carteiras:
+                    type: number
+                    description: wallets
+                  direitos:
+                    type: number
+                    description: rights moved
+                required:
+                - carteiras
+                - direitos
+        '401':
+          description: invalid_session
+        '503':
+          description: auth_unavailable
+      tags:
+      - Auth
+  /api/auth/claim:
+    post:
+      operationId: post_api_auth_claim
+      summary: 'Moves to the account what the guest created: folders (with the sub-tabs and…'
+      description: 'Requires the bootstrap/CSRF of this browser; the page does this right after sign-in. It moves only what the guest still has, in one transaction, and what conflicts with what the account already has stays with the guest. What the guest bought moves too. An old token without a signature that owns nothing here is refused. Repeating does no harm (it moves zero).
+
+        Returns: { ok, claimed }'
+      security:
+      - globalAccount: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                guest_token:
+                  type: string
+                  description: Convidado `ipt_…` deste navegador.
+              required:
+              - guest_token
+            example:
+              guest_token: ipt_…
+      responses:
+        '200':
+          description: '{ ok, claimed }'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok:
+                    type: boolean
+                    description: Whether the guest was recognized and let through.
+                  claimed:
+                    type: object
+                    description: '`product.movidos` (lines that changed owner, per table), `product.apagados` (discarded guest duplicates) and `product.direitos` (purchases that moved).'
+                required:
+                - ok
+                - claimed
+        '400':
+          description: invalid_product_claim / invalid_body
+        '401':
+          description: invalid_session
+        '403':
+          description: invalid_origin / invalid_csrf
+        '409':
+          description: unknown_guest (in `claimed.reason`)
+        '503':
+          description: product_claim_pending / auth_unavailable
       tags:
       - Auth
 components:
-  schemas:
-    Reivindicacao:
-      type: object
-      properties:
-        ok:
-          type: boolean
-          description: Se havia algo a reivindicar.
-        product:
-          allOf:
-          - $ref: '#/components/schemas/ReivindicacaoProduto'
-          description: O convidado que a conta já tinha, e o que fazer com ele.
-      required:
-      - ok
-      - product
-      description: O que o verify achou de convidado já ligado a este e-mail. É o campo que salva a biblioteca de outro aparelho.
-    ReivindicacaoProduto:
-      type: object
-      properties:
-        guest_token:
-          type: string
-          description: O convidado ANTIGO da conta. É este que tem a biblioteca.
-        adopt:
-          type: boolean
-          description: '`true` quer dizer: jogue fora o convidado local e passe a usar o de cima.'
-        resources:
-          allOf:
-          - $ref: '#/components/schemas/Recursos'
-          description: O que existe nesse convidado antigo.
-      required:
-      - guest_token
-      - adopt
-      - resources
-      description: Qual convidado usar depois de entrar — o novo ou o que já existia.
-    Conta:
-      type: object
-      properties:
-        id:
-          type: string
-          description: ID da conta.
-        email:
-          type: string
-          description: E-mail confirmado por código.
-      required:
-      - id
-      - email
-      description: A pessoa por trás da sessão.
-    Recursos:
-      type: object
-      properties:
-        categories:
-          type: integer
-          description: Quantas pastas o dono tem.
-        favorites:
-          type: integer
-          description: Quantos canais ele favoritou.
-        history:
-          type: integer
-          description: Quantos canais estão no histórico.
-      required:
-      - categories
-      - favorites
-      - history
-      description: O tamanho da biblioteca do dono — para o agente saber o que vai encontrar antes de buscar.
-    Ok:
-      type: object
-      properties:
-        ok:
-          type: boolean
-          description: Sempre `true` — a falha vem como status 4xx/5xx, não como `ok:false`.
-      required:
-      - ok
-      description: Confirmação de escrita que não tem corpo próprio a devolver.
   securitySchemes:
     bearerAuth:
       type: http
       scheme: bearer
-      description: ipt_… (guest) ou iptk_… (API key)
+      description: ipt_… (guest); the account is a cookie, never a bearer
+    globalAccount:
+      type: apiKey
+      in: cookie
+      name: __Host-mm-auth
+      description: Global session in the product's HttpOnly cookie; writes require exact Origin and X-CSRF-Token.
+    contaChaveApi:
+      type: http
+      scheme: bearer
+      bearerFormat: mmk_…
+      description: 'Account API key: `Authorization: Bearer mmk_…` or `X-Api-Key: mmk_…`. Created on the account page (API keys), valid only in the product where it was created; it acts as the account (or the organization that owns it).'
+    carteiraAgente:
+      type: http
+      scheme: bearer
+      bearerFormat: mmw_…
+      description: 'Wallet credential of an agent without an account (`Authorization: Bearer mmw_…`, 30 days, this product only): POST /api/auth/wallet/agent/start, sign the message with the wallet, POST /api/auth/wallet/agent/token. The owner is `x402:<address>`.'
+x-service-info:
+  categories:
+  - tv-guide
+  - media
+  - directory
+  docs:
+    homepage: https://gradetv.net/
+    apiReference: https://gradetv.net/developers
+    llms: https://gradetv.net/llms.txt

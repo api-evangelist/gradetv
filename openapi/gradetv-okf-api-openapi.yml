@@ -1,8 +1,8 @@
 openapi: 3.2.0
 info:
-  title: Grade Okf API
-  version: dbad45cb
-  description: Catálogo IPTV, biblioteca pessoal com feeds e informações para produtores sobre transmissão autorizada sob consulta.
+  title: GradeTV Okf API
+  version: 1d751aaf
+  description: Find TV and radio, check the schedule and organize personal lists. Present authorized broadcast projects for evaluation, without activation.
 servers:
 - url: https://gradetv.net
 tags:
@@ -11,8 +11,8 @@ paths:
   /okf/{arquivo}:
     get:
       operationId: get_okf_by_arquivo
-      summary: 'Bundle OKF (Open Knowledge Format v0.1): markdown com frontmatter para o agente…'
-      description: 'Devolve: `text/markdown`. Comece por `/okf/index.md`, que lista o bundle.'
+      summary: 'OKF bundle (Open Knowledge Format v0.1): Markdown with frontmatter, so that an…'
+      description: 'Returns: `text/markdown`. Start at `/okf/index.md`, which lists the bundle.'
       security: []
       parameters:
       - name: arquivo
@@ -20,11 +20,13 @@ paths:
         required: true
         schema:
           type: string
+        description: '`index.md`, `sobre.md`, `api.md` or `faq.md`.'
+        example: index.md
       responses:
         '200':
-          description: '`text/markdown`. Comece por `/okf/index.md`, que lista o bundle.'
+          description: '`text/markdown`. Start at `/okf/index.md`, which lists the bundle.'
         '404':
-          description: Arquivo fora do bundle.
+          description: File outside the bundle.
       tags:
       - Okf
 components:
@@ -32,4 +34,28 @@ components:
     bearerAuth:
       type: http
       scheme: bearer
-      description: ipt_… (guest) ou iptk_… (API key)
+      description: ipt_… (guest); the account is a cookie, never a bearer
+    globalAccount:
+      type: apiKey
+      in: cookie
+      name: __Host-mm-auth
+      description: Global session in the product's HttpOnly cookie; writes require exact Origin and X-CSRF-Token.
+    contaChaveApi:
+      type: http
+      scheme: bearer
+      bearerFormat: mmk_…
+      description: 'Account API key: `Authorization: Bearer mmk_…` or `X-Api-Key: mmk_…`. Created on the account page (API keys), valid only in the product where it was created; it acts as the account (or the organization that owns it).'
+    carteiraAgente:
+      type: http
+      scheme: bearer
+      bearerFormat: mmw_…
+      description: 'Wallet credential of an agent without an account (`Authorization: Bearer mmw_…`, 30 days, this product only): POST /api/auth/wallet/agent/start, sign the message with the wallet, POST /api/auth/wallet/agent/token. The owner is `x402:<address>`.'
+x-service-info:
+  categories:
+  - tv-guide
+  - media
+  - directory
+  docs:
+    homepage: https://gradetv.net/
+    apiReference: https://gradetv.net/developers
+    llms: https://gradetv.net/llms.txt

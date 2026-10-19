@@ -1,0 +1,289 @@
+openapi: 3.2.0
+info:
+  title: GradeTV Programacao API
+  version: 1d751aaf
+  description: Find TV and radio, check the schedule and organize personal lists. Present authorized broadcast projects for evaluation, without activation.
+servers:
+- url: https://gradetv.net
+tags:
+- name: Programacao
+paths:
+  /api/programacao:
+    get:
+      operationId: list_programacao
+      summary: Channels with a collected schedule, up to 48 per page
+      description: 'Returns: { canais[{id,name,slug,country,logo_url,categories,languages?,network?,website?,day?,url?,timezones?,playable_hint?}], proximo }'
+      security: []
+      parameters:
+      - name: q
+        in: query
+        required: false
+        schema:
+          type: string
+        description: Search in the channel name across the whole collection; up to 80 characters.
+      - name: depois
+        in: query
+        required: false
+        schema:
+          type: string
+        description: Exclusive ID of the last row; use proximo.
+      responses:
+        '200':
+          description: '{ canais[{id,name,slug,country,logo_url,categories,languages?,network?,website?,day?,url?,timezones?,playable_hint?}], proximo }'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ColecaoProgramacao'
+        '400':
+          description: Invalid cursor.
+        '503':
+          description: Database unavailable.
+      tags:
+      - Programacao
+  /api/programacao/{slug}:
+    get:
+      operationId: get_programacao
+      summary: Last available schedule of the channel and up to 20 dates of the history
+      description: 'Returns: { canal{id,name,slug,country,logo_url,categories,languages?,network?,website?,day?,url?,timezones?,playable_hint?}, guia{canal,dia,programas,dias,proximo}, url }'
+      security: []
+      parameters:
+      - name: slug
+        in: path
+        required: true
+        schema:
+          type: string
+        description: Stored slug of the channel, from the collection.
+        example: axn
+      - name: antes
+        in: query
+        required: false
+        schema:
+          type: string
+        description: Exclusive day to paginate the previous days; use guia.proximo.
+      responses:
+        '200':
+          description: '{ canal{id,name,slug,country,logo_url,categories,languages?,network?,website?,day?,url?,timezones?,playable_hint?}, guia{canal,dia,programas,dias,proximo}, url }'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProgramacaoCanal'
+        '400':
+          description: Invalid date.
+        '404':
+          description: Channel or schedule missing.
+        '503':
+          description: History unavailable.
+      tags:
+      - Programacao
+  /api/programacao/{slug}/{dia}:
+    get:
+      operationId: get_programacao_dia
+      summary: Preserved schedule of a channel on a specific day
+      description: 'Returns: { canal{id,name,slug,country,logo_url,categories,languages?,network?,website?,day?,url?,timezones?,playable_hint?}, guia{canal,dia,programas,dias,proximo}, url }'
+      security: []
+      parameters:
+      - name: slug
+        in: path
+        required: true
+        schema:
+          type: string
+        description: Stored slug of the channel, from the collection.
+        example: axn
+      - name: dia
+        in: path
+        required: true
+        schema:
+          type: string
+        description: Collection day, YYYY-MM-DD.
+        example: '2026-10-05'
+      - name: antes
+        in: query
+        required: false
+        schema:
+          type: string
+        description: Exclusive day to paginate the previous days; use guia.proximo.
+      responses:
+        '200':
+          description: '{ canal{id,name,slug,country,logo_url,categories,languages?,network?,website?,day?,url?,timezones?,playable_hint?}, guia{canal,dia,programas,dias,proximo}, url }'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProgramacaoCanal'
+        '400':
+          description: Invalid date.
+        '404':
+          description: Channel or day missing.
+        '503':
+          description: History unavailable.
+      tags:
+      - Programacao
+components:
+  schemas:
+    CanalProgramacao:
+      type: object
+      properties:
+        id:
+          type: string
+          description: Catalog ID.
+        name:
+          type: string
+          description: Channel name.
+        slug:
+          type: string
+          description: Page identifier.
+        country:
+          type: string
+          description: Country of the channel.
+          nullable: true
+        logo_url:
+          type: string
+          description: Public logo; it uses the product file when available.
+          nullable: true
+        categories:
+          type: string
+          description: Comma-separated categories.
+        languages:
+          type: string
+          description: Comma-separated languages, in the detail.
+        network:
+          type: string
+          description: Network of the broadcaster, in the detail.
+          nullable: true
+        website:
+          type: string
+          description: Official site of the broadcaster, in the detail.
+          nullable: true
+        day:
+          type: string
+          description: Last day in the collection.
+        url:
+          type: string
+          description: Public page of the channel.
+        timezones:
+          type: string
+          description: Comma-separated time zones, only in the detail.
+          nullable: true
+        playable_hint:
+          type: integer
+          description: 1 when there is a usable transmission, 0 when there is not.
+      required:
+      - id
+      - name
+      - slug
+      - country
+      - logo_url
+      - categories
+    ColecaoProgramacao:
+      type: object
+      properties:
+        canais:
+          type: array
+          items:
+            $ref: '#/components/schemas/CanalProgramacao'
+          description: Up to 48 eligible channels with a schedule.
+        proximo:
+          type: string
+          description: ID to go forward from; null at the end.
+          nullable: true
+      required:
+      - canais
+      - proximo
+    HistoricoProgramacao:
+      type: object
+      properties:
+        canal:
+          type: string
+          description: Channel ID.
+        dia:
+          type: string
+          description: Dia preservado.
+        programas:
+          type: array
+          items:
+            $ref: '#/components/schemas/Programa'
+          description: Up to 512 programs and 128 KiB of JSON, in chronological order.
+        dias:
+          type: array
+          items:
+            type: string
+          description: Up to 20 available days, the most recent first.
+        proximo:
+          type: string
+          description: Day to go back to; null at the end.
+          nullable: true
+      required:
+      - canal
+      - dia
+      - programas
+      - dias
+      - proximo
+    Programa:
+      type: object
+      properties:
+        inicio:
+          type: string
+          description: Start of the program, ISO 8601.
+        fim:
+          type: string
+          description: End of the program, ISO 8601.
+        titulo:
+          type: string
+          description: Title as the schedule site writes it.
+        desc:
+          type: string
+          description: Short synopsis (up to 300 characters).
+        categoria:
+          type: string
+          description: Category of the site, when it gives one.
+      required:
+      - inicio
+      - fim
+      - titulo
+      description: A program of the day's schedule, with the instants in ISO 8601 (UTC).
+    ProgramacaoCanal:
+      type: object
+      properties:
+        canal:
+          allOf:
+          - $ref: '#/components/schemas/CanalProgramacao'
+          description: Public channel metadata.
+        guia:
+          allOf:
+          - $ref: '#/components/schemas/HistoricoProgramacao'
+          description: Schedule and preserved days.
+        url:
+          type: string
+          description: Public page.
+      required:
+      - canal
+      - guia
+      - url
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      description: ipt_… (guest); the account is a cookie, never a bearer
+    globalAccount:
+      type: apiKey
+      in: cookie
+      name: __Host-mm-auth
+      description: Global session in the product's HttpOnly cookie; writes require exact Origin and X-CSRF-Token.
+    contaChaveApi:
+      type: http
+      scheme: bearer
+      bearerFormat: mmk_…
+      description: 'Account API key: `Authorization: Bearer mmk_…` or `X-Api-Key: mmk_…`. Created on the account page (API keys), valid only in the product where it was created; it acts as the account (or the organization that owns it).'
+    carteiraAgente:
+      type: http
+      scheme: bearer
+      bearerFormat: mmw_…
+      description: 'Wallet credential of an agent without an account (`Authorization: Bearer mmw_…`, 30 days, this product only): POST /api/auth/wallet/agent/start, sign the message with the wallet, POST /api/auth/wallet/agent/token. The owner is `x402:<address>`.'
+x-service-info:
+  categories:
+  - tv-guide
+  - media
+  - directory
+  docs:
+    homepage: https://gradetv.net/
+    apiReference: https://gradetv.net/developers
+    llms: https://gradetv.net/llms.txt

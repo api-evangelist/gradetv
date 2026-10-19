@@ -1,8 +1,8 @@
 openapi: 3.2.0
 info:
-  title: Grade MCP API
-  version: dbad45cb
-  description: Catálogo IPTV, biblioteca pessoal com feeds e informações para produtores sobre transmissão autorizada sob consulta.
+  title: GradeTV MCP API
+  version: 1d751aaf
+  description: Find TV and radio, check the schedule and organize personal lists. Present authorized broadcast projects for evaluation, without activation.
 servers:
 - url: https://gradetv.net
 tags:
@@ -11,18 +11,18 @@ paths:
   /mcp:
     post:
       operationId: post_mcp
-      summary: Servidor MCP por HTTP (Streamable HTTP, JSON-RPC 2.0) — pluga no cliente sem…
-      description: 'As tools são as operações deste mesmo catálogo; o MCP não tem backend próprio. `GET /mcp` devolve o cartão do servidor.
+      summary: 'MCP server over HTTP (Streamable HTTP, JSON-RPC 2.0): it connects to the client…'
+      description: 'The tools are the operations of this same catalog; the MCP has no backend of its own. `GET /mcp` returns the server card.
 
-        Devolve: Resposta JSON-RPC 2.0 (`initialize`, `tools/list` ou `tools/call`).
+        Returns: JSON-RPC 2.0 response (`initialize`, `tools/list` or `tools/call`).
 
-        Credencial vai nos headers de sempre (X-Guest-Token, Authorization, X-PAYMENT) e é repassada à API.
+        Credentials go in the usual headers (X-Guest-Token, Authorization, X-PAYMENT) and are passed on to the API.
 
-        Cota estourada chega como 402 com accepts[] dentro do resultado da tool — pague e repita.'
+        An exceeded quota arrives as 402 with accepts[] inside the tool result: pay and repeat.'
       security: []
       responses:
         '200':
-          description: Resposta JSON-RPC 2.0 (`initialize`, `tools/list` ou `tools/call`).
+          description: JSON-RPC 2.0 response (`initialize`, `tools/list` or `tools/call`).
       tags:
       - MCP
 components:
@@ -30,4 +30,28 @@ components:
     bearerAuth:
       type: http
       scheme: bearer
-      description: ipt_… (guest) ou iptk_… (API key)
+      description: ipt_… (guest); the account is a cookie, never a bearer
+    globalAccount:
+      type: apiKey
+      in: cookie
+      name: __Host-mm-auth
+      description: Global session in the product's HttpOnly cookie; writes require exact Origin and X-CSRF-Token.
+    contaChaveApi:
+      type: http
+      scheme: bearer
+      bearerFormat: mmk_…
+      description: 'Account API key: `Authorization: Bearer mmk_…` or `X-Api-Key: mmk_…`. Created on the account page (API keys), valid only in the product where it was created; it acts as the account (or the organization that owns it).'
+    carteiraAgente:
+      type: http
+      scheme: bearer
+      bearerFormat: mmw_…
+      description: 'Wallet credential of an agent without an account (`Authorization: Bearer mmw_…`, 30 days, this product only): POST /api/auth/wallet/agent/start, sign the message with the wallet, POST /api/auth/wallet/agent/token. The owner is `x402:<address>`.'
+x-service-info:
+  categories:
+  - tv-guide
+  - media
+  - directory
+  docs:
+    homepage: https://gradetv.net/
+    apiReference: https://gradetv.net/developers
+    llms: https://gradetv.net/llms.txt

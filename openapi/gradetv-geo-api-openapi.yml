@@ -1,8 +1,8 @@
 openapi: 3.2.0
 info:
-  title: Grade Geo API
-  version: dbad45cb
-  description: Catálogo IPTV, biblioteca pessoal com feeds e informações para produtores sobre transmissão autorizada sob consulta.
+  title: GradeTV Geo API
+  version: 1d751aaf
+  description: Find TV and radio, check the schedule and organize personal lists. Present authorized broadcast projects for evaluation, without activation.
 servers:
 - url: https://gradetv.net
 tags:
@@ -11,8 +11,10 @@ paths:
   /api/geo:
     get:
       operationId: geo
-      summary: País e idioma sugeridos pela borda da Cloudflare para quem está chamando
-      description: 'Devolve: { country, detected, language, language_detected, source, api }'
+      summary: Country and language suggested for the caller
+      description: 'Without a country detected by the edge, it suggests BR with `source: "fallback"`; `detected` tells what the edge saw.
+
+        Returns: { country, detected, language, language_detected, source, api }'
       security: []
       responses:
         '200':
@@ -30,21 +32,21 @@ components:
       properties:
         country:
           type: string
-          description: País a usar; cai em `BR` quando a borda não informa.
+          description: Country to use; it falls back to `BR` when the edge does not tell.
         detected:
           type: string
-          description: O que a borda realmente detectou; `null` se nada.
+          description: What the edge actually detected; `null` if nothing.
           nullable: true
         language:
           type: string
-          description: Idioma a usar; cai em `por` sem detecção.
+          description: Language to use; it falls back to `por` without detection.
         language_detected:
           type: string
           description: Idioma realmente detectado.
           nullable: true
         source:
           type: string
-          description: '`cf` quando veio da borda, `fallback` quando é o padrão.'
+          description: '`cf` when it came from the edge, `fallback` when it is the default.'
         api:
           type: string
           description: URL absoluta desta rota.
@@ -55,9 +57,33 @@ components:
       - language_detected
       - source
       - api
-      description: País e idioma sugeridos pela borda da Cloudflare para quem está chamando.
+      description: Country and language suggested for the caller.
   securitySchemes:
     bearerAuth:
       type: http
       scheme: bearer
-      description: ipt_… (guest) ou iptk_… (API key)
+      description: ipt_… (guest); the account is a cookie, never a bearer
+    globalAccount:
+      type: apiKey
+      in: cookie
+      name: __Host-mm-auth
+      description: Global session in the product's HttpOnly cookie; writes require exact Origin and X-CSRF-Token.
+    contaChaveApi:
+      type: http
+      scheme: bearer
+      bearerFormat: mmk_…
+      description: 'Account API key: `Authorization: Bearer mmk_…` or `X-Api-Key: mmk_…`. Created on the account page (API keys), valid only in the product where it was created; it acts as the account (or the organization that owns it).'
+    carteiraAgente:
+      type: http
+      scheme: bearer
+      bearerFormat: mmw_…
+      description: 'Wallet credential of an agent without an account (`Authorization: Bearer mmw_…`, 30 days, this product only): POST /api/auth/wallet/agent/start, sign the message with the wallet, POST /api/auth/wallet/agent/token. The owner is `x402:<address>`.'
+x-service-info:
+  categories:
+  - tv-guide
+  - media
+  - directory
+  docs:
+    homepage: https://gradetv.net/
+    apiReference: https://gradetv.net/developers
+    llms: https://gradetv.net/llms.txt

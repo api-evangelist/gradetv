@@ -1,0 +1,90 @@
+openapi: 3.2.0
+info:
+  title: Grade Nsfw API
+  version: dbad45cb
+  description: Catálogo IPTV, biblioteca pessoal com feeds e informações para produtores sobre transmissão autorizada sob consulta.
+servers:
+- url: https://gradetv.net
+tags:
+- name: Nsfw
+paths:
+  /api/nsfw/pass:
+    post:
+      operationId: nsfw_pass_buy
+      summary: 'Compra o passe de conteúdo adulto: $0.10 por 30 dias, via x402'
+      description: 'Exige consentimento de idade já gravado — sem ele responde 403 e nem mostra o preço. Passe válido devolve 200 sem cobrar de novo.
+
+        Devolve: { ok, charged, until, api }'
+      security:
+      - bearerAuth: []
+      responses:
+        '200':
+          description: '{ ok, charged, until, api }'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok:
+                    type: boolean
+                    description: Sempre `true` quando o passe está valendo ao fim da chamada.
+                  charged:
+                    type: boolean
+                    description: '`true` se esta chamada cobrou; `false` se o passe já valia.'
+                  until:
+                    type: string
+                    description: Até quando o passe vale (UTC).
+                  api:
+                    type: string
+                    description: URL absoluta desta rota.
+                required:
+                - ok
+                - charged
+                - until
+                - api
+        '401':
+          description: Sem credencial ou credencial inválida. Veja a auth deste endpoint.
+        '402':
+          description: 'Cota estourada. A resposta traz `accepts[]` (x402, USDC na Base): pague e repita a mesma chamada com `X-PAYMENT`.'
+        '403':
+          description: Sem consentimento 18+ gravado — declare a idade antes.
+      tags:
+      - Nsfw
+    get:
+      operationId: nsfw_pass_status
+      summary: 'Situação do passe adulto do dono: se vale e até quando'
+      description: 'Devolve: { active, until }'
+      security:
+      - bearerAuth: []
+      responses:
+        '200':
+          description: '{ active, until }'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Passe'
+        '401':
+          description: Sem credencial ou credencial inválida. Veja a auth deste endpoint.
+      tags:
+      - Nsfw
+components:
+  schemas:
+    Passe:
+      type: object
+      properties:
+        active:
+          type: boolean
+          description: Se o passe vale neste momento.
+        until:
+          type: string
+          description: Até quando vale (UTC); `null` quando não há passe.
+          nullable: true
+      required:
+      - active
+      - until
+      description: Passe mensal — do chat ou de conteúdo adulto. São contas separadas, mesmo formato.
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      description: ipt_… (guest) ou iptk_… (API key)

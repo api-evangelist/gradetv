@@ -1,0 +1,97 @@
+openapi: 3.2.0
+info:
+  title: Grade TV API
+  version: 1d751aaf
+  description: Find TV and radio, check the schedule and organize personal lists. Present authorized broadcast projects for evaluation, without activation.
+servers:
+- url: https://gradetv.net
+tags:
+- name: GradeTV
+paths:
+  /api/:
+    get:
+      operationId: api_index
+      summary: Self-describing index of the whole API, with the languages and the HTML pages…
+      description: 'Returns: { name, description, locales, auth, docs, endpoints, quota, mcp, quickstart }'
+      security: []
+      responses:
+        '200':
+          description: '{ name, description, locales, auth, docs, endpoints, quota, mcp, quickstart }'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  name:
+                    type: string
+                    description: Product name.
+                  description:
+                    type: string
+                    description: What the product does, in one sentence.
+                  locales:
+                    type: object
+                    description: Supported languages and the path of each page in each one.
+                  auth:
+                    type: object
+                    description: Each authentication mode and how to get it.
+                  docs:
+                    type: object
+                    description: Links to llms.txt, llms-full.txt, openapi.json, MCP and the UI.
+                  endpoints:
+                    type: array
+                    items:
+                      type: object
+                    description: Every endpoint with method, path, auth, absolute URL and what it returns.
+                  quota:
+                    type: object
+                    description: What is free, what costs money and how to pay, before you spend a call.
+                  mcp:
+                    type: object
+                    description: Address and transport of the MCP server.
+                  quickstart:
+                    type: array
+                    items:
+                      type: string
+                    description: The four calls that lead from zero to the library.
+                required:
+                - name
+                - description
+                - locales
+                - auth
+                - docs
+                - endpoints
+                - quota
+                - mcp
+                - quickstart
+      tags:
+      - GradeTV
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      description: ipt_… (guest); the account is a cookie, never a bearer
+    globalAccount:
+      type: apiKey
+      in: cookie
+      name: __Host-mm-auth
+      description: Global session in the product's HttpOnly cookie; writes require exact Origin and X-CSRF-Token.
+    contaChaveApi:
+      type: http
+      scheme: bearer
+      bearerFormat: mmk_…
+      description: 'Account API key: `Authorization: Bearer mmk_…` or `X-Api-Key: mmk_…`. Created on the account page (API keys), valid only in the product where it was created; it acts as the account (or the organization that owns it).'
+    carteiraAgente:
+      type: http
+      scheme: bearer
+      bearerFormat: mmw_…
+      description: 'Wallet credential of an agent without an account (`Authorization: Bearer mmw_…`, 30 days, this product only): POST /api/auth/wallet/agent/start, sign the message with the wallet, POST /api/auth/wallet/agent/token. The owner is `x402:<address>`.'
+x-service-info:
+  categories:
+  - tv-guide
+  - media
+  - directory
+  docs:
+    homepage: https://gradetv.net/
+    apiReference: https://gradetv.net/developers
+    llms: https://gradetv.net/llms.txt

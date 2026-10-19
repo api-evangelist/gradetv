@@ -1,8 +1,8 @@
 openapi: 3.2.0
 info:
-  title: Grade Favorites API
-  version: dbad45cb
-  description: Catálogo IPTV, biblioteca pessoal com feeds e informações para produtores sobre transmissão autorizada sob consulta.
+  title: GradeTV Favorites API
+  version: 1d751aaf
+  description: Find TV and radio, check the schedule and organize personal lists. Present authorized broadcast projects for evaluation, without activation.
 servers:
 - url: https://gradetv.net
 tags:
@@ -11,10 +11,10 @@ paths:
   /api/favorites:
     get:
       operationId: list_favorites
-      summary: Canais favoritados pelo dono, do mais recente para o mais antigo
-      description: 'Canal adulto só aparece com consentimento 18+ válido.
+      summary: Channels the owner marked as favorite, from the most recent to the oldest
+      description: 'Shows only channels available in the catalog.
 
-        Devolve: { items[{channel_id,name,country,quality,logo_url,is_nsfw,playable_hint,favorites,created_at,stale,api}], total, limit, offset, next_offset, api, max }'
+        Returns: { items[{channel_id,name,country,quality,logo_url,playable_hint,favorites,created_at,stale,api}], total, limit, offset, next_offset, next, api, max }'
       security:
       - bearerAuth: []
       parameters:
@@ -24,29 +24,29 @@ paths:
         schema:
           type: integer
           default: 20
-        description: Itens por página. Acima de 50 é silenciosamente reduzido a 50.
+        description: Items per page. Above 50, it is silently reduced to 50.
       - name: offset
         in: query
         required: false
         schema:
           type: integer
           default: 0
-        description: Quantos itens pular. Use `next_offset` da resposta anterior.
+        description: How many items to skip. Use `next_offset` of the previous answer.
       responses:
         '200':
-          description: '{ items[{channel_id,name,country,quality,logo_url,is_nsfw,playable_hint,favorites,created_at,stale,api}], total, limit, offset, next_offset, api, max }'
+          description: '{ items[{channel_id,name,country,quality,logo_url,playable_hint,favorites,created_at,stale,api}], total, limit, offset, next_offset, next, api, max }'
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/PaginaDeFavoritos'
         '401':
-          description: Sem credencial ou credencial inválida. Veja a auth deste endpoint.
+          description: No credential or invalid credential. See the auth of this endpoint.
       tags:
       - Favorites
     post:
       operationId: add_favorite
-      summary: Favorita um canal.
-      description: 'Devolve: { ok, favorited, created, channel_id, favorites }'
+      summary: Marks a channel as favorite.
+      description: 'Returns: { ok, favorited, created, channel_id, favorites }'
       security:
       - bearerAuth: []
       requestBody:
@@ -58,11 +58,11 @@ paths:
               properties:
                 channel_id:
                   type: string
-                  description: Canal a favoritar, ex. `Globo.br`.
+                  description: Canal a favoritar, ex. `GloboNews.br`.
               required:
               - channel_id
             example:
-              channel_id: Globo.br
+              channel_id: GloboNews.br
       responses:
         '200':
           description: '{ ok, favorited, created, channel_id, favorites }'
@@ -73,19 +73,19 @@ paths:
                 properties:
                   ok:
                     type: boolean
-                    description: Sempre `true`.
+                    description: Always `true`.
                   favorited:
                     type: boolean
-                    description: Sempre `true` ao fim desta chamada.
+                    description: Always `true` at the end of this call.
                   created:
                     type: boolean
-                    description: '`true` se foi agora; `false` se já era favorito.'
+                    description: '`true` if it was now; `false` if it was already a favorite.'
                   channel_id:
                     type: string
                     description: O canal favoritado.
                   favorites:
                     type: integer
-                    description: Total de pessoas que favoritaram este canal.
+                    description: Total of people who marked this channel as favorite.
                 required:
                 - ok
                 - favorited
@@ -93,16 +93,16 @@ paths:
                 - channel_id
                 - favorites
         '400':
-          description: '`channel_id` ausente ou teto de favoritos atingido.'
+          description: Missing `channel_id` or the favorites cap was reached.
         '401':
-          description: Sem credencial ou credencial inválida. Veja a auth deste endpoint.
+          description: No credential or invalid credential. See the auth of this endpoint.
       tags:
       - Favorites
   /api/favorites/{channel_id}:
     delete:
       operationId: remove_favorite
-      summary: Desfavorita o canal e devolve o ponto ao contador público
-      description: 'Devolve: { ok, favorited, channel_id, favorites }'
+      summary: Removes the channel from favorites and gives the point back to the public…
+      description: 'Returns: { ok, favorited, channel_id, favorites }'
       security:
       - bearerAuth: []
       parameters:
@@ -111,6 +111,8 @@ paths:
         required: true
         schema:
           type: string
+        description: Canal a desfavoritar, ex. `GloboNews.br`.
+        example: GloboNews.br
       responses:
         '200':
           description: '{ ok, favorited, channel_id, favorites }'
@@ -121,25 +123,25 @@ paths:
                 properties:
                   ok:
                     type: boolean
-                    description: Sempre `true`.
+                    description: Always `true`.
                   favorited:
                     type: boolean
-                    description: Sempre `false` ao fim desta chamada.
+                    description: Always `false` at the end of this call.
                   channel_id:
                     type: string
-                    description: O canal que saiu dos favoritos.
+                    description: The channel that left the favorites.
                   favorites:
                     type: integer
-                    description: Total de pessoas que ainda favoritam este canal.
+                    description: Total of people who still have this channel as favorite.
                 required:
                 - ok
                 - favorited
                 - channel_id
                 - favorites
         '401':
-          description: Sem credencial ou credencial inválida. Veja a auth deste endpoint.
+          description: No credential or invalid credential. See the auth of this endpoint.
         '404':
-          description: O canal não estava nos seus favoritos.
+          description: The channel was not in your favorites.
       tags:
       - Favorites
 components:
@@ -149,13 +151,13 @@ components:
       properties:
         channel_id:
           type: string
-          description: ID do canal favoritado.
+          description: ID of the favorite channel.
         name:
           type: string
-          description: Nome do canal; cai no ID se ele saiu do catálogo.
+          description: Channel name; it falls back to the ID if it left the catalog.
         country:
           type: string
-          description: País do canal.
+          description: Country of the channel.
           nullable: true
         quality:
           type: string
@@ -163,39 +165,35 @@ components:
           nullable: true
         logo_url:
           type: string
-          description: Logo servido por nós.
+          description: Logo served by us.
           nullable: true
-        is_nsfw:
-          type: boolean
-          description: Conteúdo adulto — some da lista sem consentimento 18+.
         playable_hint:
           type: boolean
-          description: Se a última verificação achou stream utilizável.
+          description: Whether the last check found a usable stream.
         favorites:
           type: integer
-          description: Quantas pessoas favoritaram este canal ao todo.
+          description: How many people made this channel a favorite in total.
         created_at:
           type: string
-          description: Quando o dono favoritou (UTC).
+          description: When the owner marked it as favorite (UTC).
         stale:
           type: boolean
-          description: '`true` quando o canal não existe mais no catálogo.'
+          description: '`true` when the channel no longer exists in the catalog.'
         api:
           type: string
-          description: URL absoluta da ficha do canal.
+          description: Absolute URL of the channel record.
       required:
       - channel_id
       - name
       - country
       - quality
       - logo_url
-      - is_nsfw
       - playable_hint
       - favorites
       - created_at
       - stale
       - api
-      description: Um canal favoritado pelo dono.
+      description: A channel the owner marked as favorite.
     PaginaDeFavoritos:
       type: object
       properties:
@@ -203,37 +201,66 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/Favorito'
-          description: Os itens desta página, na ordem que a rota define.
+          description: The items of this page, in the order that the route defines.
         total:
           type: integer
-          description: Quantos itens casam com o filtro, ignorando a paginação.
+          description: How many items match the filter, ignoring the pagination.
         limit:
           type: integer
-          description: Tamanho de página efetivamente aplicado (pode ser menor que o pedido).
+          description: Page size actually applied (it can be smaller than the requested one).
         offset:
           type: integer
-          description: Deslocamento aplicado nesta página.
+          description: Offset applied in this page.
         next_offset:
           type: integer
-          description: Offset da próxima página; `null` quando esta é a última.
+          description: Offset of the next page; `null` when this is the last one.
+          nullable: true
+        next:
+          type: string
+          description: 'Absolute URL of the next page, with the same filters: follow it until it comes as `null` to scan everything, without rebuilding the query string.'
           nullable: true
         api:
           type: string
-          description: URL absoluta desta própria listagem.
+          description: Absolute URL of this listing itself.
         max:
           type: integer
-          description: Quantos favoritos o dono pode ter.
+          description: How many favorites the owner can have.
       required:
       - items
       - total
       - limit
       - offset
       - next_offset
+      - next
       - api
       - max
-      description: Página dos favoritos do dono, com o teto de quantos cabem.
+      description: Page of the owner's favorites, with the cap of how many fit.
   securitySchemes:
     bearerAuth:
       type: http
       scheme: bearer
-      description: ipt_… (guest) ou iptk_… (API key)
+      description: ipt_… (guest); the account is a cookie, never a bearer
+    globalAccount:
+      type: apiKey
+      in: cookie
+      name: __Host-mm-auth
+      description: Global session in the product's HttpOnly cookie; writes require exact Origin and X-CSRF-Token.
+    contaChaveApi:
+      type: http
+      scheme: bearer
+      bearerFormat: mmk_…
+      description: 'Account API key: `Authorization: Bearer mmk_…` or `X-Api-Key: mmk_…`. Created on the account page (API keys), valid only in the product where it was created; it acts as the account (or the organization that owns it).'
+    carteiraAgente:
+      type: http
+      scheme: bearer
+      bearerFormat: mmw_…
+      description: 'Wallet credential of an agent without an account (`Authorization: Bearer mmw_…`, 30 days, this product only): POST /api/auth/wallet/agent/start, sign the message with the wallet, POST /api/auth/wallet/agent/token. The owner is `x402:<address>`.'
+x-service-info:
+  categories:
+  - tv-guide
+  - media
+  - directory
+  docs:
+    homepage: https://gradetv.net/
+    apiReference: https://gradetv.net/developers
+    llms: https://gradetv.net/llms.txt

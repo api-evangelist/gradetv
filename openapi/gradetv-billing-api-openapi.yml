@@ -1,8 +1,8 @@
 openapi: 3.2.0
 info:
-  title: Grade Billing API
-  version: dbad45cb
-  description: Catálogo IPTV, biblioteca pessoal com feeds e informações para produtores sobre transmissão autorizada sob consulta.
+  title: GradeTV Billing API
+  version: 1d751aaf
+  description: Find TV and radio, check the schedule and organize personal lists. Present authorized broadcast projects for evaluation, without activation.
 servers:
 - url: https://gradetv.net
 tags:
@@ -11,14 +11,14 @@ paths:
   /api/billing:
     get:
       operationId: billing
-      summary: Preços em vigor, tetos da galeria e a configuração x402 completa
-      description: 'É o número EM VIGOR: leia daqui antes de gastar chamada, em vez de assumir o preço da documentação. Com credencial, também diz se o seu passe de chat está ativo.
+      summary: Prices in force, gallery caps and the full x402 configuration
+      description: 'It is the number IN FORCE: read it from here before you spend a call, instead of assuming the price of the documentation. With a credential, it also tells whether the chat pass of the person who speaks in the chat (the guest; without one, the account) is active. `prices.abuso_24h_usd` is the price of the gate for an empty UA/curl, off today.
 
-        Devolve: { provider, mode, network, chain_id, pay_to, homolog, dev, dev_gate, facilitator, asset, asset_address, faucet, wallets, product, prices{contact_agent_usd,chat_month_usd}, chat{active,until}, limits{categories,groups_per_category,items_per_group} }'
+        Returns: { provider, mode, network, chain_id, pay_to, homolog, dev, dev_gate, alternavel, gratis?, cobrados?, facilitator, asset, asset_address, faucet, wallets, product, prices{chat_month_usd,abuso_24h_usd}, chat{active,until}, limits{categories,groups_per_category,items_per_group} }'
       security: []
       responses:
         '200':
-          description: '{ provider, mode, network, chain_id, pay_to, homolog, dev, dev_gate, facilitator, asset, asset_address, faucet, wallets, product, prices{contact_agent_usd,chat_month_usd}, chat{active,until}, limits{categories,groups_per_category,items_per_group} }'
+          description: '{ provider, mode, network, chain_id, pay_to, homolog, dev, dev_gate, alternavel, gratis?, cobrados?, facilitator, asset, asset_address, faucet, wallets, product, prices{chat_month_usd,abuso_24h_usd}, chat{active,until}, limits{categories,groups_per_category,items_per_group} }'
           content:
             application/json:
               schema:
@@ -30,16 +30,16 @@ components:
     Precos:
       type: object
       properties:
-        contact_agent_usd:
-          type: number
-          description: Custo de um contato de agente.
         chat_month_usd:
           type: number
-          description: Custo do passe de chat por 30 dias.
+          description: Cost of the chat pass per 30 days.
+        abuso_24h_usd:
+          type: number
+          description: Price of the gate for an empty UA or curl (off).
       required:
-      - contact_agent_usd
       - chat_month_usd
-      description: Preços em vigor, em dólar. Leia daqui, não da documentação.
+      - abuso_24h_usd
+      description: Prices in force, in dollars. Read them from here, not from the documentation.
     TetosGaleria:
       type: object
       properties:
@@ -56,81 +56,93 @@ components:
       - categories
       - groups_per_category
       - items_per_group
-      description: Os limites da galeria pessoal — existem para o catálogo público não ser despejado numa biblioteca.
+      description: 'The limits of the personal gallery: they exist so that the public catalog is not dumped into a library.'
     Passe:
       type: object
       properties:
         active:
           type: boolean
-          description: Se o passe vale neste momento.
+          description: Whether the pass is valid at this moment.
         until:
           type: string
-          description: Até quando vale (UTC); `null` quando não há passe.
+          description: Until when it is valid (UTC); `null` without a pass, or with the chat open for free (`X402_GRATIS`).
           nullable: true
       required:
       - active
       - until
-      description: Passe mensal — do chat ou de conteúdo adulto. São contas separadas, mesmo formato.
+      description: 'Monthly chat pass: the `chat_pass` `direito` of the speaker, in the global purchase record.'
     Billing:
       type: object
       properties:
         provider:
           type: string
-          description: Sempre `x402` — é o único protocolo de cobrança aceito.
+          description: 'Always `x402`: it is the only accepted billing protocol.'
         mode:
           type: string
-          description: 'Modo do vendedor: `live` cobra de verdade, `dev` libera sem pagar.'
+          description: 'Seller mode: `live` charges for real, `dev` releases without payment.'
         network:
           type: string
-          description: 'Rede da USDC: `base` em produção, `base-sepolia` em homologação.'
+          description: 'USDC network: `base` in production, `base-sepolia` in staging.'
         chain_id:
           type: integer
-          description: Chain ID EVM da rede acima, para a carteira assinar na cadeia certa.
+          description: EVM chain ID of the network above, so that the wallet signs on the correct chain.
         pay_to:
           type: string
-          description: Endereço que recebe o pagamento.
+          description: Address that receives the payment.
           nullable: true
         homolog:
           type: boolean
-          description: 'Seam de homologação ligado: dá para fechar o loop sem gastar USDC.'
+          description: 'Staging seam enabled: you can close the loop without spending USDC.'
         dev:
           type: boolean
-          description: 'Modo de desenvolvimento: o 402 é simulado.'
+          description: 'Development mode: the 402 is simulated.'
         dev_gate:
-          type: string
-          description: Como o modo dev é destravado, quando existe.
-          nullable: true
+          type: boolean
+          description: A staging credential is configured; it does not grant access.
+        alternavel:
+          type: boolean
+          description: 'Only in dev: the request with `X-MM-Pagamento: real` pays for real instead of the test.'
+        gratis:
+          type: array
+          items:
+            type: string
+          description: SKUs temporariamente gratuitos.
+        cobrados:
+          type: array
+          items:
+            type: string
+          description: SKUs charged even with `*` in `gratis`.
         facilitator:
           type: string
-          description: URL do facilitador que verifica e liquida o pagamento.
+          description: URL of the facilitator that verifies and settles the payment.
         asset:
           type: string
-          description: Moeda aceita — sempre `USDC`.
+          description: 'Accepted currency: always `USDC`.'
         asset_address:
           type: string
-          description: Contrato da USDC na rede acima.
+          description: USDC contract on the network above.
         faucet:
           type: string
-          description: Torneira de USDC de teste; só em base-sepolia.
+          description: Test USDC faucet; only on base-sepolia.
           nullable: true
         wallets:
           type: object
-          description: Links de carteiras que falam x402 (metamask, coinbase, base_app).
+          description: Links to wallets that speak x402 (metamask, coinbase, base_app).
         product:
           type: string
-          description: Nome do produto que está cobrando.
+          description: Name of the product that is charging.
         prices:
           allOf:
           - $ref: '#/components/schemas/Precos'
-          description: Quanto custa cada ação paga, em USD.
+          description: How much each paid action costs, in USD.
         chat:
           allOf:
           - $ref: '#/components/schemas/Passe'
-          description: Seu passe de chat; sem credencial vem inativo.
+          description: Your chat pass; without a credential it comes inactive.
         limits:
           allOf:
           - $ref: '#/components/schemas/TetosGaleria'
-          description: Quantas pastas, sub-abas e canais cabem.
+          description: How many folders, sub-tabs and channels fit.
       required:
       - provider
       - mode
@@ -140,6 +152,7 @@ components:
       - homolog
       - dev
       - dev_gate
+      - alternavel
       - facilitator
       - asset
       - asset_address
@@ -149,9 +162,33 @@ components:
       - prices
       - chat
       - limits
-      description: 'Tudo que decide se uma chamada vai custar: a configuração x402, os preços do produto, o seu passe e os tetos da galeria.'
+      description: 'Everything that decides if a call will cost money: the x402 configuration, the product prices, your pass and the gallery caps.'
   securitySchemes:
     bearerAuth:
       type: http
       scheme: bearer
-      description: ipt_… (guest) ou iptk_… (API key)
+      description: ipt_… (guest); the account is a cookie, never a bearer
+    globalAccount:
+      type: apiKey
+      in: cookie
+      name: __Host-mm-auth
+      description: Global session in the product's HttpOnly cookie; writes require exact Origin and X-CSRF-Token.
+    contaChaveApi:
+      type: http
+      scheme: bearer
+      bearerFormat: mmk_…
+      description: 'Account API key: `Authorization: Bearer mmk_…` or `X-Api-Key: mmk_…`. Created on the account page (API keys), valid only in the product where it was created; it acts as the account (or the organization that owns it).'
+    carteiraAgente:
+      type: http
+      scheme: bearer
+      bearerFormat: mmw_…
+      description: 'Wallet credential of an agent without an account (`Authorization: Bearer mmw_…`, 30 days, this product only): POST /api/auth/wallet/agent/start, sign the message with the wallet, POST /api/auth/wallet/agent/token. The owner is `x402:<address>`.'
+x-service-info:
+  categories:
+  - tv-guide
+  - media
+  - directory
+  docs:
+    homepage: https://gradetv.net/
+    apiReference: https://gradetv.net/developers
+    llms: https://gradetv.net/llms.txt

@@ -1,8 +1,8 @@
 openapi: 3.2.0
 info:
-  title: Grade Me API
-  version: dbad45cb
-  description: Catálogo IPTV, biblioteca pessoal com feeds e informações para produtores sobre transmissão autorizada sob consulta.
+  title: GradeTV Me API
+  version: 1d751aaf
+  description: Find TV and radio, check the schedule and organize personal lists. Present authorized broadcast projects for evaluation, without activation.
 servers:
 - url: https://gradetv.net
 tags:
@@ -11,13 +11,15 @@ paths:
   /api/me:
     get:
       operationId: me
-      summary: 'A conta da sessão: e-mail, convidado principal e o tamanho da biblioteca'
-      description: 'Devolve: { user{id,email}, app, guest_token, resources{categories,favorites,history} }'
+      summary: 'The session account: e-mail and the size of its library'
+      description: 'The account is the one of the account library; `user.id` is the account ID, and it owns the gallery with a session.
+
+        Returns: { user{id,email}, profile, app, resources{categories,favorites,history} }'
       security:
-      - bearerAuth: []
+      - globalAccount: []
       responses:
         '200':
-          description: '{ user{id,email}, app, guest_token, resources{categories,favorites,history} }'
+          description: '{ user{id,email}, profile, app, resources{categories,favorites,history} }'
           content:
             application/json:
               schema:
@@ -26,24 +28,26 @@ paths:
                   user:
                     allOf:
                     - $ref: '#/components/schemas/Conta'
-                    description: A pessoa dona da sessão.
+                    description: The person who owns the session.
+                  profile:
+                    type: object
+                    description: 'Perfil global: `name`, `locale`, `timeZone`, `theme`, `revision`.'
                   app:
                     type: string
-                    description: Nome do produto.
-                  guest_token:
-                    type: string
-                    description: Convidado principal da conta — é o que tem a galeria.
+                    description: Product name.
                   resources:
                     allOf:
                     - $ref: '#/components/schemas/Recursos'
-                    description: Quantas pastas, favoritos e canais no histórico existem.
+                    description: How many folders, favorites and channels in the history the account has.
                 required:
                 - user
+                - profile
                 - app
-                - guest_token
                 - resources
         '401':
-          description: Sem credencial ou credencial inválida. Veja a auth deste endpoint.
+          description: invalid_session
+        '503':
+          description: auth_unavailable
       tags:
       - Me
 components:
@@ -53,33 +57,57 @@ components:
       properties:
         id:
           type: string
-          description: ID da conta.
+          description: Account ID.
         email:
           type: string
-          description: E-mail confirmado por código.
+          description: E-mail confirmed by a code.
       required:
       - id
       - email
-      description: A pessoa por trás da sessão.
+      description: The person behind the session.
     Recursos:
       type: object
       properties:
         categories:
           type: integer
-          description: Quantas pastas o dono tem.
+          description: How many folders the owner has.
         favorites:
           type: integer
-          description: Quantos canais ele favoritou.
+          description: How many channels the owner made a favorite.
         history:
           type: integer
-          description: Quantos canais estão no histórico.
+          description: How many channels are in the history.
       required:
       - categories
       - favorites
       - history
-      description: O tamanho da biblioteca do dono — para o agente saber o que vai encontrar antes de buscar.
+      description: The size of the owner's library, so that the agent knows what it will find before it searches.
   securitySchemes:
     bearerAuth:
       type: http
       scheme: bearer
-      description: ipt_… (guest) ou iptk_… (API key)
+      description: ipt_… (guest); the account is a cookie, never a bearer
+    globalAccount:
+      type: apiKey
+      in: cookie
+      name: __Host-mm-auth
+      description: Global session in the product's HttpOnly cookie; writes require exact Origin and X-CSRF-Token.
+    contaChaveApi:
+      type: http
+      scheme: bearer
+      bearerFormat: mmk_…
+      description: 'Account API key: `Authorization: Bearer mmk_…` or `X-Api-Key: mmk_…`. Created on the account page (API keys), valid only in the product where it was created; it acts as the account (or the organization that owns it).'
+    carteiraAgente:
+      type: http
+      scheme: bearer
+      bearerFormat: mmw_…
+      description: 'Wallet credential of an agent without an account (`Authorization: Bearer mmw_…`, 30 days, this product only): POST /api/auth/wallet/agent/start, sign the message with the wallet, POST /api/auth/wallet/agent/token. The owner is `x402:<address>`.'
+x-service-info:
+  categories:
+  - tv-guide
+  - media
+  - directory
+  docs:
+    homepage: https://gradetv.net/
+    apiReference: https://gradetv.net/developers
+    llms: https://gradetv.net/llms.txt
