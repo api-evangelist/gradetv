@@ -19,7 +19,7 @@ server:
   protocol_version: '2024-11-05'
   url: https://gradetv.net/mcp
   registry_auth: well-known/gradetv-mcp-registry-auth.txt
-tools_count: 46
+tools_count: 41
 tools_file: gradetv-mcp-tools.json
 note: First-party hosted MCP server on the same host as the REST API. GET /mcp returns a server card (transport,
   protocol version, tool count); an anonymous POST tools/list returned all 46 tools with full inputSchemas,
@@ -33,106 +33,138 @@ x-evidence:
   http_status: 200
   method_probe: tools/list
 tools:
+- name: list_programacao
+  description: Channels with a collected TV guide, up to 48 per page.
+- name: get_programacao
+  description: The last TV guide available for the channel and up to 20 dates of its history.
+- name: get_programacao_dia
+  description: The stored TV guide of a channel on one day.
 - name: api_index
-  description: Descobre a API Grade.
+  description: The index of the whole API, with the languages and the HTML pages of each language.
 - name: health
-  description: Liveness.
+  description: Liveness and the commit that is published now. The smoke test waits for its own deploy
+    here.
 - name: geo
-  description: País sugerido para a UI (fallback BR).
+  description: 'The country and the language suggested for the caller. When the edge detects no country,
+    it suggests BR with `source: "fallback"`; `detected` tells what the edge saw.'
 - name: list_countries
-  description: Países do catálogo com contagem playable e URL da bandeira (kind=radio conta estações).
+  description: The countries in the catalog, with the playable count and the flag URL (`kind=radio` counts
+    stations).
 - name: list_tags
-  description: Tags das estações de rádio tocáveis, com contagem; opcionalmente por país.
+  description: The tags of the playable radio stations, with the count, optionally by country.
 - name: search_channels
-  description: 'Busca canais públicos (filtros: q, country, category, language, network, quality, playable;
-    kind=radio para estações de rádio, tag para tag de rádio; sort=score ordena pela saúde medida por
-    terceiro, sort=votes pelos votos da rádio; online='
+  description: 'Searches public channels (filters: q, country, category, language, network, quality, playable;
+    kind=radio for radio stations, tag for a radio tag; sort=score orders by the health that a third party
+    measures, sort=votes by the radio votes; online=1 returns only channels seen online in the last 48
+    h). This is the main entry point of the product. The response changes with the browser, the system
+    and the country of the caller: each channel has `social.your_fails`, the result for YOUR environment,
+    so the response is `Cache-Control: private`.'
 - name: list_languages
-  description: Idiomas do catálogo tocável.
+  description: The languages that have a playable channel, with the count of each language.
 - name: list_networks
-  description: Redes (network) do catálogo tocável.
+  description: The networks and broadcasters that have a playable channel, with the count.
 - name: list_qualities
-  description: Qualidades distintas dos streams.
+  description: The different qualities found in the catalog streams (for radio, the codec and the bitrate).
 - name: list_subdivisions
-  description: Estados/subdivisões com canal tocável.
+  description: The states and provinces that have a playable channel.
 - name: list_cities
-  description: Cidades com canal tocável.
+  description: The cities that have a playable channel. You can filter them by country and by state.
 - name: get_channel
-  description: Detalhe de um canal e seus streams.
+  description: The full record of a channel, with the streams that already point to our hop.
 - name: get_channel_guide
-  description: 'Programação de hoje do canal (grabada por nós): agora, a seguir e a lista.'
+  description: 'Today''s TV guide of the channel (recorded by us): now, next and the list. It is available
+    for the channels with a guide (`guide=1`) and is valid for up to two days. Check the date of the response;
+    the channel record has the summary in `guide_now`.'
 - name: create_guest
-  description: Cria guest ipt_…
-- name: mint_key
-  description: Gera API key iptk_… (texto 1×).
+  description: 'Creates a guest `ipt_…`. It asks for no e-mail and no other data. Keep the token: if you
+    lose the token, you lose the library, unless an account already claimed it (`POST /api/auth/claim`).
+    Then the account keeps what the token saved.'
 - name: get_library
-  description: Árvore organizada do dono + URLs de feed.
+  description: 'The whole library of the owner: folders, tabs, channels and the feed URLs of each level.'
 - name: create_category
-  description: Cria tab/categoria pessoal.
+  description: Creates a personal folder (category). 8 folders at most per owner. The response has the
+    whole updated library, so you do not need to reload `GET /api/library`.
 - name: create_group
-  description: Cria sub-aba numa categoria.
+  description: Creates a tab in a folder. 12 tabs at most per folder. The response has the whole updated
+    library, so you do not need to reload `GET /api/library`.
 - name: add_item
-  description: Adiciona canal à sub-aba.
+  description: Adds a channel to a tab. 40 channels at most per tab. The response tells the folder and
+    the tab where the channel went, so the screen opens in the right place. The response has the whole
+    updated library, so you do not need to reload `GET /api/library`.
 - name: get_history
-  description: Histórico de canais assistidos pelo dono.
+  description: The channels that the owner watched. It shows only the channels that are available in the
+    catalog.
 - name: record_watch
-  description: Registra um canal assistido no histórico do dono.
+  description: Records a watched channel in the owner's history.
 - name: forget_watch
-  description: Tira um canal do histórico do dono.
+  description: Removes a channel from the owner's history.
 - name: clear_history
-  description: Limpa o histórico inteiro do dono.
+  description: Clears the whole history of the owner at once.
+- name: tv_state
+  description: Checks the activation of the TV network by the six-digit code.
+- name: legacy_stream
+  description: 'Public metadata: the official site of the channel, the stream URL to copy into another
+    player, and the legacy HTTP player. The legacy_url button opens http://legacy.gradetv.net/legacy?stream=ID,
+    with no port in the address. The standalone page accepts lang=pt/en/es/fr/de/hu and theme=light/dark.
+    Playlists go through the HTTPS hop, and the media comes directly from the origin. It does not remove
+    an access refusal or a CORS requirement. It is one indexed read: it does not fetch the origin and
+    does not write to the database.'
 - name: producer_services
-  description: 'Oferta de transmissão autorizada sob consulta: informações e contatos para produtores.
-    Não ativa streams.'
-- name: nsfw_consent_status
-  description: Estado do portão de conteúdo adulto do dono.
-- name: nsfw_consent_accept
-  description: Declara 18+ e aceita os termos de conteúdo adulto; libera nsfw=1 para este dono.
-- name: nsfw_pass_buy
-  description: Compra o passe de conteúdo adulto ($0.10 / 30 dias, x402). Exige consentimento de idade
-    antes.
-- name: nsfw_pass_status
-  description: Diz se o passe adulto do dono está válido e até quando.
-- name: nsfw_consent_revoke
-  description: Revoga o consentimento adulto do dono.
+  description: 'Authorized broadcast offer on request: information and contacts for producers. It does
+    not turn on streams; it only gives information and collects interest. To present a project, use contact.form_url
+    in the browser, contact.email by e-mail, or POST /api/contact.'
 - name: report_play
-  description: Relata se um canal tocou (ok=true) ou não (ok=false + code). Navegador, SO e país saem
-    do pedido, não do corpo.
+  description: 'Reports whether a channel played (ok=true) or not (ok=false with code). The browser and
+    the system come from the User-Agent, and the country comes from the request data; the body cannot
+    change them. The first report of a result on a day returns 201. It counts once per owner, channel,
+    day and result; a repeat returns 200 with `reason: ja_relatado_hoje`. The reports help to compare
+    results in `GET /api/channels/:id/health`, but they do not confirm the cause of a failure.'
 - name: play_reports
-  description: Relatos crus de um canal, com endereço — só operador (METRICS_TOKEN). Use para investigar
-    um canal específico.
+  description: The raw reports of a channel, with the address. Operator only (METRICS_TOKEN). Use it to
+    investigate one channel. In the current reports, the `ip` field has an identifier calculated from
+    the network and a secret value. The retention period is in `retention_days`. The public panel does
+    not return this identifier.
 - name: channel_health
-  description: 'Saúde comunitária do canal: taxa de sucesso, motivos de falha e ambientes afetados.'
+  description: 'The community health of the channel: the success rate, the failure reasons and the affected
+    environments. It tells ''the channel is off the air'' from ''the channel is blocked in your country''.
+    `geo` tells whether it is a regional restriction or a general failure (with the countries), `regions[]`
+    has the success and the failure by country, `latency[]` has the opening speed measured at the hop
+    by country, and `pra_voce` sums it up for the country of the caller. Without community reports (`POST
+    /api/play-report`), the panel is empty.'
 - name: list_favorites
-  description: Favoritos do dono.
+  description: The favorites of the owner. It shows only the channels that are available in the catalog.
 - name: add_favorite
-  description: Favorita um canal para o dono.
+  description: 'Marks a channel as a favorite. A repeat does not add up: the public counter counts people,
+    not clicks.'
 - name: remove_favorite
-  description: Tira um canal dos favoritos do dono.
+  description: Removes the channel from the favorites and gives the point back to the public counter.
 - name: list_comments
-  description: Comentários da comunidade sobre um canal.
+  description: 'The community comments about a channel. When the call has a credential, each of your comments
+    has `mine: true`; this is how the interface knows what you can delete.'
 - name: post_comment
-  description: Comenta num canal (teto de 20/hora por dono).
+  description: Comments on a channel (20 per hour at most per owner). Without `author`, the server makes
+    a nickname that stays the same for the same owner, so the person does not get a different name for
+    each message.
 - name: delete_comment
-  description: Apaga um comentário do próprio dono.
+  description: 'Deletes a comment of the owner. The 404 is on purpose: the API does not confirm that a
+    comment with that id exists when it is not yours.'
 - name: chat_history
-  description: Últimas mensagens da sala de um canal (sem WebSocket).
+  description: The last messages in the room of a channel (without WebSocket).
 - name: chat_send
-  description: Manda mensagem na sala de um canal por HTTP.
-- name: chat_pass
-  description: Passe mensal do chat ($0.10 / 30 dias). Sem pagamento → 402.
-- name: auth_start
-  description: Manda o código de login por e-mail.
-- name: auth_verify
-  description: Confere o código, abre sessão e reivindica o convidado (devolve o convidado principal).
+  description: Sends a message to the room of a channel by HTTP. The speaker is the guest (`X-Guest-Token`),
+    the same one that the WebSocket recognizes; without a guest, the account session.
 - name: me
-  description: 'Conta da sessão (cookie repassado pelo cliente MCP): e-mail, convidado principal e tamanho
-    da biblioteca.'
-- name: billing
-  description: Preços e tetos.
+  description: 'The session account (the cookie that the MCP client passes on): the e-mail and the size
+    of the account library. `user.id` is the account id, and the account owns the library when there is
+    a session.'
 - name: contact
-  description: 'Contato, projeto de produtor ou proposta de patrocínio/parceria/anúncio ($0.10 x402/crédito
-    por envio). Após o 1º envio: 429 + Retry-After.'
+  description: 'Write to the people behind the product: a question, or a sponsorship/partnership/advertising
+    proposal. One route for a question and for a sponsorship, partnership or ad proposal (`tipo`, with
+    the placements of `GET /api/partners`). One message every 10 seconds per network: one that arrives
+    sooner waits its turn and then goes out — no error. The message reaches the team by e-mail, with `email`
+    as the reply address. For voice, send multipart/form-data: `dados` is this JSON (up to 32 KiB), and
+    `audio` is one WebM, Ogg or M4A audio file (up to 2 MB). Audio can replace message. The browser records
+    up to two minutes. Audio is attached to the owner''s e-mail.'
 descriptions_source: live tools/list (authorship probe or saved capture); filled by backfill-tools-from-authorship.py
   --descriptions, 2026-09-28
 tool_quality:
