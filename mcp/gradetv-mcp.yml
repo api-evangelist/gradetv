@@ -135,3 +135,28 @@ tools:
     por envio). Após o 1º envio: 429 + Retry-After.'
 descriptions_source: live tools/list (authorship probe or saved capture); filled by backfill-tools-from-authorship.py
   --descriptions, 2026-09-28
+tool_quality:
+  tool_count: 41
+  tokens_total: 6651
+  tokens_per_tool_median: 119
+  heavy_tools: []
+  heavy_tool_count: 0
+  params_total: 77
+  params_undescribed: 1
+  params_described_pct: 98.7
+  tools_with_undescribed_params: 1
+  tools_annotated: 41
+  annotated_pct: 100.0
+  state_changing_unhinted: []
+  tools_missing_schema: 0
+  short_descriptions: 0
+  duplicate_descriptions: 0
+  duplicate_names: 0
+  nonportable_names: []
+  output_schema_count: 0
+  token_estimate: chars/3.6 of each compact tool definition
+  source: mcp/gradetv-mcp-tools.json
+  measured: '2026-10-20'
+  scored: false
+  note: Facts from the saved tools/list capture (mcp_tool_quality.py); recorded, not scored. Checks learned
+    from Glimind's agent-readiness audit.

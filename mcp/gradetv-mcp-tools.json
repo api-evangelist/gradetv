@@ -1,1 +1,1597 @@
-{"jsonrpc":"2.0","id":1,"result":{"tools":[{"name":"api_index","description":"Descobre a API Grade.","inputSchema":{"type":"object","properties":{}}},{"name":"health","description":"Liveness.","inputSchema":{"type":"object","properties":{}}},{"name":"geo","description":"País sugerido pelo Cloudflare para a UI (fallback BR).","inputSchema":{"type":"object","properties":{}}},{"name":"list_countries","description":"Países do catálogo com contagem playable e URL da bandeira (kind=radio conta estações).","inputSchema":{"type":"object","properties":{"kind":{"type":"string","enum":["tv","radio","all"]}}}},{"name":"list_tags","description":"Tags das estações de rádio tocáveis (Radio Browser), com contagem; opcionalmente por país.","inputSchema":{"type":"object","properties":{"country":{"type":"string"},"limit":{"type":"string"}}}},{"name":"search_channels","description":"Busca canais públicos (filtros: q, country, category, language, network, quality, playable, nsfw; kind=radio para estações de rádio, tag para tag de rádio; sort=score ordena pela saúde medida por terceiro, sort=votes pelos votos da rádio; online=1 só quem foi visto online nas últimas 48 h).","inputSchema":{"type":"object","properties":{"q":{"type":"string"},"country":{"type":"string"},"category":{"type":"string"},"language":{"type":"string"},"network":{"type":"string"},"quality":{"type":"string"},"guide":{"type":"string"},"subdivision":{"type":"string"},"city":{"type":"string"},"playable":{"type":"string"},"nsfw":{"type":"string"},"sort":{"type":"string","enum":["name","score","votes"]},"online":{"type":"string"},"kind":{"type":"string","enum":["tv","radio","all"]},"tag":{"type":"string"}}}},{"name":"list_languages","description":"Idiomas do catálogo tocável.","inputSchema":{"type":"object","properties":{}}},{"name":"list_networks","description":"Redes (network) do catálogo tocável.","inputSchema":{"type":"object","properties":{}}},{"name":"list_qualities","description":"Qualidades distintas dos streams.","inputSchema":{"type":"object","properties":{}}},{"name":"list_subdivisions","description":"Estados/subdivisões com canal tocável.","inputSchema":{"type":"object","properties":{"country":{"type":"string"}}}},{"name":"list_cities","description":"Cidades com canal tocável.","inputSchema":{"type":"object","properties":{"country":{"type":"string"},"subdivision":{"type":"string"}}}},{"name":"get_channel","description":"Detalhe de um canal e seus streams.","inputSchema":{"type":"object","properties":{"id":{"type":"string"}},"required":["id"]}},{"name":"get_channel_guide","description":"Programação de hoje do canal (grabada por nós): agora, a seguir e a lista.","inputSchema":{"type":"object","properties":{"id":{"type":"string"}},"required":["id"]}},{"name":"create_guest","description":"Cria guest ipt_…","inputSchema":{"type":"object","properties":{}}},{"name":"mint_key","description":"Gera API key iptk_… (texto 1×).","inputSchema":{"type":"object","properties":{"label":{"type":"string"}}}},{"name":"get_library","description":"Árvore organizada do dono + URLs de feed.","inputSchema":{"type":"object","properties":{}}},{"name":"create_category","description":"Cria tab/categoria pessoal.","inputSchema":{"type":"object","properties":{"name":{"type":"string"}},"required":["name"]}},{"name":"create_group","description":"Cria sub-aba numa categoria.","inputSchema":{"type":"object","properties":{"category_id":{"type":"string"},"name":{"type":"string"}},"required":["category_id","name"]}},{"name":"add_item","description":"Adiciona canal à sub-aba.","inputSchema":{"type":"object","properties":{"group_id":{"type":"string"},"channel_id":{"type":"string"}},"required":["group_id","channel_id"]}},{"name":"get_history","description":"Histórico de canais assistidos pelo dono.","inputSchema":{"type":"object","properties":{"limit":{"type":"string"},"offset":{"type":"string"}}}},{"name":"record_watch","description":"Registra um canal assistido no histórico do dono.","inputSchema":{"type":"object","properties":{"channel_id":{"type":"string"}},"required":["channel_id"]}},{"name":"forget_watch","description":"Tira um canal do histórico do dono.","inputSchema":{"type":"object","properties":{"channel_id":{"type":"string"}},"required":["channel_id"]}},{"name":"clear_history","description":"Limpa o histórico inteiro do dono.","inputSchema":{"type":"object","properties":{}}},{"name":"producer_services","description":"Oferta de transmissão autorizada sob consulta: informações e contatos para produtores. Não ativa streams.","inputSchema":{"type":"object","properties":{"lang":{"type":"string","enum":["pt","en","es","fr","de"]}}}},{"name":"nsfw_consent_status","description":"Estado do portão de conteúdo adulto do dono.","inputSchema":{"type":"object","properties":{}}},{"name":"nsfw_consent_accept","description":"Declara 18+ e aceita os termos de conteúdo adulto; libera nsfw=1 para este dono.","inputSchema":{"type":"object","properties":{"birth_date":{"type":"string"},"accept_terms":{"type":"boolean"},"terms_version":{"type":"string"}},"required":["birth_date","accept_terms"]}},{"name":"nsfw_pass_buy","description":"Compra o passe de conteúdo adulto ($0.10 / 30 dias, x402). Exige consentimento de idade antes.","inputSchema":{"type":"object","properties":{}}},{"name":"nsfw_pass_status","description":"Diz se o passe adulto do dono está válido e até quando.","inputSchema":{"type":"object","properties":{}}},{"name":"nsfw_consent_revoke","description":"Revoga o consentimento adulto do dono.","inputSchema":{"type":"object","properties":{}}},{"name":"report_play","description":"Relata se um canal tocou (ok=true) ou não (ok=false + code). Navegador, SO e país saem do pedido, não do corpo.","inputSchema":{"type":"object","properties":{"channel_id":{"type":"string"},"ok":{"type":"boolean"},"code":{"type":"string"}},"required":["channel_id","ok"]}},{"name":"play_reports","description":"Relatos crus de um canal, com endereço — só operador (METRICS_TOKEN). Use para investigar um canal específico.","inputSchema":{"type":"object","properties":{"channel_id":{"type":"string"},"ok":{"type":"string"},"limit":{"type":"string"}}}},{"name":"channel_health","description":"Saúde comunitária do canal: taxa de sucesso, motivos de falha e ambientes afetados.","inputSchema":{"type":"object","properties":{"id":{"type":"string"}},"required":["id"]}},{"name":"list_favorites","description":"Favoritos do dono.","inputSchema":{"type":"object","properties":{}}},{"name":"add_favorite","description":"Favorita um canal para o dono.","inputSchema":{"type":"object","properties":{"channel_id":{"type":"string"}},"required":["channel_id"]}},{"name":"remove_favorite","description":"Tira um canal dos favoritos do dono.","inputSchema":{"type":"object","properties":{"channel_id":{"type":"string"}},"required":["channel_id"]}},{"name":"list_comments","description":"Comentários da comunidade sobre um canal.","inputSchema":{"type":"object","properties":{"id":{"type":"string"}},"required":["id"]}},{"name":"post_comment","description":"Comenta num canal (teto de 20/hora por dono).","inputSchema":{"type":"object","properties":{"id":{"type":"string"},"body":{"type":"string"},"author":{"type":"string"}},"required":["id","body"]}},{"name":"delete_comment","description":"Apaga um comentário do próprio dono.","inputSchema":{"type":"object","properties":{"id":{"type":"string"}},"required":["id"]}},{"name":"chat_history","description":"Últimas mensagens da sala de um canal (sem WebSocket).","inputSchema":{"type":"object","properties":{"channel_id":{"type":"string"}},"required":["channel_id"]}},{"name":"chat_send","description":"Manda mensagem na sala de um canal por HTTP.","inputSchema":{"type":"object","properties":{"channel_id":{"type":"string"},"body":{"type":"string"},"author":{"type":"string"}},"required":["channel_id","body"]}},{"name":"chat_pass","description":"Passe mensal do chat ($0.10 / 30 dias). Sem pagamento → 402.","inputSchema":{"type":"object","properties":{}}},{"name":"auth_start","description":"Manda o código de login por e-mail.","inputSchema":{"type":"object","properties":{"email":{"type":"string"}},"required":["email"]}},{"name":"auth_verify","description":"Confere o código, abre sessão e reivindica o convidado (devolve o convidado principal).","inputSchema":{"type":"object","properties":{"email":{"type":"string"},"code":{"type":"string"},"guest_token":{"type":"string"}},"required":["email","code"]}},{"name":"me","description":"Conta da sessão: e-mail, convidado principal e tamanho da biblioteca.","inputSchema":{"type":"object","properties":{}}},{"name":"billing","description":"Preços e tetos.","inputSchema":{"type":"object","properties":{}}},{"name":"contact","description":"Contato ou projeto de produtor ($0.10 x402/crédito por envio). form_ts é o início da composição em ms, entre 2 segundos e 12 horas atrás. Após o 1º envio: 429 + Retry-After.","inputSchema":{"type":"object","properties":{"name":{"type":"string"},"email":{"type":"string"},"message":{"type":"string"},"form_ts":{"type":"integer"}},"required":["name","email","message","form_ts"]}}]}}
+{
+  "endpoint": "https://gradetv.net/mcp",
+  "captured": "2026-10-20",
+  "method": "initialize + tools/list (anonymous, no tool called; roadmap#992)",
+  "protocol_version": "2025-06-18",
+  "server_info": {
+    "name": "GradeTV",
+    "version": "78e0bd5f"
+  },
+  "result": {
+    "tools": [
+      {
+        "name": "list_programacao",
+        "title": "TV guide channels",
+        "description": "Channels with a collected TV guide, up to 48 per page.",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "q": {
+              "type": "string",
+              "maxLength": 80,
+              "description": "Search in the channel name across the whole collection, up to 80 characters."
+            },
+            "depois": {
+              "type": "string",
+              "description": "Exclusive ID of the last row; use `proximo`."
+            }
+          }
+        },
+        "annotations": {
+          "title": "TV guide channels",
+          "readOnlyHint": true,
+          "destructiveHint": false,
+          "idempotentHint": true
+        },
+        "securitySchemes": [
+          {
+            "type": "noauth"
+          },
+          {
+            "type": "oauth2",
+            "scopes": [
+              "mcp"
+            ]
+          }
+        ]
+      },
+      {
+        "name": "get_programacao",
+        "title": "Channel TV guide",
+        "description": "The last TV guide available for the channel and up to 20 dates of its history.",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "slug": {
+              "type": "string",
+              "description": "The stored slug of the channel, from the collection."
+            },
+            "antes": {
+              "type": "string",
+              "description": "Exclusive day to page through the earlier days; use `guia.proximo`."
+            }
+          },
+          "required": [
+            "slug"
+          ]
+        },
+        "annotations": {
+          "title": "Channel TV guide",
+          "readOnlyHint": true,
+          "destructiveHint": false,
+          "idempotentHint": true
+        },
+        "securitySchemes": [
+          {
+            "type": "noauth"
+          },
+          {
+            "type": "oauth2",
+            "scopes": [
+              "mcp"
+            ]
+          }
+        ]
+      },
+      {
+        "name": "get_programacao_dia",
+        "title": "Channel TV guide for a day",
+        "description": "The stored TV guide of a channel on one day.",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "slug": {
+              "type": "string",
+              "description": "The stored slug of the channel, from the collection."
+            },
+            "dia": {
+              "type": "string",
+              "description": "Collection day, YYYY-MM-DD."
+            },
+            "antes": {
+              "type": "string",
+              "description": "Exclusive day to page through the earlier days; use `guia.proximo`."
+            }
+          },
+          "required": [
+            "slug",
+            "dia"
+          ]
+        },
+        "annotations": {
+          "title": "Channel TV guide for a day",
+          "readOnlyHint": true,
+          "destructiveHint": false,
+          "idempotentHint": true
+        },
+        "securitySchemes": [
+          {
+            "type": "noauth"
+          },
+          {
+            "type": "oauth2",
+            "scopes": [
+              "mcp"
+            ]
+          }
+        ]
+      },
+      {
+        "name": "api_index",
+        "title": "API index",
+        "description": "The index of the whole API, with the languages and the HTML pages of each language.",
+        "inputSchema": {
+          "type": "object",
+          "properties": {}
+        },
+        "annotations": {
+          "title": "API index",
+          "readOnlyHint": true,
+          "destructiveHint": false,
+          "idempotentHint": true
+        },
+        "securitySchemes": [
+          {
+            "type": "noauth"
+          },
+          {
+            "type": "oauth2",
+            "scopes": [
+              "mcp"
+            ]
+          }
+        ]
+      },
+      {
+        "name": "health",
+        "title": "Service health",
+        "description": "Liveness and the commit that is published now. The smoke test waits for its own deploy here.",
+        "inputSchema": {
+          "type": "object",
+          "properties": {}
+        },
+        "annotations": {
+          "title": "Service health",
+          "readOnlyHint": true,
+          "destructiveHint": false,
+          "idempotentHint": true
+        },
+        "securitySchemes": [
+          {
+            "type": "noauth"
+          },
+          {
+            "type": "oauth2",
+            "scopes": [
+              "mcp"
+            ]
+          }
+        ]
+      },
+      {
+        "name": "geo",
+        "title": "Suggested country and language",
+        "description": "The country and the language suggested for the caller. When the edge detects no country, it suggests BR with `source: \"fallback\"`; `detected` tells what the edge saw.",
+        "inputSchema": {
+          "type": "object",
+          "properties": {}
+        },
+        "annotations": {
+          "title": "Suggested country and language",
+          "readOnlyHint": true,
+          "destructiveHint": false,
+          "idempotentHint": true
+        },
+        "securitySchemes": [
+          {
+            "type": "noauth"
+          },
+          {
+            "type": "oauth2",
+            "scopes": [
+              "mcp"
+            ]
+          }
+        ]
+      },
+      {
+        "name": "list_countries",
+        "title": "Countries",
+        "description": "The countries in the catalog, with the playable count and the flag URL (`kind=radio` counts stations).",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "enum": [
+                "tv",
+                "radio",
+                "all"
+              ],
+              "description": "`tv` (default) counts TV channels; `radio` counts radio stations; `all` counts both.",
+              "default": "tv"
+            }
+          }
+        },
+        "annotations": {
+          "title": "Countries",
+          "readOnlyHint": true,
+          "destructiveHint": false,
+          "idempotentHint": true
+        },
+        "securitySchemes": [
+          {
+            "type": "noauth"
+          },
+          {
+            "type": "oauth2",
+            "scopes": [
+              "mcp"
+            ]
+          }
+        ]
+      },
+      {
+        "name": "list_tags",
+        "title": "Radio tags",
+        "description": "The tags of the playable radio stations, with the count, optionally by country.",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "country": {
+              "type": "string",
+              "description": "Limits to the stations of one country, ISO 3166-1 alpha-2."
+            },
+            "limit": {
+              "type": "string",
+              "description": "How many tags to return (100 at most).",
+              "default": 40
+            }
+          }
+        },
+        "annotations": {
+          "title": "Radio tags",
+          "readOnlyHint": true,
+          "destructiveHint": false,
+          "idempotentHint": true
+        },
+        "securitySchemes": [
+          {
+            "type": "noauth"
+          },
+          {
+            "type": "oauth2",
+            "scopes": [
+              "mcp"
+            ]
+          }
+        ]
+      },
+      {
+        "name": "search_channels",
+        "title": "Search channels",
+        "description": "Searches public channels (filters: q, country, category, language, network, quality, playable; kind=radio for radio stations, tag for a radio tag; sort=score orders by the health that a third party measures, sort=votes by the radio votes; online=1 returns only channels seen online in the last 48 h). This is the main entry point of the product. The response changes with the browser, the system and the country of the caller: each channel has `social.your_fails`, the result for YOUR environment, so the response is `Cache-Control: private`.",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "q": {
+              "type": "string",
+              "description": "Free text in the channel name and its aliases (full-text search)."
+            },
+            "country": {
+              "type": "string",
+              "description": "Country of the channel, ISO 3166-1 alpha-2."
+            },
+            "category": {
+              "type": "string",
+              "description": "Category ID from the catalog."
+            },
+            "language": {
+              "type": "string",
+              "description": "Language of the channel, ISO 639-3."
+            },
+            "network": {
+              "type": "string",
+              "description": "Exact name of the network or broadcaster."
+            },
+            "quality": {
+              "type": "string",
+              "description": "Exact quality of the stream."
+            },
+            "guide": {
+              "type": "string",
+              "description": "`1` returns only channels with a TV guide (EPG).",
+              "enum": [
+                "0",
+                "1"
+              ],
+              "default": "0"
+            },
+            "subdivision": {
+              "type": "string",
+              "description": "State or province, catalog code."
+            },
+            "city": {
+              "type": "string",
+              "description": "City, catalog code."
+            },
+            "playable": {
+              "type": "string",
+              "description": "`0` also includes channels with no known usable stream.",
+              "enum": [
+                "0",
+                "1"
+              ],
+              "default": "1"
+            },
+            "sort": {
+              "type": "string",
+              "enum": [
+                "name",
+                "score",
+                "votes"
+              ],
+              "description": "`score` orders by the health that a third party measures, best first; channels with no measurement go to the end. `votes` orders by the votes recorded for the station (radio). `name` is alphabetical order.",
+              "default": "name"
+            },
+            "online": {
+              "type": "string",
+              "description": "`1` returns only channels that the source saw online in the 48 h before the last catalog reload (`health_ext.online`). When the catalog has not reloaded for more than 48 h, the filter returns no channel.",
+              "enum": [
+                "0",
+                "1"
+              ],
+              "default": "0"
+            },
+            "kind": {
+              "type": "string",
+              "enum": [
+                "tv",
+                "radio",
+                "all"
+              ],
+              "description": "`tv` (default) is the TV catalog; `radio` is the radio stations; `all` is both. Without `kind`, radio never appears.",
+              "default": "tv"
+            },
+            "tag": {
+              "type": "string",
+              "description": "Radio station tag (free vocabulary, for example `mpb` or `news`); see `GET /api/tags`."
+            }
+          }
+        },
+        "annotations": {
+          "title": "Search channels",
+          "readOnlyHint": true,
+          "destructiveHint": false,
+          "idempotentHint": true
+        },
+        "securitySchemes": [
+          {
+            "type": "noauth"
+          },
+          {
+            "type": "oauth2",
+            "scopes": [
+              "mcp"
+            ]
+          }
+        ]
+      },
+      {
+        "name": "list_languages",
+        "title": "Languages",
+        "description": "The languages that have a playable channel, with the count of each language.",
+        "inputSchema": {
+          "type": "object",
+          "properties": {}
+        },
+        "annotations": {
+          "title": "Languages",
+          "readOnlyHint": true,
+          "destructiveHint": false,
+          "idempotentHint": true
+        },
+        "securitySchemes": [
+          {
+            "type": "noauth"
+          },
+          {
+            "type": "oauth2",
+            "scopes": [
+              "mcp"
+            ]
+          }
+        ]
+      },
+      {
+        "name": "list_networks",
+        "title": "Networks",
+        "description": "The networks and broadcasters that have a playable channel, with the count.",
+        "inputSchema": {
+          "type": "object",
+          "properties": {}
+        },
+        "annotations": {
+          "title": "Networks",
+          "readOnlyHint": true,
+          "destructiveHint": false,
+          "idempotentHint": true
+        },
+        "securitySchemes": [
+          {
+            "type": "noauth"
+          },
+          {
+            "type": "oauth2",
+            "scopes": [
+              "mcp"
+            ]
+          }
+        ]
+      },
+      {
+        "name": "list_qualities",
+        "title": "Stream qualities",
+        "description": "The different qualities found in the catalog streams (for radio, the codec and the bitrate).",
+        "inputSchema": {
+          "type": "object",
+          "properties": {}
+        },
+        "annotations": {
+          "title": "Stream qualities",
+          "readOnlyHint": true,
+          "destructiveHint": false,
+          "idempotentHint": true
+        },
+        "securitySchemes": [
+          {
+            "type": "noauth"
+          },
+          {
+            "type": "oauth2",
+            "scopes": [
+              "mcp"
+            ]
+          }
+        ]
+      },
+      {
+        "name": "list_subdivisions",
+        "title": "States and provinces",
+        "description": "The states and provinces that have a playable channel.",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "country": {
+              "type": "string",
+              "description": "Limits to one country, ISO 3166-1 alpha-2."
+            }
+          }
+        },
+        "annotations": {
+          "title": "States and provinces",
+          "readOnlyHint": true,
+          "destructiveHint": false,
+          "idempotentHint": true
+        },
+        "securitySchemes": [
+          {
+            "type": "noauth"
+          },
+          {
+            "type": "oauth2",
+            "scopes": [
+              "mcp"
+            ]
+          }
+        ]
+      },
+      {
+        "name": "list_cities",
+        "title": "Cities",
+        "description": "The cities that have a playable channel. You can filter them by country and by state.",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "country": {
+              "type": "string",
+              "description": "Limits to one country, ISO 3166-1 alpha-2."
+            },
+            "subdivision": {
+              "type": "string",
+              "description": "Limits to one state or province."
+            }
+          }
+        },
+        "annotations": {
+          "title": "Cities",
+          "readOnlyHint": true,
+          "destructiveHint": false,
+          "idempotentHint": true
+        },
+        "securitySchemes": [
+          {
+            "type": "noauth"
+          },
+          {
+            "type": "oauth2",
+            "scopes": [
+              "mcp"
+            ]
+          }
+        ]
+      },
+      {
+        "name": "get_channel",
+        "title": "Get a channel",
+        "description": "The full record of a channel, with the streams that already point to our hop.",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "id": {
+              "type": "string",
+              "description": "Channel ID in the catalog, for example `GloboNews.br`."
+            }
+          },
+          "required": [
+            "id"
+          ]
+        },
+        "annotations": {
+          "title": "Get a channel",
+          "readOnlyHint": true,
+          "destructiveHint": false,
+          "idempotentHint": true
+        },
+        "securitySchemes": [
+          {
+            "type": "noauth"
+          },
+          {
+            "type": "oauth2",
+            "scopes": [
+              "mcp"
+            ]
+          }
+        ]
+      },
+      {
+        "name": "get_channel_guide",
+        "title": "Today's channel guide",
+        "description": "Today's TV guide of the channel (recorded by us): now, next and the list. It is available for the channels with a guide (`guide=1`) and is valid for up to two days. Check the date of the response; the channel record has the summary in `guide_now`.",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "id": {
+              "type": "string",
+              "description": "Channel ID in the catalog, for example `GloboNews.br`."
+            }
+          },
+          "required": [
+            "id"
+          ]
+        },
+        "annotations": {
+          "title": "Today's channel guide",
+          "readOnlyHint": true,
+          "destructiveHint": false,
+          "idempotentHint": true
+        },
+        "securitySchemes": [
+          {
+            "type": "noauth"
+          },
+          {
+            "type": "oauth2",
+            "scopes": [
+              "mcp"
+            ]
+          }
+        ]
+      },
+      {
+        "name": "create_guest",
+        "title": "Create a guest",
+        "description": "Creates a guest `ipt_…`. It asks for no e-mail and no other data. Keep the token: if you lose the token, you lose the library, unless an account already claimed it (`POST /api/auth/claim`). Then the account keeps what the token saved.",
+        "inputSchema": {
+          "type": "object",
+          "properties": {}
+        },
+        "annotations": {
+          "title": "Create a guest",
+          "readOnlyHint": false,
+          "destructiveHint": false,
+          "idempotentHint": false
+        },
+        "securitySchemes": [
+          {
+            "type": "noauth"
+          },
+          {
+            "type": "oauth2",
+            "scopes": [
+              "mcp"
+            ]
+          }
+        ]
+      },
+      {
+        "name": "get_library",
+        "title": "Library",
+        "description": "The whole library of the owner: folders, tabs, channels and the feed URLs of each level.",
+        "inputSchema": {
+          "type": "object",
+          "properties": {}
+        },
+        "annotations": {
+          "title": "Library",
+          "readOnlyHint": true,
+          "destructiveHint": false,
+          "idempotentHint": true
+        },
+        "securitySchemes": [
+          {
+            "type": "noauth"
+          },
+          {
+            "type": "oauth2",
+            "scopes": [
+              "mcp"
+            ]
+          }
+        ]
+      },
+      {
+        "name": "create_category",
+        "title": "Create a folder",
+        "description": "Creates a personal folder (category). 8 folders at most per owner. The response has the whole updated library, so you do not need to reload `GET /api/library`.",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "name": {
+              "type": "string",
+              "description": "Folder name, up to 40 characters."
+            }
+          },
+          "required": [
+            "name"
+          ]
+        },
+        "annotations": {
+          "title": "Create a folder",
+          "readOnlyHint": false,
+          "destructiveHint": false,
+          "idempotentHint": false
+        },
+        "securitySchemes": [
+          {
+            "type": "noauth"
+          },
+          {
+            "type": "oauth2",
+            "scopes": [
+              "mcp"
+            ]
+          }
+        ]
+      },
+      {
+        "name": "create_group",
+        "title": "Create a tab",
+        "description": "Creates a tab in a folder. 12 tabs at most per folder. The response has the whole updated library, so you do not need to reload `GET /api/library`.",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "category_id": {
+              "type": "string",
+              "description": "Folder that receives the tab, `cat_…`."
+            },
+            "name": {
+              "type": "string",
+              "description": "Tab name, up to 40 characters."
+            }
+          },
+          "required": [
+            "category_id",
+            "name"
+          ]
+        },
+        "annotations": {
+          "title": "Create a tab",
+          "readOnlyHint": false,
+          "destructiveHint": false,
+          "idempotentHint": false
+        },
+        "securitySchemes": [
+          {
+            "type": "noauth"
+          },
+          {
+            "type": "oauth2",
+            "scopes": [
+              "mcp"
+            ]
+          }
+        ]
+      },
+      {
+        "name": "add_item",
+        "title": "Add a channel to a tab",
+        "description": "Adds a channel to a tab. 40 channels at most per tab. The response tells the folder and the tab where the channel went, so the screen opens in the right place. The response has the whole updated library, so you do not need to reload `GET /api/library`.",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "group_id": {
+              "type": "string",
+              "description": "Tab that receives the channel, `grp_…`."
+            },
+            "channel_id": {
+              "type": "string",
+              "description": "Channel ID in the catalog, for example `GloboNews.br`."
+            }
+          },
+          "required": [
+            "group_id",
+            "channel_id"
+          ]
+        },
+        "annotations": {
+          "title": "Add a channel to a tab",
+          "readOnlyHint": false,
+          "destructiveHint": false,
+          "idempotentHint": false
+        },
+        "securitySchemes": [
+          {
+            "type": "noauth"
+          },
+          {
+            "type": "oauth2",
+            "scopes": [
+              "mcp"
+            ]
+          }
+        ]
+      },
+      {
+        "name": "get_history",
+        "title": "Watch history",
+        "description": "The channels that the owner watched. It shows only the channels that are available in the catalog.",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "limit": {
+              "type": "string",
+              "description": "Items per page. A value above 50 becomes 50.",
+              "default": 20
+            },
+            "offset": {
+              "type": "string",
+              "description": "How many items to skip. Use `next_offset` from the previous response.",
+              "default": 0
+            }
+          }
+        },
+        "annotations": {
+          "title": "Watch history",
+          "readOnlyHint": true,
+          "destructiveHint": false,
+          "idempotentHint": true
+        },
+        "securitySchemes": [
+          {
+            "type": "noauth"
+          },
+          {
+            "type": "oauth2",
+            "scopes": [
+              "mcp"
+            ]
+          }
+        ]
+      },
+      {
+        "name": "record_watch",
+        "title": "Record a watched channel",
+        "description": "Records a watched channel in the owner's history.",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "channel_id": {
+              "type": "string",
+              "description": "The watched channel, for example `GloboNews.br`."
+            }
+          },
+          "required": [
+            "channel_id"
+          ]
+        },
+        "annotations": {
+          "title": "Record a watched channel",
+          "readOnlyHint": false,
+          "destructiveHint": false,
+          "idempotentHint": false
+        },
+        "securitySchemes": [
+          {
+            "type": "noauth"
+          },
+          {
+            "type": "oauth2",
+            "scopes": [
+              "mcp"
+            ]
+          }
+        ]
+      },
+      {
+        "name": "forget_watch",
+        "title": "Remove from the history",
+        "description": "Removes a channel from the owner's history.",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "channel_id": {
+              "type": "string",
+              "description": "Channel to remove from the history, for example `GloboNews.br`."
+            }
+          },
+          "required": [
+            "channel_id"
+          ]
+        },
+        "annotations": {
+          "title": "Remove from the history",
+          "readOnlyHint": false,
+          "destructiveHint": true,
+          "idempotentHint": true
+        },
+        "securitySchemes": [
+          {
+            "type": "noauth"
+          },
+          {
+            "type": "oauth2",
+            "scopes": [
+              "mcp"
+            ]
+          }
+        ]
+      },
+      {
+        "name": "clear_history",
+        "title": "Clear the history",
+        "description": "Clears the whole history of the owner at once.",
+        "inputSchema": {
+          "type": "object",
+          "properties": {}
+        },
+        "annotations": {
+          "title": "Clear the history",
+          "readOnlyHint": false,
+          "destructiveHint": true,
+          "idempotentHint": true
+        },
+        "securitySchemes": [
+          {
+            "type": "noauth"
+          },
+          {
+            "type": "oauth2",
+            "scopes": [
+              "mcp"
+            ]
+          }
+        ]
+      },
+      {
+        "name": "tv_state",
+        "title": "TV network activation",
+        "description": "Checks the activation of the TV network by the six-digit code.",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "codigo": {
+              "type": "string",
+              "description": "The six digits shown on the TV screen. They are valid for ten minutes."
+            }
+          },
+          "required": [
+            "codigo"
+          ]
+        },
+        "annotations": {
+          "title": "TV network activation",
+          "readOnlyHint": true,
+          "destructiveHint": false,
+          "idempotentHint": true
+        },
+        "securitySchemes": [
+          {
+            "type": "noauth"
+          },
+          {
+            "type": "oauth2",
+            "scopes": [
+              "mcp"
+            ]
+          }
+        ]
+      },
+      {
+        "name": "legacy_stream",
+        "title": "Legacy stream",
+        "description": "Public metadata: the official site of the channel, the stream URL to copy into another player, and the legacy HTTP player. The legacy_url button opens http://legacy.gradetv.net/legacy?stream=ID, with no port in the address. The standalone page accepts lang=pt/en/es/fr/de/hu and theme=light/dark. Playlists go through the HTTPS hop, and the media comes directly from the origin. It does not remove an access refusal or a CORS requirement. It is one indexed read: it does not fetch the origin and does not write to the database.",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "id": {
+              "type": "string",
+              "description": "Public stream ID, including the old IDs for compatibility."
+            }
+          },
+          "required": [
+            "id"
+          ]
+        },
+        "annotations": {
+          "title": "Legacy stream",
+          "readOnlyHint": true,
+          "destructiveHint": false,
+          "idempotentHint": true
+        },
+        "securitySchemes": [
+          {
+            "type": "noauth"
+          },
+          {
+            "type": "oauth2",
+            "scopes": [
+              "mcp"
+            ]
+          }
+        ]
+      },
+      {
+        "name": "producer_services",
+        "title": "Services for producers",
+        "description": "Authorized broadcast offer on request: information and contacts for producers. It does not turn on streams; it only gives information and collects interest. To present a project, use contact.form_url in the browser, contact.email by e-mail, or POST /api/contact.",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "lang": {
+              "type": "string",
+              "enum": [
+                "pt",
+                "en",
+                "es",
+                "fr",
+                "de",
+                "hu"
+              ],
+              "description": "Language of the offer: pt, en, es, fr, de or hu. A missing or unknown value falls back to pt.",
+              "default": "pt"
+            }
+          }
+        },
+        "annotations": {
+          "title": "Services for producers",
+          "readOnlyHint": true,
+          "destructiveHint": false,
+          "idempotentHint": true
+        },
+        "securitySchemes": [
+          {
+            "type": "noauth"
+          },
+          {
+            "type": "oauth2",
+            "scopes": [
+              "mcp"
+            ]
+          }
+        ]
+      },
+      {
+        "name": "report_play",
+        "title": "Report a play",
+        "description": "Reports whether a channel played (ok=true) or not (ok=false with code). The browser and the system come from the User-Agent, and the country comes from the request data; the body cannot change them. The first report of a result on a day returns 201. It counts once per owner, channel, day and result; a repeat returns 200 with `reason: ja_relatado_hoje`. The reports help to compare results in `GET /api/channels/:id/health`, but they do not confirm the cause of a failure.",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "channel_id": {
+              "type": "string",
+              "description": "The channel that you tried to watch."
+            },
+            "ok": {
+              "type": "boolean",
+              "description": "`true` when it played, `false` when it failed."
+            },
+            "code": {
+              "type": "string",
+              "description": "Failure code, only when `ok` is `false`. A missing or unknown code counts as `outro`.",
+              "enum": [
+                "cors",
+                "geo",
+                "sumiu",
+                "codec",
+                "playlist",
+                "sem_resposta",
+                "protocolo",
+                "sem_stream",
+                "embed",
+                "outro"
+              ]
+            }
+          },
+          "required": [
+            "channel_id",
+            "ok"
+          ]
+        },
+        "annotations": {
+          "title": "Report a play",
+          "readOnlyHint": false,
+          "destructiveHint": false,
+          "idempotentHint": false
+        },
+        "securitySchemes": [
+          {
+            "type": "noauth"
+          },
+          {
+            "type": "oauth2",
+            "scopes": [
+              "mcp"
+            ]
+          }
+        ]
+      },
+      {
+        "name": "play_reports",
+        "title": "Raw play reports",
+        "description": "The raw reports of a channel, with the address. Operator only (METRICS_TOKEN). Use it to investigate one channel. In the current reports, the `ip` field has an identifier calculated from the network and a secret value. The retention period is in `retention_days`. The public panel does not return this identifier.",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "channel_id": {
+              "type": "string",
+              "description": "Limits to one channel."
+            },
+            "ok": {
+              "type": "string",
+              "description": "`0` returns only the failures, which is the subset for an investigation.",
+              "enum": [
+                "0"
+              ]
+            },
+            "limit": {
+              "type": "string",
+              "description": "Items per page. A value above 50 becomes 50.",
+              "default": 20
+            }
+          }
+        },
+        "annotations": {
+          "title": "Raw play reports",
+          "readOnlyHint": true,
+          "destructiveHint": false,
+          "idempotentHint": true
+        },
+        "securitySchemes": [
+          {
+            "type": "oauth2",
+            "scopes": [
+              "mcp"
+            ]
+          }
+        ]
+      },
+      {
+        "name": "channel_health",
+        "title": "Channel health",
+        "description": "The community health of the channel: the success rate, the failure reasons and the affected environments. It tells 'the channel is off the air' from 'the channel is blocked in your country'. `geo` tells whether it is a regional restriction or a general failure (with the countries), `regions[]` has the success and the failure by country, `latency[]` has the opening speed measured at the hop by country, and `pra_voce` sums it up for the country of the caller. Without community reports (`POST /api/play-report`), the panel is empty.",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "id": {
+              "type": "string",
+              "description": "Channel ID in the catalog, for example `GloboNews.br`."
+            }
+          },
+          "required": [
+            "id"
+          ]
+        },
+        "annotations": {
+          "title": "Channel health",
+          "readOnlyHint": true,
+          "destructiveHint": false,
+          "idempotentHint": true
+        },
+        "securitySchemes": [
+          {
+            "type": "noauth"
+          },
+          {
+            "type": "oauth2",
+            "scopes": [
+              "mcp"
+            ]
+          }
+        ]
+      },
+      {
+        "name": "list_favorites",
+        "title": "Favorites",
+        "description": "The favorites of the owner. It shows only the channels that are available in the catalog.",
+        "inputSchema": {
+          "type": "object",
+          "properties": {}
+        },
+        "annotations": {
+          "title": "Favorites",
+          "readOnlyHint": true,
+          "destructiveHint": false,
+          "idempotentHint": true
+        },
+        "securitySchemes": [
+          {
+            "type": "noauth"
+          },
+          {
+            "type": "oauth2",
+            "scopes": [
+              "mcp"
+            ]
+          }
+        ]
+      },
+      {
+        "name": "add_favorite",
+        "title": "Add a favorite",
+        "description": "Marks a channel as a favorite. A repeat does not add up: the public counter counts people, not clicks.",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "channel_id": {
+              "type": "string",
+              "description": "Channel to mark as a favorite, for example `GloboNews.br`."
+            }
+          },
+          "required": [
+            "channel_id"
+          ]
+        },
+        "annotations": {
+          "title": "Add a favorite",
+          "readOnlyHint": false,
+          "destructiveHint": false,
+          "idempotentHint": false
+        },
+        "securitySchemes": [
+          {
+            "type": "noauth"
+          },
+          {
+            "type": "oauth2",
+            "scopes": [
+              "mcp"
+            ]
+          }
+        ]
+      },
+      {
+        "name": "remove_favorite",
+        "title": "Remove a favorite",
+        "description": "Removes the channel from the favorites and gives the point back to the public counter.",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "channel_id": {
+              "type": "string",
+              "description": "Channel to remove from the favorites, for example `GloboNews.br`."
+            }
+          },
+          "required": [
+            "channel_id"
+          ]
+        },
+        "annotations": {
+          "title": "Remove a favorite",
+          "readOnlyHint": false,
+          "destructiveHint": true,
+          "idempotentHint": true
+        },
+        "securitySchemes": [
+          {
+            "type": "noauth"
+          },
+          {
+            "type": "oauth2",
+            "scopes": [
+              "mcp"
+            ]
+          }
+        ]
+      },
+      {
+        "name": "list_comments",
+        "title": "Channel comments",
+        "description": "The community comments about a channel. When the call has a credential, each of your comments has `mine: true`; this is how the interface knows what you can delete.",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "id": {
+              "type": "string",
+              "description": "Channel ID in the catalog, for example `GloboNews.br`."
+            }
+          },
+          "required": [
+            "id"
+          ]
+        },
+        "annotations": {
+          "title": "Channel comments",
+          "readOnlyHint": true,
+          "destructiveHint": false,
+          "idempotentHint": true
+        },
+        "securitySchemes": [
+          {
+            "type": "noauth"
+          },
+          {
+            "type": "oauth2",
+            "scopes": [
+              "mcp"
+            ]
+          }
+        ]
+      },
+      {
+        "name": "post_comment",
+        "title": "Post a comment",
+        "description": "Comments on a channel (20 per hour at most per owner). Without `author`, the server makes a nickname that stays the same for the same owner, so the person does not get a different name for each message.",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "id": {
+              "type": "string",
+              "description": "Channel ID in the catalog, for example `GloboNews.br`."
+            },
+            "body": {
+              "type": "string",
+              "description": "The comment text. The limit is in `max_length` of the list."
+            },
+            "author": {
+              "type": "string",
+              "description": "Nickname to use; without it, the server makes a stable one."
+            }
+          },
+          "required": [
+            "id",
+            "body"
+          ]
+        },
+        "annotations": {
+          "title": "Post a comment",
+          "readOnlyHint": false,
+          "destructiveHint": false,
+          "idempotentHint": false
+        },
+        "securitySchemes": [
+          {
+            "type": "noauth"
+          },
+          {
+            "type": "oauth2",
+            "scopes": [
+              "mcp"
+            ]
+          }
+        ]
+      },
+      {
+        "name": "delete_comment",
+        "title": "Delete a comment",
+        "description": "Deletes a comment of the owner. The 404 is on purpose: the API does not confirm that a comment with that id exists when it is not yours.",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "id": {
+              "type": "string",
+              "description": "Comment ID, from `Comentario.id`."
+            }
+          },
+          "required": [
+            "id"
+          ]
+        },
+        "annotations": {
+          "title": "Delete a comment",
+          "readOnlyHint": false,
+          "destructiveHint": true,
+          "idempotentHint": true
+        },
+        "securitySchemes": [
+          {
+            "type": "noauth"
+          },
+          {
+            "type": "oauth2",
+            "scopes": [
+              "mcp"
+            ]
+          }
+        ]
+      },
+      {
+        "name": "chat_history",
+        "title": "Chat history",
+        "description": "The last messages in the room of a channel (without WebSocket).",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "channel_id": {
+              "type": "string",
+              "description": "Channel ID in the catalog, for example `GloboNews.br`."
+            }
+          },
+          "required": [
+            "channel_id"
+          ]
+        },
+        "annotations": {
+          "title": "Chat history",
+          "readOnlyHint": true,
+          "destructiveHint": false,
+          "idempotentHint": true
+        },
+        "securitySchemes": [
+          {
+            "type": "noauth"
+          },
+          {
+            "type": "oauth2",
+            "scopes": [
+              "mcp"
+            ]
+          }
+        ]
+      },
+      {
+        "name": "chat_send",
+        "title": "Send a chat message",
+        "description": "Sends a message to the room of a channel by HTTP. The speaker is the guest (`X-Guest-Token`), the same one that the WebSocket recognizes; without a guest, the account session.",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "channel_id": {
+              "type": "string",
+              "description": "Channel ID in the catalog, for example `GloboNews.br`."
+            },
+            "body": {
+              "type": "string",
+              "description": "The message text, within `max_length`."
+            },
+            "author": {
+              "type": "string",
+              "description": "Nickname to use; without it, the server makes a stable one."
+            }
+          },
+          "required": [
+            "channel_id",
+            "body"
+          ]
+        },
+        "annotations": {
+          "title": "Send a chat message",
+          "readOnlyHint": false,
+          "destructiveHint": false,
+          "idempotentHint": false
+        },
+        "securitySchemes": [
+          {
+            "type": "noauth"
+          },
+          {
+            "type": "oauth2",
+            "scopes": [
+              "mcp"
+            ]
+          }
+        ]
+      },
+      {
+        "name": "me",
+        "title": "Account",
+        "description": "The session account (the cookie that the MCP client passes on): the e-mail and the size of the account library. `user.id` is the account id, and the account owns the library when there is a session.",
+        "inputSchema": {
+          "type": "object",
+          "properties": {}
+        },
+        "annotations": {
+          "title": "Account",
+          "readOnlyHint": true,
+          "destructiveHint": false,
+          "idempotentHint": true
+        },
+        "securitySchemes": [
+          {
+            "type": "oauth2",
+            "scopes": [
+              "mcp"
+            ]
+          }
+        ]
+      },
+      {
+        "name": "contact",
+        "title": "Contact",
+        "description": "Write to the people behind the product: a question, or a sponsorship/partnership/advertising proposal. One route for a question and for a sponsorship, partnership or ad proposal (`tipo`, with the placements of `GET /api/partners`). One message every 10 seconds per network: one that arrives sooner waits its turn and then goes out — no error. The message reaches the team by e-mail, with `email` as the reply address. For voice, send multipart/form-data: `dados` is this JSON (up to 32 KiB), and `audio` is one WebM, Ogg or M4A audio file (up to 2 MB). Audio can replace message. The browser records up to two minutes. Audio is attached to the owner's e-mail.",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "name": {
+              "type": "string",
+              "description": "What to call the person writing."
+            },
+            "email": {
+              "type": "string",
+              "description": "Where to reply."
+            },
+            "message": {
+              "type": "string",
+              "description": "What you want to say."
+            },
+            "whatsapp": {
+              "type": "string",
+              "description": "Optional reply number with country code, such as +5561999999999."
+            },
+            "prefer_whatsapp": {
+              "type": "boolean",
+              "description": "Request a WhatsApp reply. Requires whatsapp."
+            },
+            "tipo": {
+              "type": "string",
+              "enum": [
+                "patrocinio",
+                "parceria",
+                "anuncio",
+                "consultoria"
+              ],
+              "description": "Proposal: `patrocinio`, `parceria`, `anuncio` or `consultoria`. Turns on the fields below."
+            },
+            "empresa": {
+              "type": "string",
+              "description": "Who is proposing, when it is a company."
+            },
+            "site": {
+              "type": "string",
+              "description": "Website of who is proposing."
+            },
+            "orcamento": {
+              "type": "string",
+              "enum": [
+                "ate_100",
+                "100_500",
+                "500_2000",
+                "2000_mais",
+                "a_combinar",
+                "ate_2000",
+                "2000_5000",
+                "5000_10000",
+                "10000_mais",
+                "nao_sei"
+              ],
+              "description": "Advertising: `ate_100`, `100_500`, `500_2000`, `2000_mais` or `a_combinar`. Consulting, in US dollars: `ate_2000`, `2000_5000`, `5000_10000`, `10000_mais` or `nao_sei`."
+            },
+            "espaco": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "description": "Placement ids from `GET /api/partners`, up to 6."
+            },
+            "duracao": {
+              "type": "string",
+              "enum": [
+                "30",
+                "90",
+                "365"
+              ],
+              "description": "Exposure in days: `30`, `90` or `365`."
+            },
+            "pagamento": {
+              "type": "string",
+              "enum": [
+                "usdc",
+                "deposito",
+                "a_combinar"
+              ]
+            },
+            "projeto": {
+              "type": "string",
+              "enum": [
+                "llm_privado",
+                "voz",
+                "dados_sensiveis",
+                "gpu",
+                "integracao",
+                "outro"
+              ],
+              "description": "Consulting: the kind of project (`llm_privado`, `voz`, `dados_sensiveis`, `gpu`, `integracao` or `outro`)."
+            },
+            "prazo": {
+              "type": "string",
+              "enum": [
+                "agora",
+                "1_mes",
+                "1_3_meses",
+                "explorando"
+              ],
+              "description": "Consulting: when to start (`agora`, `1_mes`, `1_3_meses` or `explorando`)."
+            },
+            "formato": {
+              "type": "string",
+              "enum": [
+                "projeto",
+                "mensal",
+                "assessoria"
+              ],
+              "description": "Consulting: `projeto` (per scope), `mensal` (monthly) or `assessoria` (advisory)."
+            },
+            "pais": {
+              "type": "string",
+              "description": "Consulting: the country of the person asking."
+            },
+            "fuso": {
+              "type": "string",
+              "description": "Consulting: the IANA time zone, such as `America/New_York`."
+            },
+            "horarios": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "description": "Consulting: up to 3 times for the call, `YYYY-MM-DDTHH:MM` in that time zone."
+            }
+          },
+          "required": [
+            "name",
+            "email",
+            "message"
+          ]
+        },
+        "annotations": {
+          "title": "Contact",
+          "readOnlyHint": false,
+          "destructiveHint": false,
+          "idempotentHint": false
+        },
+        "securitySchemes": [
+          {
+            "type": "noauth"
+          },
+          {
+            "type": "oauth2",
+            "scopes": [
+              "mcp"
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}
